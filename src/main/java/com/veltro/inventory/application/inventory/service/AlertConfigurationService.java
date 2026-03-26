@@ -6,6 +6,7 @@ import com.veltro.inventory.application.inventory.mapper.AlertConfigurationMappe
 import com.veltro.inventory.domain.inventory.model.AlertConfigurationEntity;
 import com.veltro.inventory.domain.inventory.ports.AlertConfigurationRepository;
 import com.veltro.inventory.domain.inventory.ports.InventoryRepository;
+import com.veltro.inventory.infrastructure.adapters.security.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,14 +27,16 @@ public class AlertConfigurationService {
 
     @Transactional(readOnly = true)
     public AlertConfigurationResponse getConfiguration(Long productId) {
-        return configurationRepository.findByProductIdAndActiveTrue(productId)
+        Long businessId = TenantContext.getBusinessId();
+        return configurationRepository.findByProductIdAndActiveTrueAndBusinessId(productId, businessId)
                 .map(configurationMapper::toResponse)
                 .orElseGet(() -> configurationMapper.toResponse(createDefaultConfiguration(productId)));
     }
 
     @Transactional
     public AlertConfigurationResponse updateConfiguration(Long productId, UpdateAlertConfigurationRequest request) {
-        AlertConfigurationEntity config = configurationRepository.findByProductIdAndActiveTrue(productId)
+        Long businessId = TenantContext.getBusinessId();
+        AlertConfigurationEntity config = configurationRepository.findByProductIdAndActiveTrueAndBusinessId(productId, businessId)
                 .orElseGet(() -> createDefaultConfiguration(productId));
 
         config.setCriticalStock(request.criticalStock());
@@ -46,7 +49,8 @@ public class AlertConfigurationService {
     }
 
     private AlertConfigurationEntity createDefaultConfiguration(Long productId) {
-        var inventory = inventoryRepository.findByProductIdAndActiveTrue(productId)
+        Long businessId = TenantContext.getBusinessId();
+        var inventory = inventoryRepository.findByProductIdAndActiveTrueAndBusinessId(productId, businessId)
                 .orElseThrow(() -> new IllegalStateException("Inventory not found for product " + productId));
 
         int minStock = (inventory.getMinStock() != null && inventory.getMinStock() > 0)
@@ -58,6 +62,7 @@ public class AlertConfigurationService {
 
         AlertConfigurationEntity config = new AlertConfigurationEntity();
         config.setProduct(inventory.getProduct());
+        config.setBusinessId(businessId);
         config.setCriticalStock(DEFAULT_CRITICAL_STOCK);
         config.setMinStock(minStock);
         config.setOverstockThreshold(maxStock);

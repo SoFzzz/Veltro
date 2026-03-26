@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -58,7 +59,7 @@ class PurchaseOrderControllerTest {
         return new PurchaseOrderResponse(
                 1L, "PO-2026-000001", PurchaseOrderStatus.PENDING,
                 1L, "Test Supplier Corp", "127.50", "Test notes",
-                List.of(), 1L, auditInfo
+                OffsetDateTime.now().plusDays(7), "", List.of(), 1L, auditInfo
         );
     }
 
@@ -195,7 +196,7 @@ class PurchaseOrderControllerTest {
     void create_validRequest_returns201() {
         when(purchaseOrderService.create(any(CreatePurchaseOrderRequest.class))).thenReturn(stubPurchaseOrder());
 
-        CreatePurchaseOrderRequest request = new CreatePurchaseOrderRequest(1L, "Test purchase order");
+        CreatePurchaseOrderRequest request = new CreatePurchaseOrderRequest(1L, "Test purchase order", OffsetDateTime.now().plusDays(7), "");
         ResponseEntity<PurchaseOrderResponse> response = controller.create(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -209,7 +210,7 @@ class PurchaseOrderControllerTest {
     void create_delegatesToService() {
         when(purchaseOrderService.create(any(CreatePurchaseOrderRequest.class))).thenReturn(stubPurchaseOrder());
 
-        CreatePurchaseOrderRequest request = new CreatePurchaseOrderRequest(2L, "Another order");
+        CreatePurchaseOrderRequest request = new CreatePurchaseOrderRequest(2L, "Another order", OffsetDateTime.now().plusDays(7), "");
         controller.create(request);
 
         verify(purchaseOrderService).create(request);

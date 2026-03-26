@@ -9,6 +9,8 @@ import com.veltro.inventory.application.purchasing.mapper.PurchaseOrderMapper;
 import com.veltro.inventory.application.shared.dto.AuditInfo;
 import com.veltro.inventory.domain.catalog.model.ProductEntity;
 import com.veltro.inventory.domain.catalog.ports.ProductRepository;
+import com.veltro.inventory.domain.iam.model.UserEntity;
+import com.veltro.inventory.domain.iam.ports.UserRepository;
 import com.veltro.inventory.domain.purchasing.model.PurchaseOrderDetailEntity;
 import com.veltro.inventory.domain.purchasing.model.PurchaseOrderEntity;
 import com.veltro.inventory.domain.purchasing.model.PurchaseOrderStatus;
@@ -16,6 +18,7 @@ import com.veltro.inventory.domain.purchasing.model.SupplierEntity;
 import com.veltro.inventory.domain.purchasing.ports.PurchaseOrderRepository;
 import com.veltro.inventory.domain.purchasing.ports.SupplierRepository;
 import com.veltro.inventory.exception.NotFoundException;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -25,9 +28,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -65,11 +71,15 @@ class PurchaseOrderServiceTest {
 
     @Mock
     private AuditCommandExecutor auditCommandExecutor;
+
+    @Mock
+    private UserRepository userRepository;
     
     private PurchaseOrderService orderService;
     
     private SupplierEntity supplierEntity;
     private ProductEntity productEntity;
+    private UserEntity testUser;
     private PurchaseOrderEntity orderEntity;
     private PurchaseOrderDetailEntity detailEntity;
     private PurchaseOrderResponse orderResponse;
@@ -79,7 +89,16 @@ class PurchaseOrderServiceTest {
     @BeforeEach
     void setUp() {
         // Manual service instantiation
-        orderService = new PurchaseOrderService(orderRepository, supplierRepository, productRepository, orderMapper, applicationEventPublisher, auditCommandExecutor);
+        orderService = new PurchaseOrderService(orderRepository, supplierRepository, productRepository, userRepository, orderMapper, applicationEventPublisher, auditCommandExecutor);
+
+        // Setup SecurityContext for getCurrentUser()
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken("testuser", null, List.of());
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
+        // Setup test user
+        testUser = new UserEntity();
+        testUser.setId(1L);
+        testUser.setActive(true);
         
         // Setup supplier
         supplierEntity = new SupplierEntity();
@@ -122,12 +141,17 @@ class PurchaseOrderServiceTest {
         orderResponse = new PurchaseOrderResponse(
                 1L, "PO-2026-000001", PurchaseOrderStatus.PENDING,
                 1L, "Test Supplier Corp", "127.50", "Test notes",
-                List.of(), 1L, auditInfo
+                OffsetDateTime.now().plusDays(7), "", List.of(), 1L, auditInfo
         );
 
-        createRequest = new CreatePurchaseOrderRequest(1L, "Test notes");
+        createRequest = new CreatePurchaseOrderRequest(1L, "Test notes", OffsetDateTime.now().plusDays(7), "");
         
         addItemRequest = new AddOrderItemRequest(100L, 3, new BigDecimal("15.75"));
+    }
+
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -216,6 +240,7 @@ class PurchaseOrderServiceTest {
         // Given
         PurchaseOrderEntity newEntity = new PurchaseOrderEntity();
         when(supplierRepository.findByIdAndActiveTrue(1L)).thenReturn(Optional.of(supplierEntity));
+        when(userRepository.findByUsernameAndActiveTrue("testuser")).thenReturn(Optional.of(testUser));
         when(orderRepository.getNextOrderSequenceValue()).thenReturn(1L);
         when(orderMapper.toEntity(createRequest)).thenReturn(newEntity);
         when(orderRepository.save(any(PurchaseOrderEntity.class))).thenReturn(orderEntity);
@@ -247,7 +272,7 @@ class PurchaseOrderServiceTest {
     void shouldThrowNotFoundExceptionWhenSupplierNotFoundForCreate() {
         // Given
         when(supplierRepository.findByIdAndActiveTrue(99L)).thenReturn(Optional.empty());
-        CreatePurchaseOrderRequest invalidRequest = new CreatePurchaseOrderRequest(99L, "Test notes");
+        CreatePurchaseOrderRequest invalidRequest = new CreatePurchaseOrderRequest(99L, "Test notes", OffsetDateTime.now().plusDays(7), "");
 
         // When/Then
         assertThatThrownBy(() -> orderService.create(invalidRequest))
@@ -373,6 +398,7 @@ class PurchaseOrderServiceTest {
         clonedEntity.setActive(true);
         
         when(orderRepository.findByIdAndActiveTrue(1L)).thenReturn(Optional.of(orderEntity));
+        when(userRepository.findByUsernameAndActiveTrue("testuser")).thenReturn(Optional.of(testUser));
         when(orderRepository.getNextOrderSequenceValue()).thenReturn(2L);
         when(orderRepository.save(any(PurchaseOrderEntity.class))).thenReturn(clonedEntity);
         when(orderMapper.toResponse(clonedEntity)).thenReturn(orderResponse);

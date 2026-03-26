@@ -86,4 +86,7 @@ public class InventoryMovementEntity {
     @CreatedBy
     @Column(name = "created_by", nullable = false, updatable = false, length = 100)
     private String createdBy;
+
+    @Column(name = "business_id", nullable = false)
+    private Long businessId;
 }

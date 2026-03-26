@@ -1,0 +1,47 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://127.0.0.1:5432/veltro_db
+    driver-class-name: org.postgresql.Driver
+    username: postgres
+    password: lolxd777
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          batch_size: 20
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: 0
+    validate-on-migrate: true
+
+logging:
+  level:
+    root: INFO
+    com.veltro: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web: INFO
+    org.flywaydb: DEBUG
+
+server:
+  port: 8080
+
+# AI Vision API configuration - ENABLED FOR TESTING
+veltro:
+  ai:
+    openai:
+      enabled: true
+      # Using a mock/test key for demonstration - replace with real key to test actual API
+      api-key: "sk-test-key-for-demonstration-only"
+      model: gpt-4-vision-preview
+      max-tokens: 500
+      timeout-seconds: 30
+      max-image-size-mb: 10
+      max-retries: 1  # Reduced for testing to avoid delays

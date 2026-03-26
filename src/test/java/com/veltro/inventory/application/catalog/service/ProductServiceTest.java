@@ -67,7 +67,10 @@ class ProductServiceTest {
                 "A test widget",
                 new BigDecimal("10.0000"),   // costPrice
                 new BigDecimal("9.9999"),    // salePrice — violates constraint
-                null
+                null,                        // categoryId
+                5,                           // minStockInfo
+                10,                          // minStockWarning
+                2                            // minStockCritical
         );
 
         assertThatThrownBy(() -> productService.create(request))
@@ -87,13 +90,17 @@ class ProductServiceTest {
                 "A test widget",
                 price,
                 price,
-                null
+                null,                        // categoryId
+                5,                           // minStockInfo
+                10,                          // minStockWarning
+                2                            // minStockCritical
         );
 
         ProductEntity entity = new ProductEntity();
         ProductResponse stubResponse = new ProductResponse(
                 1L, "Widget", "123456789", "WGT-001", "A test widget",
-                "5.0000", "5.0000", null, null, true);
+                "5.0000", "5.0000", 1L, "Test Category", true,
+                5, 10, 2);
 
         when(productMapper.toEntity(any(CreateProductRequest.class))).thenReturn(entity);
         when(productRepository.save(any(ProductEntity.class))).thenReturn(entity);
@@ -115,13 +122,17 @@ class ProductServiceTest {
                 "A test widget",
                 new BigDecimal("5.0000"),
                 new BigDecimal("9.9999"),
-                null
+                null,                        // categoryId
+                5,                           // minStockInfo
+                10,                          // minStockWarning
+                2                            // minStockCritical
         );
 
         ProductEntity entity = new ProductEntity();
         ProductResponse stubResponse = new ProductResponse(
                 1L, "Widget", "123456789", "WGT-001", "A test widget",
-                "5.0000", "9.9999", null, null, true);
+                "5.0000", "9.9999", 1L, "Test Category", true,
+                5, 10, 2);
 
         when(productMapper.toEntity(any(CreateProductRequest.class))).thenReturn(entity);
         when(productRepository.save(any(ProductEntity.class))).thenReturn(entity);
@@ -153,7 +164,8 @@ class ProductServiceTest {
         ProductEntity entity = new ProductEntity();
         ProductResponse stubResponse = new ProductResponse(
                 42L, "Chip", "BARCODE-001", "CHI-001", null,
-                "1.0000", "2.0000", null, null, true);
+                "1.0000", "2.0000", 1L, "Test Category", true,
+                5, 10, 2);
 
         when(productRepository.findByBarcodeAndActiveTrue("BARCODE-001"))
                 .thenReturn(Optional.of(entity));

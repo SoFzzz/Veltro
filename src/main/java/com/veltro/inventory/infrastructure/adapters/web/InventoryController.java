@@ -51,6 +51,16 @@ public class InventoryController {
     // -------------------------------------------------------------------------
 
     /**
+     * Returns all inventory records with pagination.
+     * Useful for inventory overview pages.
+     */
+    @GetMapping
+    public ResponseEntity<Page<InventoryResponse>> getAll(
+            @PageableDefault(size = 20, sort = "id") Pageable pageable) {
+        return ResponseEntity.ok(inventoryService.findAll(pageable));
+    }
+
+    /**
      * Returns the current stock record for the given product.
      * Returns 404 when the product has no inventory row.
      */

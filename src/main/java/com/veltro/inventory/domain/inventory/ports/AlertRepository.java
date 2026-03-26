@@ -22,4 +22,18 @@ public interface AlertRepository {
     Page<AlertEntity> findByReadFalseAndResolvedFalseOrderBySeverityDescCreatedAtAsc(Pageable pageable);
 
     long countByReadFalseAndResolvedFalse();
+
+    // --- Multi-tenant scoped methods ---
+
+    Optional<AlertEntity> findByIdAndActiveTrueAndBusinessId(Long id, Long businessId);
+
+    List<AlertEntity> findByProductIdAndResolvedFalseAndBusinessId(Long productId, Long businessId);
+
+    boolean existsByProductIdAndResolvedFalseAndTypeAndBusinessId(Long productId, AlertType type, Long businessId);
+
+    Page<AlertEntity> findByResolvedFalseAndBusinessIdOrderBySeverityDescCreatedAtAsc(Long businessId, Pageable pageable);
+
+    Page<AlertEntity> findByReadFalseAndResolvedFalseAndBusinessIdOrderBySeverityDescCreatedAtAsc(Long businessId, Pageable pageable);
+
+    long countByReadFalseAndResolvedFalseAndBusinessId(Long businessId);
 }

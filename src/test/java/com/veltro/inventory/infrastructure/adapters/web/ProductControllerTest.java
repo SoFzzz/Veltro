@@ -56,7 +56,8 @@ class ProductControllerTest {
     private static ProductResponse stubProduct() {
         return new ProductResponse(
                 1L, "Widget A", "BARC-001", "WGT-001", "A widget",
-                "5.0000", "9.9900", 10L, "Electronics", true);
+                "5.0000", "9.9900", 10L, "Electronics", true,
+                5, 10, 2);
     }
 
     // -------------------------------------------------------------------------
@@ -172,7 +173,8 @@ class ProductControllerTest {
 
         CreateProductRequest request = new CreateProductRequest(
                 "Widget A", "BARC-001", "WGT-001", "A widget",
-                new BigDecimal("5.0000"), new BigDecimal("9.9900"), 10L);
+                new BigDecimal("5.0000"), new BigDecimal("9.9900"), 10L,
+                5, 10, 2);
         ResponseEntity<ProductResponse> response = controller.create(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -189,7 +191,8 @@ class ProductControllerTest {
 
         CreateProductRequest request = new CreateProductRequest(
                 "Test Product", "TEST-001", "TST-001", "Test description",
-                new BigDecimal("10.00"), new BigDecimal("15.00"), 5L);
+                new BigDecimal("10.00"), new BigDecimal("15.00"), 5L,
+                5, 10, 2);
         controller.create(request);
 
         verify(productService).create(request);
@@ -203,7 +206,8 @@ class ProductControllerTest {
 
         CreateProductRequest request = new CreateProductRequest(
                 "Widget A", "BARC-001", "WGT-001", "A widget",
-                new BigDecimal("10.00"), new BigDecimal("5.00"), 10L);
+                new BigDecimal("10.00"), new BigDecimal("5.00"), 10L,
+                5, 10, 2);
 
         assertThatThrownBy(() -> controller.create(request))
                 .isInstanceOf(InvalidPriceException.class)
@@ -223,7 +227,8 @@ class ProductControllerTest {
 
         UpdateProductRequest request = new UpdateProductRequest(
                 "Widget A Updated", "BARC-001", "WGT-001", "Updated description",
-                new BigDecimal("6.0000"), new BigDecimal("10.9900"), 10L);
+                new BigDecimal("6.0000"), new BigDecimal("10.9900"), 10L,
+                5, 10, 2);
         ResponseEntity<ProductResponse> response = controller.update(1L, request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -239,7 +244,8 @@ class ProductControllerTest {
 
         UpdateProductRequest request = new UpdateProductRequest(
                 "Updated Product", "UPD-001", "UPD-001", "Updated description",
-                new BigDecimal("8.00"), new BigDecimal("12.00"), 5L);
+                new BigDecimal("8.00"), new BigDecimal("12.00"), 5L,
+                5, 10, 2);
         controller.update(5L, request);
 
         verify(productService).update(5L, request);
@@ -253,7 +259,8 @@ class ProductControllerTest {
 
         UpdateProductRequest request = new UpdateProductRequest(
                 "Widget A", "BARC-001", "WGT-001", "A widget",
-                new BigDecimal("5.0000"), new BigDecimal("9.9900"), 10L);
+                new BigDecimal("5.0000"), new BigDecimal("9.9900"), 10L,
+                5, 10, 2);
 
         assertThatThrownBy(() -> controller.update(999L, request))
                 .isInstanceOf(NotFoundException.class)

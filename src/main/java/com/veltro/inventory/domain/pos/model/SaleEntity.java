@@ -66,6 +66,9 @@ public class SaleEntity extends AbstractAuditableEntity {
     @Column(nullable = false)
     private Long version;
 
+    @Column(name = "business_id", nullable = false)
+    private Long businessId;
+
     @OneToMany(mappedBy = "sale", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = false)
     private List<SaleDetailEntity> details = new ArrayList<>();
 

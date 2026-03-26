@@ -4,10 +4,15 @@ import com.veltro.inventory.application.iam.dto.ChangePasswordRequest;
 import com.veltro.inventory.application.iam.dto.LoginRequest;
 import com.veltro.inventory.application.iam.dto.LoginResponse;
 import com.veltro.inventory.application.iam.dto.RefreshRequest;
+import com.veltro.inventory.application.iam.dto.RegisterRequest;
 import com.veltro.inventory.application.iam.service.AuthService;
+import com.veltro.inventory.domain.iam.model.UserEntity;
+import com.veltro.inventory.infrastructure.adapters.security.TenantContext;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -41,6 +46,20 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
+    }
+
+    /**
+     * Registers a new user with default role CASHIER.
+     *
+     * @return HTTP 200 with success message.
+     *         HTTP 400 if username already exists or validation fails.
+     */
+    @PostMapping("/register")
+    public ResponseEntity<Map<String, Object>> register(@Valid @RequestBody RegisterRequest request) {
+        authService.register(request);
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "User registered successfully."));
     }
 
     /**
@@ -85,5 +104,26 @@ public class AuthController {
         return ResponseEntity.ok(Map.of(
                 "success", true,
                 "message", "Password changed successfully."));
+    }
+
+    /**
+     * Creates a worker (CASHIER or WAREHOUSE) within the current admin's business.
+     *
+     * @return HTTP 201 with worker details on success.
+     *         HTTP 400 if validation fails or username already taken in this business.
+     *         HTTP 403 if caller is not ADMIN.
+     */
+    @PostMapping("/workers")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, Object>> createWorker(
+            @Valid @RequestBody RegisterRequest request) {
+
+        Long businessId = TenantContext.getBusinessId();
+        UserEntity worker = authService.createWorker(businessId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                "success", true,
+                "message", "Worker created successfully",
+                "username", worker.getUsername(),
+                "role", worker.getRole().name()));
     }
 }

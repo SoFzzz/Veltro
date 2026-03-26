@@ -22,4 +22,12 @@ public interface CategoryRepository {
     List<CategoryEntity> findAllByActiveTrue();
 
     CategoryEntity save(CategoryEntity category);
+
+    // --- Multi-tenant scoped methods ---
+
+    Optional<CategoryEntity> findByIdAndActiveTrueAndBusinessId(Long id, Long businessId);
+
+    List<CategoryEntity> findAllByParentCategoryIsNullAndActiveTrueAndBusinessId(Long businessId);
+
+    List<CategoryEntity> findAllByActiveTrueAndBusinessId(Long businessId);
 }

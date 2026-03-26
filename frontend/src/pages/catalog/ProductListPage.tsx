@@ -58,24 +58,24 @@ export function ProductListPage() {
   if (isLoading && products.length === 0) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="text-gray-500">Cargando productos...</div>
+        <div className="text-[var(--text-secondary)]">Cargando productos...</div>
       </div>
     );
   }
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
+    <div className="max-w-7xl mx-auto space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Productos</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight">Productos</h1>
+          <p className="mt-1 text-[var(--text-secondary)] text-sm">
             {totalElements} producto{totalElements !== 1 ? 's' : ''} en total
           </p>
         </div>
         {canEdit && (
           <Link
             to="/catalog/products/new"
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+            className="btn-primary"
           >
             Nuevo Producto
           </Link>
@@ -83,95 +83,81 @@ export function ProductListPage() {
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+        <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-600 shadow-sm">
           {error}
         </div>
       )}
 
-      <div className="bg-white shadow rounded-lg overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+      <div className="card overflow-x-auto">
+        <table className="table-responsive w-full">
+          <thead>
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Producto
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Código de Barras
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Categoría
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Precio Costo
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Precio Venta
-              </th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Estado
-              </th>
-              {canEdit && (
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Acciones
-                </th>
-              )}
+              <th>Producto</th>
+              <th>Código de Barras</th>
+              <th>Categoría</th>
+              <th className="text-right">Precio Costo</th>
+              <th className="text-right">Precio Venta</th>
+              <th className="text-center">Estado</th>
+              {canEdit && <th className="text-right">Acciones</th>}
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody>
             {products.map((product) => (
-              <tr key={product.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">
+              <tr key={product.id}>
+                <td>
+                  <div className="text-sm font-semibold text-[var(--text-primary)]">
                     {product.name}
                   </div>
                   {product.sku && (
-                    <div className="text-sm text-gray-500">SKU: {product.sku}</div>
+                    <div className="text-xs text-[var(--text-tertiary)] mt-0.5 font-mono">SKU: {product.sku}</div>
                   )}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="text-sm text-[var(--text-secondary)] font-mono">
                   {product.barcode || '-'}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {product.categoryName || 'Sin categoría'}
+                <td className="text-sm text-[var(--text-secondary)]">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700">
+                    {product.categoryName || 'Sin categoría'}
+                  </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                <td className="text-sm text-right tabular-data font-medium text-[var(--text-primary)]">
                   {formatPrice(product.costPrice)}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
+                <td className="text-sm text-right tabular-data font-bold text-[var(--primary-base)]">
                   {formatPrice(product.salePrice)}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-center">
+                <td className="text-center">
                   <span
-                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      product.active
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
+                    className={`px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                      product.active 
+                        ? 'bg-[var(--primary-faint)] text-[var(--primary-base)]' 
+                        : 'bg-red-50 text-red-600'
                     }`}
                   >
                     {product.active ? 'Activo' : 'Inactivo'}
                   </span>
                 </td>
                 {canEdit && (
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <td className="text-right text-sm font-medium space-x-3">
                     <Link
                       to={`/catalog/products/${product.id}/edit`}
-                      className="text-blue-600 hover:text-blue-900 mr-4"
+                      className="text-[var(--primary-base)] hover:text-[var(--primary-dark)] transition-colors"
                     >
                       Editar
                     </Link>
                     <button
-                      onClick={() => handleDelete(product.id)}
-                      className="text-red-600 hover:text-red-900"
-                    >
-                      Desactivar
-                    </button>
+                       onClick={() => handleDelete(product.id)}
+                       className="text-red-500 hover:text-red-700 transition-colors"
+                     >
+                       Desactivar
+                     </button>
                   </td>
                 )}
               </tr>
             ))}
             {products.length === 0 && (
               <tr>
-                <td colSpan={canEdit ? 7 : 6} className="px-6 py-8 text-center text-gray-500">
+                <td colSpan={canEdit ? 7 : 6} className="py-12 text-center text-[var(--text-tertiary)]">
                   No hay productos registrados
                 </td>
               </tr>
@@ -182,25 +168,25 @@ export function ProductListPage() {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-between items-center mt-4">
-          <div className="text-sm text-gray-700">
-            Mostrando página {page + 1} de {totalPages}
+        <div className="flex justify-between items-center mt-6 card p-4">
+          <div className="text-sm text-[var(--text-secondary)] font-medium">
+            Mostrando página <span className="text-[var(--text-primary)] font-bold">{page + 1}</span> de <span className="text-[var(--text-primary)] font-bold">{totalPages}</span>
           </div>
           <div className="flex space-x-2">
             <button
-              onClick={() => setPage((p) => Math.max(0, p - 1))}
-              disabled={page === 0}
-              className="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-            >
-              Anterior
-            </button>
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-              disabled={page >= totalPages - 1}
-              className="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-            >
-              Siguiente
-            </button>
+               onClick={() => setPage((p) => Math.max(0, p - 1))}
+               disabled={page === 0}
+               className="btn-secondary px-3 py-1.5 text-sm"
+             >
+               Anterior
+             </button>
+             <button
+               onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+               disabled={page >= totalPages - 1}
+               className="btn-secondary px-3 py-1.5 text-sm"
+             >
+               Siguiente
+             </button>
           </div>
         </div>
       )}

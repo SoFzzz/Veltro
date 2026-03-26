@@ -7,6 +7,26 @@ spring:
 # JWT configuration (B1-02).
 # Override jwt.secret per environment profile; never commit a real secret here.
 jwt:
-  secret: ${JWT_SECRET:veltro-local-dev-secret-change-in-production-min-256bits!!}
+  secret: ${JWT_SECRET:dev-only-secret-do-not-use-in-production-min-256bits!!}
   access-token-expiration: 900        # 15 minutes in seconds
   refresh-token-expiration: 604800    # 7 days in seconds
+
+# AI Vision API configuration (B3-01).
+# Supports: OpenRouter, OpenAI, Google Gemini, etc.
+# API provider is auto-detected based on key format:
+#   - sk-or-... = OpenRouter
+#   - AIza... = Google Gemini
+#   - sk-... = OpenAI
+# For production, configure via environment variables
+veltro:
+  ai:
+    openai:
+      enabled: true                               # AI vision enabled
+      api-key: ${OPENAI_API_KEY:}
+      api-endpoint: ${OPENAI_API_ENDPOINT:https://models.inference.ai.azure.com/chat/completions}
+      model: ${OPENAI_MODEL:gpt-4o-mini}          # GitHub AI API - GPT-4o-mini
+      max-tokens: 1000                            # Response token limit
+      timeout-seconds: 60                         # GitHub AI is fast
+      max-image-size-mb: 20                       # Max image size
+      max-retries: 3                              # Transient error retries
+

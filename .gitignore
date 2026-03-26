@@ -34,3 +34,35 @@ build/
 ### Veltro ###
 *.class
 **/application-local.yml
+
+### 🔐 SECURITY: API Keys & Credentials (NEVER COMMIT) ###
+.env
+.env.local
+.env.*.local
+.env.production
+.env.staging
+application-prod.yaml
+application-prod.yml
+application-production.yaml
+application-production.yml
+application-*.properties
+secrets.yaml
+secrets.yml
+
+### 🔐 OPENAI API KEY ###
+OPENAI_API_KEY
+**/openai.key
+**/api-keys/**
+
+### Logs that may contain sensitive data ###
+logs/
+*.log
+*.log.*
+
+### OS-specific ###
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+

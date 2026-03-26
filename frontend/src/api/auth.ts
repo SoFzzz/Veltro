@@ -1,9 +1,19 @@
 import apiClient from './client';
-import type { LoginRequest, LoginResponse, User } from '../types';
+import type { LoginRequest, LoginResponse, RegisterRequest, User } from '../types';
 
 export const authApi = {
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
     const response = await apiClient.post<LoginResponse>('/auth/login', credentials);
+    return response.data;
+  },
+
+  register: async (data: RegisterRequest): Promise<{ success: boolean; message: string }> => {
+    const response = await apiClient.post<{ success: boolean; message: string }>('/auth/register', data);
+    return response.data;
+  },
+
+  createWorker: async (data: RegisterRequest): Promise<{ success: boolean; message: string; username: string; role: string }> => {
+    const response = await apiClient.post<{ success: boolean; message: string; username: string; role: string }>('/auth/workers', data);
     return response.data;
   },
 
@@ -12,11 +22,13 @@ export const authApi = {
   },
 
   getCurrentUser: async (): Promise<User> => {
-    const response = await apiClient.get<User>('/auth/me');
-    return response.data;
+    // Backend has no GET /auth/me endpoint.
+    // User info is extracted from the JWT token at login time.
+    // This method is kept for interface compatibility but should not be called.
+    throw new Error('GET /auth/me is not implemented on the backend. Use login response data instead.');
   },
 
-  changePassword: async (oldPassword: string, newPassword: string): Promise<void> => {
-    await apiClient.post('/auth/change-password', { oldPassword, newPassword });
+  changePassword: async (currentPassword: string, newPassword: string): Promise<void> => {
+    await apiClient.put('/auth/change-password', { currentPassword, newPassword });
   },
 };

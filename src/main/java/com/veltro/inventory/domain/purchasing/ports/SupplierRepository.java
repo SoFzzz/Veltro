@@ -51,4 +51,14 @@ public interface SupplierRepository {
      * @return true if tax ID exists
      */
     boolean existsByTaxIdAndActiveTrueAndIdNot(String taxId, Long excludeId);
+
+    // --- Multi-tenant scoped methods ---
+
+    Optional<SupplierEntity> findByIdAndActiveTrueAndBusinessId(Long id, Long businessId);
+
+    Optional<SupplierEntity> findByTaxIdAndActiveTrueAndBusinessId(String taxId, Long businessId);
+
+    List<SupplierEntity> findAllByActiveTrueAndBusinessId(Long businessId);
+
+    boolean existsByTaxIdAndActiveTrueAndIdNotAndBusinessId(String taxId, Long excludeId, Long businessId);
 }

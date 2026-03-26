@@ -49,6 +49,7 @@ public abstract class PurchaseOrderMapper {
     @Mapping(target = "details", ignore = true)
     @Mapping(target = "version", ignore = true)
     @Mapping(target = "state", ignore = true)
+    @Mapping(target = "requestedBy", ignore = true)
     public abstract PurchaseOrderEntity toEntity(CreatePurchaseOrderRequest request);
 
     /**

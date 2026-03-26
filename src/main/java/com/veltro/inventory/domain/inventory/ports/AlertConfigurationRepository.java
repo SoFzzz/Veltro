@@ -8,4 +8,8 @@ public interface AlertConfigurationRepository {
     Optional<AlertConfigurationEntity> findByProductIdAndActiveTrue(Long productId);
 
     AlertConfigurationEntity save(AlertConfigurationEntity configuration);
+
+    // --- Multi-tenant scoped methods ---
+
+    Optional<AlertConfigurationEntity> findByProductIdAndActiveTrueAndBusinessId(Long productId, Long businessId);
 }

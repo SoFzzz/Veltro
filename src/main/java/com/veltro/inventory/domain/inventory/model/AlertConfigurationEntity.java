@@ -41,4 +41,7 @@ public class AlertConfigurationEntity extends AbstractAuditableEntity {
 
     @Column(name = "overstock_threshold", nullable = false)
     private Integer overstockThreshold;
+
+    @Column(name = "business_id", nullable = false)
+    private Long businessId;
 }

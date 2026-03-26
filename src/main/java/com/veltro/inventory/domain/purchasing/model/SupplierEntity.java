@@ -43,6 +43,12 @@ public class SupplierEntity extends AbstractAuditableEntity {
     @Column(name = "address", columnDefinition = "TEXT")
     private String address;
 
+    @Column(name = "notes", columnDefinition = "TEXT")
+    private String notes;
+
+    @Column(name = "business_id", nullable = false)
+    private Long businessId;
+
     @Override
     public String toString() {
         return "SupplierEntity{" +

@@ -64,4 +64,18 @@ public interface DashboardQueryRepository {
      * @return list of recent sales
      */
     List<DashboardResponse.RecentSale> findRecentSales(int limit);
+
+    // --- Multi-tenant scoped methods ---
+
+    BigDecimal sumTodaySales(LocalDateTime startOfDay, LocalDateTime endOfDay, Long businessId);
+
+    long countTodaySales(LocalDateTime startOfDay, LocalDateTime endOfDay, Long businessId);
+
+    BigDecimal sumSalesBetween(LocalDateTime startDate, LocalDateTime endDate, Long businessId);
+
+    List<DashboardResponse.OutOfStockProduct> findOutOfStockProducts(Long businessId);
+
+    long countActiveAlertsByType(AlertType type, Long businessId);
+
+    List<DashboardResponse.RecentSale> findRecentSales(int limit, Long businessId);
 }

@@ -62,4 +62,18 @@ public class ProductEntity extends AbstractAuditableEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private CategoryEntity category;
+
+    // Stock alert thresholds (P4 - Inventory Alerts)
+    // These define when the system should show info/warning/critical alerts
+    @Column(name = "min_stock_info")
+    private Integer minStockInfo;
+
+    @Column(name = "min_stock_warning")
+    private Integer minStockWarning;
+
+    @Column(name = "min_stock_critical")
+    private Integer minStockCritical;
+
+    @Column(name = "business_id", nullable = false)
+    private Long businessId;
 }

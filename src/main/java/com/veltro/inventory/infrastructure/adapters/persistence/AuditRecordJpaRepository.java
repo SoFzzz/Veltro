@@ -39,11 +39,11 @@ public interface AuditRecordJpaRepository extends JpaRepository<AuditRecordEntit
     @Override
     @Query("""
             SELECT a FROM AuditRecordEntity a
-            WHERE (:entityType IS NULL OR a.entityType = :entityType)
-              AND (:action IS NULL OR a.action = :action)
+            WHERE (CAST(:entityType AS string) IS NULL OR a.entityType = :entityType)
+              AND (CAST(:action AS string) IS NULL OR a.action = :action)
               AND (:username IS NULL OR a.username = :username)
-              AND (:startDate IS NULL OR a.createdAt >= :startDate)
-              AND (:endDate IS NULL OR a.createdAt <= :endDate)
+              AND (CAST(:startDate AS string) IS NULL OR a.createdAt >= :startDate)
+              AND (CAST(:endDate AS string) IS NULL OR a.createdAt <= :endDate)
             ORDER BY a.createdAt DESC
             """)
     Page<AuditRecordEntity> findByFilters(
@@ -53,4 +53,30 @@ public interface AuditRecordJpaRepository extends JpaRepository<AuditRecordEntit
             @Param("startDate") Instant startDate,
             @Param("endDate") Instant endDate,
             Pageable pageable);
+
+    // --- Multi-tenant scoped methods ---
+
+    @Override
+    @Query("""
+            SELECT a FROM AuditRecordEntity a
+            WHERE (CAST(:entityType AS string) IS NULL OR a.entityType = :entityType)
+              AND (CAST(:action AS string) IS NULL OR a.action = :action)
+              AND (:username IS NULL OR a.username = :username)
+              AND (CAST(:startDate AS string) IS NULL OR a.createdAt >= :startDate)
+              AND (CAST(:endDate AS string) IS NULL OR a.createdAt <= :endDate)
+              AND a.businessId = :businessId
+            ORDER BY a.createdAt DESC
+            """)
+    Page<AuditRecordEntity> findByFiltersAndBusinessId(
+            @Param("entityType") AuditEntityType entityType,
+            @Param("action") AuditAction action,
+            @Param("username") String username,
+            @Param("startDate") Instant startDate,
+            @Param("endDate") Instant endDate,
+            @Param("businessId") Long businessId,
+            Pageable pageable);
+
+    @Override
+    List<AuditRecordEntity> findByEntityTypeAndEntityIdAndBusinessIdOrderByCreatedAtDesc(
+            AuditEntityType entityType, Long entityId, Long businessId);
 }

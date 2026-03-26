@@ -3,6 +3,7 @@ package com.veltro.inventory.application.purchasing.dto;
 import com.veltro.inventory.application.shared.dto.AuditInfo;
 import com.veltro.inventory.domain.purchasing.model.PurchaseOrderStatus;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 /**
@@ -18,6 +19,8 @@ public record PurchaseOrderResponse(
         String supplierName,
         String total,
         String notes,
+        OffsetDateTime expectedDeliveryDate,
+        String receiptImageUrl,
         List<PurchaseOrderDetailResponse> details,
         Long version,
         AuditInfo auditInfo

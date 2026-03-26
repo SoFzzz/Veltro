@@ -91,4 +91,7 @@ public class AuditRecordEntity {
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
+
+    @Column(name = "business_id", nullable = false)
+    private Long businessId;
 }

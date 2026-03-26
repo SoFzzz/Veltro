@@ -6,5 +6,8 @@ package com.veltro.inventory.domain.inventory.model;
 public enum AlertType {
     OUT_OF_STOCK,
     LOW_STOCK,
-    OVERSTOCK
+    CRITICAL_STOCK,
+    OVERSTOCK,
+    EXPIRING,
+    REORDER
 }

@@ -11,6 +11,7 @@ import com.veltro.inventory.domain.catalog.ports.CategoryRepository;
 import com.veltro.inventory.domain.catalog.ports.ProductRepository;
 import com.veltro.inventory.exception.InvalidPriceException;
 import com.veltro.inventory.exception.NotFoundException;
+import com.veltro.inventory.infrastructure.adapters.security.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -43,7 +44,8 @@ public class ProductService {
      */
     @Transactional(readOnly = true)
     public Page<ProductResponse> findAll(Pageable pageable) {
-        return productRepository.findAllByActiveTrue(pageable)
+        Long businessId = TenantContext.getBusinessId();
+        return productRepository.findAllByActiveTrueAndBusinessId(businessId, pageable)
                 .map(productMapper::toResponse);
     }
 
@@ -58,7 +60,8 @@ public class ProductService {
      */
     @Transactional(readOnly = true)
     public ProductResponse findByBarcode(String barcode) {
-        ProductEntity entity = productRepository.findByBarcodeAndActiveTrue(barcode)
+        Long businessId = TenantContext.getBusinessId();
+        ProductEntity entity = productRepository.findByBarcodeAndActiveTrueAndBusinessId(barcode, businessId)
                 .orElseThrow(() -> new NotFoundException(
                         "Product not found with barcode: " + barcode));
         return productMapper.toResponse(entity);
@@ -70,9 +73,11 @@ public class ProductService {
 
     @Transactional
     public ProductResponse create(CreateProductRequest request) {
+        Long businessId = TenantContext.getBusinessId();
         validatePrice(request.costPrice(), request.salePrice());
 
         ProductEntity entity = productMapper.toEntity(request);
+        entity.setBusinessId(businessId);
         resolveCategory(entity, request.categoryId());
 
         ProductEntity saved = productRepository.save(entity);
@@ -83,6 +88,7 @@ public class ProductService {
 
     @Transactional
     public ProductResponse update(Long id, UpdateProductRequest request) {
+        Long businessId = TenantContext.getBusinessId();
         validatePrice(request.costPrice(), request.salePrice());
 
         ProductEntity entity = requireActive(id);
@@ -122,13 +128,15 @@ public class ProductService {
     }
 
     private ProductEntity requireActive(Long id) {
-        return productRepository.findByIdAndActiveTrue(id)
+        Long businessId = TenantContext.getBusinessId();
+        return productRepository.findByIdAndActiveTrueAndBusinessId(id, businessId)
                 .orElseThrow(() -> new NotFoundException("Product not found with id: " + id));
     }
 
     private void resolveCategory(ProductEntity entity, Long categoryId) {
+        Long businessId = TenantContext.getBusinessId();
         if (categoryId != null) {
-            CategoryEntity category = categoryRepository.findByIdAndActiveTrue(categoryId)
+            CategoryEntity category = categoryRepository.findByIdAndActiveTrueAndBusinessId(categoryId, businessId)
                     .orElseThrow(() -> new NotFoundException("Category not found with id: " + categoryId));
             entity.setCategory(category);
         } else {

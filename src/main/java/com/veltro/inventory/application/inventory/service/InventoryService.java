@@ -21,6 +21,7 @@ import com.veltro.inventory.domain.inventory.ports.InventoryMovementRepository;
 import com.veltro.inventory.domain.inventory.ports.InventoryRepository;
 import com.veltro.inventory.exception.InsufficientStockException;
 import com.veltro.inventory.exception.NotFoundException;
+import com.veltro.inventory.infrastructure.adapters.security.TenantContext;
 import java.time.OffsetDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -48,20 +49,30 @@ public class InventoryService {
     private final AuditCommandExecutor auditCommandExecutor;
 
     @Transactional(readOnly = true)
+    public Page<InventoryResponse> findAll(Pageable pageable) {
+        Long businessId = TenantContext.getBusinessId();
+        return inventoryRepository.findAllByActiveTrueAndBusinessId(businessId, pageable)
+                .map(inventoryMapper::toResponse);
+    }
+
+    @Transactional(readOnly = true)
     public InventoryResponse findByProductId(Long productId) {
-        return inventoryMapper.toResponse(requireByProductId(productId));
+        Long businessId = TenantContext.getBusinessId();
+        return inventoryMapper.toResponse(requireByProductId(productId, businessId));
     }
 
     @Transactional(readOnly = true)
     public Page<InventoryMovementResponse> getMovements(Long productId, Pageable pageable) {
-        InventoryEntity inventory = requireByProductId(productId);
-        return movementRepository.findByInventoryId(inventory.getId(), pageable)
+        Long businessId = TenantContext.getBusinessId();
+        InventoryEntity inventory = requireByProductId(productId, businessId);
+        return movementRepository.findByInventoryIdAndBusinessId(inventory.getId(), businessId, pageable)
                 .map(movementMapper::toResponse);
     }
 
     @Transactional
     public InventoryResponse recordEntry(Long productId, StockEntryRequest request) {
-        InventoryEntity inventory = requireByProductId(productId);
+        Long businessId = TenantContext.getBusinessId();
+        InventoryEntity inventory = requireByProductId(productId, businessId);
         int previousStock = inventory.getCurrentStock();
         int newStock = previousStock + request.quantity();
 
@@ -77,7 +88,8 @@ public class InventoryService {
 
     @Transactional
     public InventoryResponse recordExit(Long productId, StockExitRequest request) {
-        InventoryEntity inventory = requireByProductId(productId);
+        Long businessId = TenantContext.getBusinessId();
+        InventoryEntity inventory = requireByProductId(productId, businessId);
         int previousStock = inventory.getCurrentStock();
 
         if (previousStock - request.quantity() < 0) {
@@ -108,7 +120,8 @@ public class InventoryService {
      */
     @Transactional
     public InventoryResponse recordAdjustment(Long productId, StockAdjustmentRequest request) {
-        InventoryEntity inventory = requireByProductId(productId);
+        Long businessId = TenantContext.getBusinessId();
+        InventoryEntity inventory = requireByProductId(productId, businessId);
         int previousStock = inventory.getCurrentStock();
         int newStock = request.newStock();
         int delta = Math.abs(newStock - previousStock);
@@ -140,7 +153,8 @@ public class InventoryService {
 
     @Transactional
     public InventoryResponse updateLimits(Long productId, UpdateStockLimitsRequest request) {
-        InventoryEntity inventory = requireByProductId(productId);
+        Long businessId = TenantContext.getBusinessId();
+        InventoryEntity inventory = requireByProductId(productId, businessId);
         inventory.setMinStock(request.minStock());
         inventory.setMaxStock(request.maxStock());
         InventoryEntity saved = inventoryRepository.save(inventory);
@@ -154,6 +168,7 @@ public class InventoryService {
     public InventoryEntity createForProduct(ProductEntity product) {
         InventoryEntity inventory = new InventoryEntity();
         inventory.setProduct(product);
+        inventory.setBusinessId(product.getBusinessId());
         inventory.setCurrentStock(0);
         inventory.setMinStock(0);
         inventory.setMaxStock(0);
@@ -162,13 +177,14 @@ public class InventoryService {
         return saved;
     }
 
-    private InventoryEntity requireByProductId(Long productId) {
-        return inventoryRepository.findByProductIdAndActiveTrue(productId)
+    private InventoryEntity requireByProductId(Long productId, Long businessId) {
+        return inventoryRepository.findByProductIdAndActiveTrueAndBusinessId(productId, businessId)
                 .orElseThrow(() -> new NotFoundException("Inventory not found for product id: " + productId));
     }
 
     private void persistMovement(InventoryEntity inventory, MovementType type,
                                  int quantity, int previousStock, int newStock, String reason) {
+         Long businessId = TenantContext.getBusinessId();
          InventoryMovementEntity movement = new InventoryMovementEntity();
          movement.setInventory(inventory);
          movement.setMovementType(type);
@@ -176,6 +192,7 @@ public class InventoryService {
          movement.setPreviousStock(previousStock);
          movement.setNewStock(newStock);
          movement.setReason(reason);
+         movement.setBusinessId(businessId);
          movementRepository.save(movement);
     }
 

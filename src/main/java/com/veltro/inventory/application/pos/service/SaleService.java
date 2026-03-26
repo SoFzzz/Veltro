@@ -5,6 +5,7 @@ import com.veltro.inventory.application.audit.command.AuditContext;
 import com.veltro.inventory.application.pos.dto.AddItemRequest;
 import com.veltro.inventory.application.pos.dto.ConfirmSaleRequest;
 import com.veltro.inventory.application.pos.dto.ModifyItemRequest;
+import com.veltro.inventory.application.pos.dto.QuickSaleRequest;
 import com.veltro.inventory.application.pos.dto.SaleResponse;
 import com.veltro.inventory.application.pos.event.SaleCompletedEvent;
 import com.veltro.inventory.application.pos.event.SaleItemInfo;
@@ -21,12 +22,11 @@ import com.veltro.inventory.domain.pos.model.SaleStatus;
 import com.veltro.inventory.domain.pos.ports.SaleRepository;
 import com.veltro.inventory.exception.InvalidPaymentException;
 import com.veltro.inventory.exception.NotFoundException;
+import com.veltro.inventory.infrastructure.adapters.security.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -61,7 +61,8 @@ public class SaleService {
 
     @Transactional(readOnly = true)
     public SaleResponse findById(Long saleId) {
-        SaleEntity sale = saleRepository.findByIdAndActiveTrue(saleId)
+        Long businessId = TenantContext.getBusinessId();
+        SaleEntity sale = saleRepository.findByIdAndActiveTrueAndBusinessId(saleId, businessId)
                 .orElseThrow(() -> new NotFoundException("Sale not found with id: " + saleId));
         return saleMapper.toResponse(sale);
     }
@@ -78,6 +79,7 @@ public class SaleService {
     @Transactional
     public SaleResponse startSale() {
         Long userId = getCurrentUserId();
+        Long businessId = TenantContext.getBusinessId();
         Long sequenceValue = saleRepository.getNextSaleSequenceValue();
         String saleNumber = generateSaleNumber(sequenceValue);
 
@@ -85,6 +87,7 @@ public class SaleService {
         sale.setSaleNumber(saleNumber);
         sale.setStatus(SaleStatus.IN_PROGRESS);
         sale.setCashierId(userId);
+        sale.setBusinessId(businessId);
         sale.setSubtotal(BigDecimal.ZERO);
         sale.setTotal(BigDecimal.ZERO);
 
@@ -102,10 +105,11 @@ public class SaleService {
      */
     @Transactional
     public SaleResponse addItem(Long saleId, AddItemRequest request) {
-        SaleEntity sale = saleRepository.findByIdAndActiveTrue(saleId)
+        Long businessId = TenantContext.getBusinessId();
+        SaleEntity sale = saleRepository.findByIdAndActiveTrueAndBusinessId(saleId, businessId)
                 .orElseThrow(() -> new NotFoundException("Sale not found with id: " + saleId));
 
-        ProductEntity product = productRepository.findByIdAndActiveTrue(request.productId())
+        ProductEntity product = productRepository.findByIdAndActiveTrueAndBusinessId(request.productId(), businessId)
                 .orElseThrow(() -> new NotFoundException("Product not found with id: " + request.productId()));
 
         // Create detail with product snapshot
@@ -135,7 +139,8 @@ public class SaleService {
      */
     @Transactional
     public SaleResponse modifyItem(Long saleId, Long detailId, ModifyItemRequest request) {
-        SaleEntity sale = saleRepository.findByIdAndActiveTrue(saleId)
+        Long businessId = TenantContext.getBusinessId();
+        SaleEntity sale = saleRepository.findByIdAndActiveTrueAndBusinessId(saleId, businessId)
                 .orElseThrow(() -> new NotFoundException("Sale not found with id: " + saleId));
 
         // State pattern validates and modifies
@@ -156,7 +161,8 @@ public class SaleService {
      */
     @Transactional
     public SaleResponse removeItem(Long saleId, Long detailId) {
-        SaleEntity sale = saleRepository.findByIdAndActiveTrue(saleId)
+        Long businessId = TenantContext.getBusinessId();
+        SaleEntity sale = saleRepository.findByIdAndActiveTrueAndBusinessId(saleId, businessId)
                 .orElseThrow(() -> new NotFoundException("Sale not found with id: " + saleId));
 
         // State pattern validates and soft-deletes
@@ -182,7 +188,8 @@ public class SaleService {
      */
     @Transactional
     public SaleResponse confirm(Long saleId, ConfirmSaleRequest request) {
-        SaleEntity sale = saleRepository.findByIdAndActiveTrue(saleId)
+        Long businessId = TenantContext.getBusinessId();
+        SaleEntity sale = saleRepository.findByIdAndActiveTrueAndBusinessId(saleId, businessId)
                 .orElseThrow(() -> new NotFoundException("Sale not found with id: " + saleId));
 
         // Capture state BEFORE confirmation for audit (B3-03)
@@ -236,7 +243,8 @@ public class SaleService {
      */
     @Transactional
     public SaleResponse voidSale(Long saleId) {
-        SaleEntity sale = saleRepository.findByIdAndActiveTrue(saleId)
+        Long businessId = TenantContext.getBusinessId();
+        SaleEntity sale = saleRepository.findByIdAndActiveTrueAndBusinessId(saleId, businessId)
                 .orElseThrow(() -> new NotFoundException("Sale not found with id: " + saleId));
 
         // Capture state BEFORE voiding for audit (B3-03)
@@ -265,6 +273,87 @@ public class SaleService {
         return saleMapper.toResponse(saved);
     }
 
+    /**
+     * Quick sale: starts a sale, adds all items, and confirms in a single transaction.
+     *
+     * <p>Used by the frontend POS page which submits the entire sale in one shot.
+     * Internally delegates to {@link #startSale()}, {@link #addItem}, and {@link #confirm}.
+     *
+     * @param request the quick sale request (items, paymentMethod, amountReceived, notes)
+     * @return the confirmed sale
+     */
+    @Transactional
+    public SaleResponse quickSale(QuickSaleRequest request) {
+        // 1. Start the sale
+        Long userId = getCurrentUserId();
+        Long businessId = TenantContext.getBusinessId();
+        Long sequenceValue = saleRepository.getNextSaleSequenceValue();
+        String saleNumber = generateSaleNumber(sequenceValue);
+
+        SaleEntity sale = new SaleEntity();
+        sale.setSaleNumber(saleNumber);
+        sale.setStatus(SaleStatus.IN_PROGRESS);
+        sale.setCashierId(userId);
+        sale.setBusinessId(businessId);
+        sale.setSubtotal(BigDecimal.ZERO);
+        sale.setTotal(BigDecimal.ZERO);
+
+        SaleEntity saved = saleRepository.save(sale);
+        log.info("Quick sale started: {} by user {}", saleNumber, userId);
+
+        // 2. Add all items
+        for (QuickSaleRequest.Item item : request.items()) {
+            ProductEntity product = productRepository.findByIdAndActiveTrueAndBusinessId(item.productId(), businessId)
+                    .orElseThrow(() -> new NotFoundException("Product not found with id: " + item.productId()));
+
+            SaleDetailEntity detail = new SaleDetailEntity();
+            detail.setProductId(product.getId());
+            detail.setProductName(product.getName());
+            detail.setQuantity(item.quantity());
+            detail.setUnitPrice(product.getSalePrice());
+            detail.calculateSubtotal();
+
+            saved.addItem(detail);
+        }
+        saved.recalculateTotals();
+        saved = saleRepository.save(saved);
+
+        // 3. Confirm the sale
+        final Map<String, Object> beforeSnapshot = buildSaleSnapshot(saved);
+
+        if (request.paymentMethod() == PaymentMethod.CASH) {
+            BigDecimal amountReceived = request.amountReceived();
+            if (amountReceived == null) {
+                // Default: exact amount
+                amountReceived = saved.getTotal();
+            }
+            if (amountReceived.compareTo(saved.getTotal()) < 0) {
+                throw new InvalidPaymentException(
+                        "Amount received must be greater than or equal to total for cash payments");
+            }
+            saved.setAmountReceived(amountReceived);
+            saved.setChange(amountReceived.subtract(saved.getTotal()));
+        }
+
+        saved.confirm(request.paymentMethod());
+        final SaleEntity confirmedSale = saleRepository.save(saved);
+
+        applicationEventPublisher.publishEvent(buildSaleCompletedEvent(confirmedSale));
+
+        auditCommandExecutor.execute(
+                AuditEntityType.SALE,
+                confirmedSale.getId(),
+                AuditAction.CONFIRM,
+                () -> beforeSnapshot,
+                () -> confirmedSale,
+                (result) -> buildSaleSnapshot(confirmedSale),
+                AuditContext.empty()
+        );
+
+        log.info("Quick sale {} confirmed with {} payment", confirmedSale.getSaleNumber(), request.paymentMethod());
+        return saleMapper.toResponse(confirmedSale);
+    }
+
     // -------------------------------------------------------------------------
     // Helper Methods
     // -------------------------------------------------------------------------
@@ -275,13 +364,7 @@ public class SaleService {
     }
 
     private Long getCurrentUserId() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof UserDetails userDetails) {
-            // Extract user ID from UserDetails (assuming username is numeric user ID for now)
-            // In production, CustomUserDetails should expose userId directly
-            return 1L; // Placeholder — should be extracted from custom UserDetails
-        }
-        return 1L; // Fallback for system operations
+        return TenantContext.getUserId();
     }
 
     private SaleCompletedEvent buildSaleCompletedEvent(SaleEntity sale) {
@@ -348,7 +431,7 @@ public class SaleService {
         snapshot.put("paymentMethod", sale.getPaymentMethod() != null ? sale.getPaymentMethod().name() : null);
         snapshot.put("amountReceived", sale.getAmountReceived());
         snapshot.put("change", sale.getChange());
-        snapshot.put("completedAt", sale.getCompletedAt());
+        snapshot.put("completedAt", sale.getCompletedAt() != null ? sale.getCompletedAt().toString() : null);
 
         // Capture active details
         List<Map<String, Object>> details = sale.getDetails().stream()

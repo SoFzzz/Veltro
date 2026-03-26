@@ -54,4 +54,7 @@ public class CategoryEntity extends AbstractAuditableEntity {
     // Composite Pattern — children (empty list for leaf nodes)
     @OneToMany(mappedBy = "parentCategory", fetch = FetchType.LAZY)
     private List<CategoryEntity> subCategories = new ArrayList<>();
+
+    @Column(name = "business_id", nullable = false)
+    private Long businessId;
 }
