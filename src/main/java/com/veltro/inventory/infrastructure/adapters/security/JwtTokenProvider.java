@@ -1,6 +1,6 @@
 package com.veltro.inventory.infrastructure.adapters.security;
 
-import com.veltro.inventory.infrastructure.adapters.config.JwtProperties;
+import com.veltro.inventory.config.JwtProperties;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;

@@ -1,4 +1,4 @@
-package com.veltro.inventory.infrastructure.adapters.config;
+package com.veltro.inventory.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
