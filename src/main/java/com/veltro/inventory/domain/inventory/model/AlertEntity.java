@@ -51,4 +51,7 @@ public class AlertEntity extends AbstractAuditableEntity {
 
     @Column(name = "resolved", nullable = false)
     private boolean resolved;
+
+    @Column(name = "business_id", nullable = false)
+    private Long businessId;
 }

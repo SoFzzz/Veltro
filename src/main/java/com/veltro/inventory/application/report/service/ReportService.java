@@ -4,6 +4,7 @@ import com.veltro.inventory.application.report.dto.ProfitabilityReport;
 import com.veltro.inventory.application.report.dto.ReportType;
 import com.veltro.inventory.application.report.exporter.ReportExporter;
 import com.veltro.inventory.domain.pos.model.SaleStatus;
+import com.veltro.inventory.infrastructure.adapters.security.TenantContext;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.extern.slf4j.Slf4j;
@@ -57,52 +58,65 @@ public class ReportService {
     public ProfitabilityReport generateProfitabilityReport(LocalDate startDate, LocalDate endDate) {
         log.info("Generating profitability report for {} to {}", startDate, endDate);
 
+        Long businessId = TenantContext.getBusinessId();
+
         LocalDateTime start = startDate.atStartOfDay();
         LocalDateTime end = endDate.plusDays(1).atStartOfDay();
 
         // Get total sales
         BigDecimal totalSales = entityManager.createQuery(
                         "SELECT COALESCE(SUM(s.total), 0) FROM SaleEntity s " +
-                                "WHERE s.status = :status AND s.completedAt BETWEEN :start AND :end",
+                                "WHERE s.status = :status AND s.completedAt BETWEEN :start AND :end " +
+                                "AND s.businessId = :businessId",
                         BigDecimal.class)
                 .setParameter("status", SaleStatus.COMPLETED)
                 .setParameter("start", start)
                 .setParameter("end", end)
+                .setParameter("businessId", businessId)
                 .getSingleResult();
 
         // Count sales and items
         long salesCount = entityManager.createQuery(
                         "SELECT COUNT(s) FROM SaleEntity s " +
-                                "WHERE s.status = :status AND s.completedAt BETWEEN :start AND :end",
+                                "WHERE s.status = :status AND s.completedAt BETWEEN :start AND :end " +
+                                "AND s.businessId = :businessId",
                         Long.class)
                 .setParameter("status", SaleStatus.COMPLETED)
                 .setParameter("start", start)
                 .setParameter("end", end)
+                .setParameter("businessId", businessId)
                 .getSingleResult();
 
         Long itemsSold = entityManager.createQuery(
                         "SELECT COALESCE(SUM(d.quantity), 0) FROM SaleDetailEntity d " +
                                 "JOIN d.sale s " +
-                                "WHERE s.status = :status AND s.completedAt BETWEEN :start AND :end",
+                                "WHERE s.status = :status AND s.completedAt BETWEEN :start AND :end " +
+                                "AND s.businessId = :businessId",
                         Long.class)
                 .setParameter("status", SaleStatus.COMPLETED)
                 .setParameter("start", start)
                 .setParameter("end", end)
+                .setParameter("businessId", businessId)
                 .getSingleResult();
 
         // Get product-level breakdown
+        // Note: SaleDetailEntity has no @ManyToOne to ProductEntity — it stores productId
+        // as a plain Long column. We use a cross-entity join via WHERE clause instead.
         @SuppressWarnings("unchecked")
         List<Object[]> productResults = entityManager.createQuery(
                         "SELECT p.id, p.name, p.sku, SUM(d.quantity), SUM(d.subtotal), p.costPrice " +
                                 "FROM SaleDetailEntity d " +
-                                "JOIN d.sale s " +
-                                "JOIN d.product p " +
-                                "WHERE s.status = :status AND s.completedAt BETWEEN :start AND :end " +
+                                "JOIN d.sale s, " +
+                                "ProductEntity p " +
+                                "WHERE d.productId = p.id " +
+                                "AND s.status = :status AND s.completedAt BETWEEN :start AND :end " +
+                                "AND s.businessId = :businessId " +
                                 "GROUP BY p.id, p.name, p.sku, p.costPrice " +
                                 "ORDER BY SUM(d.subtotal) DESC")
                 .setParameter("status", SaleStatus.COMPLETED)
                 .setParameter("start", start)
                 .setParameter("end", end)
+                .setParameter("businessId", businessId)
                 .getResultList();
 
         BigDecimal totalCost = BigDecimal.ZERO;

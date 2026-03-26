@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * JWT authentication filter (B1-02).
@@ -61,7 +63,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // Only authenticate if no authentication is already set in the context
         if (SecurityContextHolder.getContext().getAuthentication() == null) {
             String username = jwtTokenProvider.extractUsername(token);
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            String role = jwtTokenProvider.extractRole(token);
+            Long businessId = jwtTokenProvider.extractBusinessId(token);
+            Long userId = jwtTokenProvider.extractUserId(token);
+
+            // Build VeltroUserDetails from JWT claims — avoids DB hit per request
+            UserDetails userDetails = new VeltroUserDetails(
+                    username,
+                    "", // password not needed for already-authenticated token
+                    List.of(new SimpleGrantedAuthority("ROLE_" + role)),
+                    userId,
+                    businessId);
 
             UsernamePasswordAuthenticationToken authToken =
                     new UsernamePasswordAuthenticationToken(
@@ -69,7 +81,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
             SecurityContextHolder.getContext().setAuthentication(authToken);
-            log.debug("Authenticated user '{}' on {}", username, request.getRequestURI());
+            log.debug("Authenticated user '{}' (bid={}) on {}", username, businessId, request.getRequestURI());
         }
 
         filterChain.doFilter(request, response);

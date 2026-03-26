@@ -7,6 +7,7 @@ import com.veltro.inventory.application.catalog.mapper.CategoryMapper;
 import com.veltro.inventory.domain.catalog.model.CategoryEntity;
 import com.veltro.inventory.domain.catalog.ports.CategoryRepository;
 import com.veltro.inventory.exception.NotFoundException;
+import com.veltro.inventory.infrastructure.adapters.security.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -38,7 +39,8 @@ public class CategoryService {
      */
     @Transactional(readOnly = true)
     public List<CategoryResponse> findRoots() {
-        return categoryRepository.findAllByParentCategoryIsNullAndActiveTrue()
+        Long businessId = TenantContext.getBusinessId();
+        return categoryRepository.findAllByParentCategoryIsNullAndActiveTrueAndBusinessId(businessId)
                 .stream()
                 .map(categoryMapper::toResponse)
                 .toList();
@@ -46,7 +48,8 @@ public class CategoryService {
 
     @Transactional(readOnly = true)
     public CategoryResponse findById(Long id) {
-        CategoryEntity entity = requireActive(id);
+        Long businessId = TenantContext.getBusinessId();
+        CategoryEntity entity = requireActive(id, businessId);
         return categoryMapper.toResponse(entity);
     }
 
@@ -56,10 +59,12 @@ public class CategoryService {
 
     @Transactional
     public CategoryResponse create(CreateCategoryRequest request) {
+        Long businessId = TenantContext.getBusinessId();
         CategoryEntity entity = categoryMapper.toEntity(request);
+        entity.setBusinessId(businessId);
 
         if (request.parentCategoryId() != null) {
-            CategoryEntity parent = requireActive(request.parentCategoryId());
+            CategoryEntity parent = requireActive(request.parentCategoryId(), businessId);
             entity.setParentCategory(parent);
         }
 
@@ -70,11 +75,12 @@ public class CategoryService {
 
     @Transactional
     public CategoryResponse update(Long id, UpdateCategoryRequest request) {
-        CategoryEntity entity = requireActive(id);
+        Long businessId = TenantContext.getBusinessId();
+        CategoryEntity entity = requireActive(id, businessId);
         categoryMapper.updateEntity(request, entity);
 
         if (request.parentCategoryId() != null) {
-            CategoryEntity parent = requireActive(request.parentCategoryId());
+            CategoryEntity parent = requireActive(request.parentCategoryId(), businessId);
             entity.setParentCategory(parent);
         } else {
             entity.setParentCategory(null);
@@ -91,7 +97,8 @@ public class CategoryService {
      */
     @Transactional
     public void deactivate(Long id) {
-        CategoryEntity entity = requireActive(id);
+        Long businessId = TenantContext.getBusinessId();
+        CategoryEntity entity = requireActive(id, businessId);
         entity.setActive(false);
         categoryRepository.save(entity);
         log.info("Category deactivated: id={}", id);
@@ -101,8 +108,8 @@ public class CategoryService {
     // Internal helpers
     // -------------------------------------------------------------------------
 
-    private CategoryEntity requireActive(Long id) {
-        return categoryRepository.findByIdAndActiveTrue(id)
+    private CategoryEntity requireActive(Long id, Long businessId) {
+        return categoryRepository.findByIdAndActiveTrueAndBusinessId(id, businessId)
                 .orElseThrow(() -> new NotFoundException("Category not found with id: " + id));
     }
 }

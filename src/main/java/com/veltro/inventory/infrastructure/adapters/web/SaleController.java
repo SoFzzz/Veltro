@@ -3,6 +3,7 @@ package com.veltro.inventory.infrastructure.adapters.web;
 import com.veltro.inventory.application.pos.dto.AddItemRequest;
 import com.veltro.inventory.application.pos.dto.ConfirmSaleRequest;
 import com.veltro.inventory.application.pos.dto.ModifyItemRequest;
+import com.veltro.inventory.application.pos.dto.QuickSaleRequest;
 import com.veltro.inventory.application.pos.dto.SaleResponse;
 import com.veltro.inventory.application.pos.service.SaleService;
 import jakarta.validation.Valid;
@@ -44,6 +45,26 @@ public class SaleController {
     public ResponseEntity<SaleResponse> startSale() {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(saleService.startSale());
+    }
+
+    // -------------------------------------------------------------------------
+    // POST /api/v1/sales/quick — Quick sale (start+items+confirm in one shot)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Creates and confirms a sale in a single request.
+     *
+     * <p>Used by the frontend POS page which sends all items + payment in one shot.
+     *
+     * @param request items, paymentMethod, optional amountReceived, optional notes
+     * @return 201 CREATED with the confirmed sale
+     */
+    @PostMapping("/quick")
+    @PreAuthorize("hasAnyRole('CASHIER', 'ADMIN')")
+    public ResponseEntity<SaleResponse> quickSale(
+            @Valid @RequestBody QuickSaleRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(saleService.quickSale(request));
     }
 
     // -------------------------------------------------------------------------

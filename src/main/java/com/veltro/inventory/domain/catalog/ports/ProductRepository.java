@@ -23,4 +23,12 @@ public interface ProductRepository {
     Page<ProductEntity> findAllByActiveTrue(Pageable pageable);
 
     ProductEntity save(ProductEntity product);
+
+    // --- Multi-tenant scoped methods ---
+
+    Optional<ProductEntity> findByIdAndActiveTrueAndBusinessId(Long id, Long businessId);
+
+    Optional<ProductEntity> findByBarcodeAndActiveTrueAndBusinessId(String barcode, Long businessId);
+
+    Page<ProductEntity> findAllByActiveTrueAndBusinessId(Long businessId, Pageable pageable);
 }

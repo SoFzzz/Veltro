@@ -25,6 +25,7 @@ export interface User {
   username: string;
   email: string;
   role: UserRole;
+  businessId: number;
 }
 
 export interface LoginRequest {
@@ -32,15 +33,32 @@ export interface LoginRequest {
   password: string;
 }
 
+export interface RegisterRequest {
+  username: string;
+  email: string;
+  password: string;
+  role?: string;
+  businessName?: string;
+}
+
 export interface LoginResponse {
   accessToken: string;
   refreshToken: string;
-  user: User;
+  tokenType: string;
+  expiresIn: number;
+  username: string;
+  role: UserRole;
+  businessId: number;
 }
 
 export interface RefreshResponse {
   accessToken: string;
   refreshToken: string;
+  tokenType: string;
+  expiresIn: number;
+  username: string;
+  role: UserRole;
+  businessId: number;
 }
 
 // Product types
@@ -54,6 +72,9 @@ export interface Product {
   salePrice: string;
   categoryId: number | null;
   categoryName: string | null;
+  minStockInfo: number | null;
+  minStockWarning: number | null;
+  minStockCritical: number | null;
   active: boolean;
   createdAt: string;
   updatedAt: string | null;
@@ -67,6 +88,9 @@ export interface ProductRequest {
   costPrice: string;
   salePrice: string;
   categoryId?: number;
+  minStockInfo?: number;
+  minStockWarning?: number;
+  minStockCritical?: number;
 }
 
 // Category types

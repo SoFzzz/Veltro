@@ -33,4 +33,8 @@ public interface SaleRepository {
      * @return the next sequence value
      */
     Long getNextSaleSequenceValue();
+
+    // --- Multi-tenant scoped methods ---
+
+    Optional<SaleEntity> findByIdAndActiveTrueAndBusinessId(Long id, Long businessId);
 }

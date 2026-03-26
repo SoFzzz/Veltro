@@ -20,6 +20,10 @@ public record ProductResponse(
         String salePrice,
         Long categoryId,
         String categoryName,
-        boolean active
+        boolean active,
+        // Stock alert thresholds (P4 - Inventory Alerts)
+        Integer minStockInfo,
+        Integer minStockWarning,
+        Integer minStockCritical
 ) {
 }

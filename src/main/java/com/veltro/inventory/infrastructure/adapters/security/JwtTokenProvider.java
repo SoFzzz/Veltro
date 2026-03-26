@@ -31,6 +31,8 @@ public class JwtTokenProvider {
 
     private static final String CLAIM_ROLE = "role";
     private static final String CLAIM_TYPE = "type";
+    private static final String CLAIM_BUSINESS_ID = "bid";
+    private static final String CLAIM_USER_ID = "uid";
     private static final String TYPE_ACCESS = "ACCESS";
     private static final String TYPE_REFRESH = "REFRESH";
 
@@ -51,7 +53,8 @@ public class JwtTokenProvider {
 
     /**
      * Creates an ACCESS token for the authenticated user.
-     * Contains claims: {@code sub} (username), {@code role}, {@code type=ACCESS}.
+     * Contains claims: {@code sub} (username), {@code role}, {@code bid} (businessId),
+     * {@code uid} (userId), {@code type=ACCESS}.
      */
     public String generateAccessToken(UserDetails userDetails) {
         String role = userDetails.getAuthorities().stream()
@@ -59,9 +62,20 @@ public class JwtTokenProvider {
                 .map(a -> a.getAuthority().replace("ROLE_", ""))
                 .orElse("");
 
-        return buildToken(userDetails.getUsername(),
-                Map.of(CLAIM_ROLE, role, CLAIM_TYPE, TYPE_ACCESS),
-                accessExpSeconds);
+        Long businessId = null;
+        Long userId = null;
+        if (userDetails instanceof VeltroUserDetails v) {
+            businessId = v.getBusinessId();
+            userId = v.getUserId();
+        }
+
+        var claims = new java.util.HashMap<String, Object>();
+        claims.put(CLAIM_ROLE, role);
+        claims.put(CLAIM_TYPE, TYPE_ACCESS);
+        if (businessId != null) claims.put(CLAIM_BUSINESS_ID, businessId);
+        if (userId != null) claims.put(CLAIM_USER_ID, userId);
+
+        return buildToken(userDetails.getUsername(), claims, accessExpSeconds);
     }
 
     /**
@@ -128,6 +142,24 @@ public class JwtTokenProvider {
      */
     public String extractRole(String token) {
         return parseClaims(token).get(CLAIM_ROLE, String.class);
+    }
+
+    /**
+     * Extracts the businessId claim from an ACCESS token.
+     * Returns null if the claim is not present.
+     */
+    public Long extractBusinessId(String token) {
+        Object val = parseClaims(token).get(CLAIM_BUSINESS_ID);
+        return val != null ? ((Number) val).longValue() : null;
+    }
+
+    /**
+     * Extracts the userId claim from an ACCESS token.
+     * Returns null if the claim is not present.
+     */
+    public Long extractUserId(String token) {
+        Object val = parseClaims(token).get(CLAIM_USER_ID);
+        return val != null ? ((Number) val).longValue() : null;
     }
 
     private Claims parseClaims(String token) {

@@ -34,7 +34,7 @@ public class UserEntity extends AbstractAuditableEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "username", nullable = false, unique = true, length = 50)
+    @Column(name = "username", nullable = false, length = 50)
     private String username;
 
     @Column(name = "email", nullable = false, unique = true, length = 150)
@@ -46,4 +46,8 @@ public class UserEntity extends AbstractAuditableEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false, length = 20)
     private Role role;
+
+    /** Multi-tenant: the business this user belongs to. */
+    @Column(name = "business_id", nullable = false)
+    private Long businessId;
 }

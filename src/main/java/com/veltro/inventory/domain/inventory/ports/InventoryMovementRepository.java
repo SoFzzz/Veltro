@@ -16,4 +16,8 @@ public interface InventoryMovementRepository {
 
     /** Returns a paginated history of movements for a given inventory record (AC-07). */
     Page<InventoryMovementEntity> findByInventoryId(Long inventoryId, Pageable pageable);
+
+    // --- Multi-tenant scoped methods ---
+
+    Page<InventoryMovementEntity> findByInventoryIdAndBusinessId(Long inventoryId, Long businessId, Pageable pageable);
 }

@@ -13,6 +13,7 @@ interface AuthState {
   setTokens: (accessToken: string, refreshToken: string) => void;
   logout: () => void;
   hasRole: (role: UserRole | UserRole[]) => boolean;
+  getBusinessId: () => number | null;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -52,6 +53,11 @@ export const useAuthStore = create<AuthState>()(
           return role.includes(user.role);
         }
         return user.role === role;
+      },
+
+      getBusinessId: () => {
+        const user = get().user;
+        return user?.businessId ?? null;
       },
     }),
     {

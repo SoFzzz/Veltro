@@ -23,4 +23,12 @@ public interface InventoryRepository {
     Page<InventoryEntity> findAllByActiveTrue(Pageable pageable);
 
     InventoryEntity save(InventoryEntity inventory);
+
+    // --- Multi-tenant scoped methods ---
+
+    Optional<InventoryEntity> findByIdAndActiveTrueAndBusinessId(Long id, Long businessId);
+
+    Optional<InventoryEntity> findByProductIdAndActiveTrueAndBusinessId(Long productId, Long businessId);
+
+    Page<InventoryEntity> findAllByActiveTrueAndBusinessId(Long businessId, Pageable pageable);
 }

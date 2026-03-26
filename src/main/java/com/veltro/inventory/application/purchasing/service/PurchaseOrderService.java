@@ -12,6 +12,8 @@ import com.veltro.inventory.domain.audit.model.AuditAction;
 import com.veltro.inventory.domain.audit.model.AuditEntityType;
 import com.veltro.inventory.domain.catalog.model.ProductEntity;
 import com.veltro.inventory.domain.catalog.ports.ProductRepository;
+import com.veltro.inventory.domain.iam.model.UserEntity;
+import com.veltro.inventory.domain.iam.ports.UserRepository;
 import com.veltro.inventory.domain.purchasing.model.PurchaseOrderDetailEntity;
 import com.veltro.inventory.domain.purchasing.model.PurchaseOrderEntity;
 import com.veltro.inventory.domain.purchasing.model.PurchaseOrderStatus;
@@ -19,9 +21,11 @@ import com.veltro.inventory.domain.purchasing.model.SupplierEntity;
 import com.veltro.inventory.domain.purchasing.ports.PurchaseOrderRepository;
 import com.veltro.inventory.domain.purchasing.ports.SupplierRepository;
 import com.veltro.inventory.exception.NotFoundException;
+import com.veltro.inventory.infrastructure.adapters.security.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,6 +50,7 @@ public class PurchaseOrderService {
     private final PurchaseOrderRepository orderRepository;
     private final SupplierRepository supplierRepository;
     private final ProductRepository productRepository;
+    private final UserRepository userRepository;
     private final PurchaseOrderMapper orderMapper;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final AuditCommandExecutor auditCommandExecutor;
@@ -61,7 +66,8 @@ public class PurchaseOrderService {
      */
     @Transactional(readOnly = true)
     public List<PurchaseOrderResponse> findAll() {
-        return orderRepository.findAllByActiveTrue().stream()
+        Long businessId = TenantContext.getBusinessId();
+        return orderRepository.findAllByActiveTrueAndBusinessId(businessId).stream()
                 .map(orderMapper::toResponse)
                 .collect(Collectors.toList());
     }
@@ -74,7 +80,8 @@ public class PurchaseOrderService {
      */
     @Transactional(readOnly = true)
     public List<PurchaseOrderResponse> findBySupplier(Long supplierId) {
-        return orderRepository.findBySupplierIdAndActiveTrue(supplierId).stream()
+        Long businessId = TenantContext.getBusinessId();
+        return orderRepository.findBySupplierIdAndActiveTrueAndBusinessId(supplierId, businessId).stream()
                 .map(orderMapper::toResponse)
                 .collect(Collectors.toList());
     }
@@ -88,7 +95,8 @@ public class PurchaseOrderService {
      */
     @Transactional(readOnly = true)
     public PurchaseOrderResponse findById(Long orderId) {
-        PurchaseOrderEntity order = orderRepository.findByIdAndActiveTrue(orderId)
+        Long businessId = TenantContext.getBusinessId();
+        PurchaseOrderEntity order = orderRepository.findByIdAndActiveTrueAndBusinessId(orderId, businessId)
                 .orElseThrow(() -> new NotFoundException("Purchase order not found with id: " + orderId));
         
         return orderMapper.toResponse(order);
@@ -103,7 +111,8 @@ public class PurchaseOrderService {
      */
     @Transactional(readOnly = true)
     public PurchaseOrderResponse findByOrderNumber(String orderNumber) {
-        PurchaseOrderEntity order = orderRepository.findByOrderNumberAndActiveTrue(orderNumber)
+        Long businessId = TenantContext.getBusinessId();
+        PurchaseOrderEntity order = orderRepository.findByOrderNumberAndActiveTrueAndBusinessId(orderNumber, businessId)
                 .orElseThrow(() -> new NotFoundException("Purchase order not found with order number: " + orderNumber));
         
         return orderMapper.toResponse(order);
@@ -122,17 +131,22 @@ public class PurchaseOrderService {
      */
     @Transactional
     public PurchaseOrderResponse create(CreatePurchaseOrderRequest request) {
-        SupplierEntity supplier = supplierRepository.findByIdAndActiveTrue(request.supplierId())
+        Long businessId = TenantContext.getBusinessId();
+        SupplierEntity supplier = supplierRepository.findByIdAndActiveTrueAndBusinessId(request.supplierId(), businessId)
                 .orElseThrow(() -> new NotFoundException("Supplier not found with id: " + request.supplierId()));
+
+        UserEntity currentUser = getCurrentUser();
 
         Long sequenceValue = orderRepository.getNextOrderSequenceValue();
         String orderNumber = generateOrderNumber(sequenceValue);
 
         PurchaseOrderEntity order = orderMapper.toEntity(request);
+        order.setBusinessId(businessId);
         order.setOrderNumber(orderNumber);
         order.setStatus(PurchaseOrderStatus.PENDING);
         order.setSupplier(supplier);
         order.setTotal(BigDecimal.ZERO);
+        order.setRequestedBy(currentUser);
 
         PurchaseOrderEntity saved = orderRepository.save(order);
         log.info("Created purchase order: {} for supplier: {}", orderNumber, supplier.getCompanyName());
@@ -150,10 +164,11 @@ public class PurchaseOrderService {
      */
     @Transactional
     public PurchaseOrderResponse addItem(Long orderId, AddOrderItemRequest request) {
-        PurchaseOrderEntity order = orderRepository.findByIdAndActiveTrue(orderId)
+        Long businessId = TenantContext.getBusinessId();
+        PurchaseOrderEntity order = orderRepository.findByIdAndActiveTrueAndBusinessId(orderId, businessId)
                 .orElseThrow(() -> new NotFoundException("Purchase order not found with id: " + orderId));
 
-        ProductEntity product = productRepository.findByIdAndActiveTrue(request.productId())
+        ProductEntity product = productRepository.findByIdAndActiveTrueAndBusinessId(request.productId(), businessId)
                 .orElseThrow(() -> new NotFoundException("Product not found with id: " + request.productId()));
 
         PurchaseOrderDetailEntity detail = new PurchaseOrderDetailEntity();
@@ -180,7 +195,8 @@ public class PurchaseOrderService {
      */
     @Transactional
     public PurchaseOrderResponse removeItem(Long orderId, Long detailId) {
-        PurchaseOrderEntity order = orderRepository.findByIdAndActiveTrue(orderId)
+        Long businessId = TenantContext.getBusinessId();
+        PurchaseOrderEntity order = orderRepository.findByIdAndActiveTrueAndBusinessId(orderId, businessId)
                 .orElseThrow(() -> new NotFoundException("Purchase order not found with id: " + orderId));
 
         // State Pattern delegation
@@ -203,7 +219,8 @@ public class PurchaseOrderService {
      */
     @Transactional
     public PurchaseOrderResponse voidOrder(Long orderId) {
-        PurchaseOrderEntity order = orderRepository.findByIdAndActiveTrue(orderId)
+        Long businessId = TenantContext.getBusinessId();
+        PurchaseOrderEntity order = orderRepository.findByIdAndActiveTrueAndBusinessId(orderId, businessId)
                 .orElseThrow(() -> new NotFoundException("Purchase order not found with id: " + orderId));
 
         // Capture state BEFORE voiding for audit (B3-03)
@@ -241,7 +258,8 @@ public class PurchaseOrderService {
      */
     @Transactional
     public PurchaseOrderResponse markAsReceived(Long orderId) {
-        PurchaseOrderEntity order = orderRepository.findByIdAndActiveTrue(orderId)
+        Long businessId = TenantContext.getBusinessId();
+        PurchaseOrderEntity order = orderRepository.findByIdAndActiveTrueAndBusinessId(orderId, businessId)
                 .orElseThrow(() -> new NotFoundException("Purchase order not found with id: " + orderId));
 
         // Capture state BEFORE receiving for audit (B3-03)
@@ -287,11 +305,16 @@ public class PurchaseOrderService {
      */
     @Transactional
     public PurchaseOrderResponse cloneOrder(Long sourceOrderId) {
-        PurchaseOrderEntity sourceOrder = orderRepository.findByIdAndActiveTrue(sourceOrderId)
+        Long businessId = TenantContext.getBusinessId();
+        PurchaseOrderEntity sourceOrder = orderRepository.findByIdAndActiveTrueAndBusinessId(sourceOrderId, businessId)
                 .orElseThrow(() -> new NotFoundException("Source purchase order not found with id: " + sourceOrderId));
+
+        UserEntity currentUser = getCurrentUser();
 
         // Prototype Pattern
         PurchaseOrderEntity clonedOrder = sourceOrder.cloneForNewOrder();
+        clonedOrder.setBusinessId(businessId);
+        clonedOrder.setRequestedBy(currentUser);
         
         // Generate new order number
         Long sequenceValue = orderRepository.getNextOrderSequenceValue();
@@ -307,6 +330,18 @@ public class PurchaseOrderService {
     // -------------------------------------------------------------------------
     // Private Helper Methods
     // -------------------------------------------------------------------------
+
+    /**
+     * Retrieves the current authenticated user from TenantContext.
+     *
+     * @return the UserEntity of the currently authenticated user
+     * @throws NotFoundException if the user cannot be found in the database
+     */
+    private UserEntity getCurrentUser() {
+        String username = TenantContext.getUsername();
+        return userRepository.findByUsernameAndActiveTrue(username)
+                .orElseThrow(() -> new NotFoundException("Current user not found: " + username));
+    }
 
     /**
      * Generates order number in format PO-YYYY-NNNNNN.
@@ -337,7 +372,8 @@ public class PurchaseOrderService {
                 order.getSupplier().getCompanyName(),
                 order.getTotal(),
                 LocalDateTime.now(),
-                "System", // TODO: Get current user when authentication is integrated
+                SecurityContextHolder.getContext().getAuthentication() != null
+                        ? SecurityContextHolder.getContext().getAuthentication().getName() : "System",
                 receivedItems
         );
 

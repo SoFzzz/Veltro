@@ -1,16 +1,25 @@
 package com.veltro.inventory.application.scanner.strategy;
 
+import com.veltro.inventory.application.scanner.client.OpenAiVisionClient;
+import com.veltro.inventory.application.scanner.config.OpenAiConfig;
+import com.veltro.inventory.application.scanner.dto.ProductSuggestionResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for {@link AiVisionStrategy} (B3-01).
@@ -19,11 +28,19 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @DisplayName("AiVisionStrategy")
 class AiVisionStrategyTest {
 
+    @Mock
+    private OpenAiVisionClient openAiVisionClient;
+
+    @Mock
+    private OpenAiConfig openAiConfig;
+
+    @InjectMocks
     private AiVisionStrategy strategy;
 
     @BeforeEach
     void setUp() {
-        strategy = new AiVisionStrategy();
+        // Default configuration: not enabled
+        lenient().when(openAiConfig.isConfigured()).thenReturn(false);
     }
 
     @Test
@@ -77,44 +94,51 @@ class AiVisionStrategyTest {
     }
 
     @Test
-    @DisplayName("isApiKeyConfigured returns false when API key is empty")
-    void isApiKeyConfigured_emptyKey_returnsFalse() {
-        ReflectionTestUtils.setField(strategy, "openAiApiKey", "");
+    @DisplayName("isApiKeyConfigured returns false when not configured")
+    void isApiKeyConfigured_notConfigured_returnsFalse() {
+        lenient().when(openAiConfig.isConfigured()).thenReturn(false);
         assertThat(strategy.isApiKeyConfigured()).isFalse();
     }
 
     @Test
-    @DisplayName("isApiKeyConfigured returns false when API key is null")
-    void isApiKeyConfigured_nullKey_returnsFalse() {
-        ReflectionTestUtils.setField(strategy, "openAiApiKey", null);
-        assertThat(strategy.isApiKeyConfigured()).isFalse();
-    }
-
-    @Test
-    @DisplayName("isApiKeyConfigured returns true when API key is set")
-    void isApiKeyConfigured_validKey_returnsTrue() {
-        ReflectionTestUtils.setField(strategy, "openAiApiKey", "sk-test-key-123");
+    @DisplayName("isApiKeyConfigured returns true when configured")
+    void isApiKeyConfigured_configured_returnsTrue() {
+        lenient().when(openAiConfig.isConfigured()).thenReturn(true);
         assertThat(strategy.isApiKeyConfigured()).isTrue();
     }
 
     @Test
-    @DisplayName("isAvailable returns false when API key is not configured")
-    void isAvailable_noApiKey_returnsFalse() {
-        ReflectionTestUtils.setField(strategy, "openAiApiKey", "");
+    @DisplayName("isAvailable returns false when API is not configured")
+    void isAvailable_notConfigured_returnsFalse() {
+        lenient().when(openAiConfig.isConfigured()).thenReturn(false);
         assertThat(strategy.isAvailable()).isFalse();
     }
 
     @Test
-    @DisplayName("process throws UnsupportedOperationException when API key is not configured")
-    void process_noApiKey_throwsUnsupportedOperationException() {
-        ReflectionTestUtils.setField(strategy, "openAiApiKey", "");
+    @DisplayName("isAvailable returns true when API is configured")
+    void isAvailable_configured_returnsTrue() {
+        lenient().when(openAiConfig.isConfigured()).thenReturn(true);
+        assertThat(strategy.isAvailable()).isTrue();
+    }
+
+    @Test
+    @DisplayName("process delegates to OpenAiVisionClient and returns response")
+    void process_validImage_delegatesToClient() {
+        lenient().when(openAiConfig.isConfigured()).thenReturn(true);
         MultipartFile imageFile = new MockMultipartFile(
                 "image", "test.jpg", "image/jpeg", new byte[]{1, 2, 3}
         );
 
-        assertThatThrownBy(() -> strategy.process(imageFile))
-                .isInstanceOf(UnsupportedOperationException.class)
-                .hasMessageContaining("AI Vision is not available");
+        ProductSuggestionResponse mockResponse = new ProductSuggestionResponse(
+                List.of(),
+                100,
+                "AI_VISION"
+        );
+        when(openAiVisionClient.analyzeProductImage(any())).thenReturn(mockResponse);
+
+        ProductSuggestionResponse result = strategy.process(imageFile);
+
+        assertThat(result).isEqualTo(mockResponse);
     }
 
     @Test
@@ -126,15 +150,10 @@ class AiVisionStrategyTest {
     }
 
     @Test
-    @DisplayName("process throws UnsupportedOperationException even with API key (not implemented yet)")
-    void process_withApiKey_throwsUnsupportedOperationException() {
-        ReflectionTestUtils.setField(strategy, "openAiApiKey", "sk-test-key-123");
-        MultipartFile imageFile = new MockMultipartFile(
-                "image", "test.jpg", "image/jpeg", new byte[]{1, 2, 3}
-        );
-
-        assertThatThrownBy(() -> strategy.process(imageFile))
-                .isInstanceOf(UnsupportedOperationException.class)
-                .hasMessageContaining("not yet implemented");
+    @DisplayName("process handles null input")
+    void process_nullInput_throwsIllegalArgumentException() {
+        assertThatThrownBy(() -> strategy.process(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("MultipartFile");
     }
 }

@@ -62,4 +62,18 @@ public interface AuditRecordRepository {
             Instant startDate,
             Instant endDate,
             Pageable pageable);
+
+    // --- Multi-tenant scoped methods ---
+
+    Page<AuditRecordEntity> findByFiltersAndBusinessId(
+            AuditEntityType entityType,
+            AuditAction action,
+            String username,
+            Instant startDate,
+            Instant endDate,
+            Long businessId,
+            Pageable pageable);
+
+    List<AuditRecordEntity> findByEntityTypeAndEntityIdAndBusinessIdOrderByCreatedAtDesc(
+            AuditEntityType entityType, Long entityId, Long businessId);
 }

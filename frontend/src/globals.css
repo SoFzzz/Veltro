@@ -1,0 +1,178 @@
+/* Veltro Design System - The Precision Ledger */
+
+:root {
+  /* Surfaces - The Thermal Paper World */
+  --surface-primary: #FEFAF1;      /* 80% - Main background, warm to reduce eye strain */
+  --surface-secondary: #FFFFFF;    /* Elevated cards, forms */
+  --surface-tertiary: #F9F7F2;     /* Hover states, subtle zebra striping */
+  --surface-inset: rgba(31, 41, 55, 0.03); /* Embedded inputs */
+  
+  /* Borders - The Ledger Lines (Sharp, precise, no shadows) */
+  --border-light: 1px solid rgba(31, 41, 55, 0.08);
+  --border-medium: 1px solid rgba(31, 41, 55, 0.15);
+  --border-strong: 1px solid rgba(31, 41, 55, 0.3);
+  --border-focus: 2px solid #038E57;
+  --border-radius-sm: 4px;
+  --border-radius-md: 6px;
+  --border-radius-lg: 8px;
+
+  /* Identity Colors - LED & Hardware */
+  --primary-dark: #027A43;         
+  --primary-base: #038E57;         /* LED Success / Main Brand */
+  --primary-light: #10A96D;        
+  --primary-faint: rgba(3, 142, 87, 0.08); 
+
+  /* Accent & Critical */
+  --accent-base: #FFAC00;          /* Warning tape / In-progress */
+  --accent-faint: rgba(255, 172, 0, 0.1);
+  --critical-red: #FF2E21;         /* Laser scanner / Void / Error */
+  --critical-faint: rgba(255, 46, 33, 0.08);
+
+  /* Typography - Ink on Paper */
+  --text-primary: #111827;         /* Deepest ink */
+  --text-secondary: #4B5563;       /* Metadata */
+  --text-tertiary: #9CA3AF;        /* Placeholders / Disabled */
+  --font-family-base: 'Inter', system-ui, -apple-system, sans-serif;
+  
+  /* Layout */
+  --sidebar-width: 260px;
+  --header-height: 64px;
+}
+
+/* Base Setup */
+html {
+  font-family: var(--font-family-base);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--surface-primary);
+}
+
+body {
+  background-color: var(--surface-primary);
+  color: var(--text-primary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Tailwind Directives */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  /* Precision Cards */
+  .card {
+    background-color: var(--surface-secondary);
+    border: var(--border-light);
+    border-radius: var(--border-radius-md);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02); /* Extremely subtle grounding */
+    transition: all 0.2s ease;
+  }
+  .card:hover {
+    border: var(--border-medium);
+  }
+
+  /* Form Controls */
+  .input-base {
+    background-color: var(--surface-inset);
+    border: 1px solid rgba(31, 41, 55, 0.1);
+    border-radius: var(--border-radius-sm);
+    color: var(--text-primary);
+    padding: 0.625rem 0.75rem;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    width: 100%;
+  }
+  .input-base:focus {
+    outline: none;
+    background-color: var(--surface-secondary);
+    border-color: var(--primary-base);
+    box-shadow: inset 0 0 0 1px var(--primary-base);
+  }
+  .input-base::placeholder { color: var(--text-tertiary); }
+  .input-base:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  /* Buttons */
+  .btn-primary {
+    background-color: var(--primary-base);
+    color: #FFFFFF;
+    border: none;
+    border-radius: var(--border-radius-sm);
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  .btn-primary:hover:not(:disabled) {
+    background-color: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(3, 142, 87, 0.15);
+  }
+  .btn-primary:active:not(:disabled) {
+    transform: translateY(0);
+  }
+  
+  .btn-secondary {
+    background-color: var(--surface-secondary);
+    color: var(--text-primary);
+    border: var(--border-medium);
+    border-radius: var(--border-radius-sm);
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .btn-secondary:hover:not(:disabled) {
+    background-color: var(--surface-tertiary);
+    border-color: rgba(31, 41, 55, 0.3);
+  }
+
+  /* Ledger Tables */
+  .table-responsive {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    text-align: left;
+  }
+  .table-responsive th {
+    background-color: var(--surface-tertiary);
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.75rem 1rem;
+    border-bottom: var(--border-strong);
+  }
+  .table-responsive td {
+    padding: 1rem;
+    font-size: 0.875rem;
+    border-bottom: var(--border-light);
+    color: var(--text-primary);
+  }
+  .table-responsive tbody tr {
+    transition: background-color 0.15s ease;
+  }
+  .table-responsive tbody tr:hover {
+    background-color: rgba(31, 41, 55, 0.02);
+  }
+
+  /* Semantic Typography */
+  .tabular-data {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+}
+
+/* Base animations */
+@keyframes spin { to { transform: rotate(360deg); } }
+.animate-spin-slow { animation: spin 1s linear infinite; }

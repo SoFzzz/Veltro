@@ -10,7 +10,8 @@ public record LoginResponse(
         String tokenType,
         long expiresIn,
         String username,
-        String role
+        String role,
+        Long businessId
 ) {
     /**
      * Convenience factory. {@code tokenType} is always "Bearer".
@@ -20,7 +21,8 @@ public record LoginResponse(
             String refreshToken,
             long expiresIn,
             String username,
-            String role) {
-        return new LoginResponse(accessToken, refreshToken, "Bearer", expiresIn, username, role);
+            String role,
+            Long businessId) {
+        return new LoginResponse(accessToken, refreshToken, "Bearer", expiresIn, username, role, businessId);
     }
 }

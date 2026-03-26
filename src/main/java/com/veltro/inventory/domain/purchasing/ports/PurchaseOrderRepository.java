@@ -57,4 +57,14 @@ public interface PurchaseOrderRepository {
      * @return the next sequence value
      */
     Long getNextOrderSequenceValue();
+
+    // --- Multi-tenant scoped methods ---
+
+    Optional<PurchaseOrderEntity> findByIdAndActiveTrueAndBusinessId(Long id, Long businessId);
+
+    List<PurchaseOrderEntity> findBySupplierIdAndActiveTrueAndBusinessId(Long supplierId, Long businessId);
+
+    List<PurchaseOrderEntity> findAllByActiveTrueAndBusinessId(Long businessId);
+
+    Optional<PurchaseOrderEntity> findByOrderNumberAndActiveTrueAndBusinessId(String orderNumber, Long businessId);
 }

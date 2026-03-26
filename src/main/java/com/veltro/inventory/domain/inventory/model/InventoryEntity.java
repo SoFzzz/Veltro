@@ -67,4 +67,7 @@ public class InventoryEntity extends AbstractAuditableEntity {
     @Version
     @Column(name = "version", nullable = false)
     private Long version;
+
+    @Column(name = "business_id", nullable = false)
+    private Long businessId;
 }

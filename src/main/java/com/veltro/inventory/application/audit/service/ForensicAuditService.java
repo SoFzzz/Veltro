@@ -6,6 +6,7 @@ import com.veltro.inventory.application.audit.mapper.AuditRecordMapper;
 import com.veltro.inventory.domain.audit.model.AuditEntityType;
 import com.veltro.inventory.domain.audit.ports.AuditRecordRepository;
 import com.veltro.inventory.exception.NotFoundException;
+import com.veltro.inventory.infrastructure.adapters.security.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -45,12 +46,15 @@ public class ForensicAuditService {
     public Page<AuditRecordResponse> findAll(AuditFilterRequest filter, Pageable pageable) {
         log.debug("Finding audit records with filters: {}", filter);
 
-        Page<AuditRecordResponse> results = auditRepository.findByFilters(
+        Long businessId = TenantContext.getBusinessId();
+
+        Page<AuditRecordResponse> results = auditRepository.findByFiltersAndBusinessId(
                 filter.entityType(),
                 filter.action(),
                 filter.username(),
                 filter.startDate(),
                 filter.endDate(),
+                businessId,
                 pageable
         ).map(mapper::toResponse);
 
@@ -90,8 +94,10 @@ public class ForensicAuditService {
 
         log.debug("Finding audit records for {} with ID {}", entityType, entityId);
 
+        Long businessId = TenantContext.getBusinessId();
+
         List<AuditRecordResponse> records = auditRepository
-                .findByEntityTypeAndEntityIdOrderByCreatedAtDesc(entityType, entityId)
+                .findByEntityTypeAndEntityIdAndBusinessIdOrderByCreatedAtDesc(entityType, entityId, businessId)
                 .stream()
                 .map(mapper::toResponse)
                 .toList();

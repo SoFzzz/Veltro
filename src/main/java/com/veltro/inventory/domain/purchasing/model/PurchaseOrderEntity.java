@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -72,11 +73,26 @@ public class PurchaseOrderEntity extends AbstractAuditableEntity {
     private String notes;
 
     /**
+     * Expected delivery date for tracking purposes.
+     */
+    @Column(name = "expected_delivery_date")
+    private OffsetDateTime expectedDeliveryDate;
+
+    /**
+     * URL or Base64 reference to receipt/invoice image.
+     */
+    @Column(name = "receipt_image_url", columnDefinition = "TEXT")
+    private String receiptImageUrl;
+
+    /**
      * ADR-002: Optimistic locking for concurrent updates.
      */
     @Version
     @Column(nullable = false)
     private Long version;
+
+    @Column(name = "business_id", nullable = false)
+    private Long businessId;
 
     @OneToMany(mappedBy = "purchaseOrder", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = false)
     private List<PurchaseOrderDetailEntity> details = new ArrayList<>();

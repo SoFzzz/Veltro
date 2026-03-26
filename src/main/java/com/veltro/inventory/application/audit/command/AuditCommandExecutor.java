@@ -6,6 +6,7 @@ import com.veltro.inventory.domain.audit.model.AuditAction;
 import com.veltro.inventory.domain.audit.model.AuditEntityType;
 import com.veltro.inventory.domain.audit.model.AuditRecordEntity;
 import com.veltro.inventory.domain.audit.ports.AuditRecordRepository;
+import com.veltro.inventory.infrastructure.adapters.security.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -133,6 +134,7 @@ public class AuditCommandExecutor {
         record.setAction(action);
         record.setPreviousData(beforeJson);
         record.setNewData(afterJson);
+        record.setBusinessId(TenantContext.getBusinessId());
         record.setUsername(getCurrentUsername());  // From SecurityContextHolder
         record.setIpAddress(context.ipAddress());  // From controller
         // createdAt is auto-populated by @CreatedDate

@@ -2,6 +2,7 @@ package com.veltro.inventory.application.dashboard.service;
 
 import com.veltro.inventory.application.dashboard.dto.DashboardResponse;
 import com.veltro.inventory.domain.inventory.model.AlertType;
+import com.veltro.inventory.infrastructure.adapters.security.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -40,33 +41,35 @@ public class DashboardService {
     public DashboardResponse getDashboard() {
         log.info("Generating dashboard KPIs");
 
+        Long businessId = TenantContext.getBusinessId();
+
         LocalDate today = LocalDate.now();
         LocalDateTime startOfDay = today.atStartOfDay();
         LocalDateTime endOfDay = today.plusDays(1).atStartOfDay();
 
         // Today's sales metrics
-        BigDecimal todaySales = dashboardQueryRepository.sumTodaySales(startOfDay, endOfDay);
+        BigDecimal todaySales = dashboardQueryRepository.sumTodaySales(startOfDay, endOfDay, businessId);
         if (todaySales == null) {
             todaySales = BigDecimal.ZERO;
         }
 
-        long todaySalesCount = dashboardQueryRepository.countTodaySales(startOfDay, endOfDay);
+        long todaySalesCount = dashboardQueryRepository.countTodaySales(startOfDay, endOfDay, businessId);
 
         BigDecimal averageTicket = todaySalesCount > 0
                 ? todaySales.divide(BigDecimal.valueOf(todaySalesCount), 2, RoundingMode.HALF_UP)
                 : BigDecimal.ZERO;
 
         // Out of stock products
-        List<DashboardResponse.OutOfStockProduct> outOfStockList = dashboardQueryRepository.findOutOfStockProducts();
+        List<DashboardResponse.OutOfStockProduct> outOfStockList = dashboardQueryRepository.findOutOfStockProducts(businessId);
         long outOfStockCount = outOfStockList.size();
 
         // Low stock alerts count
-        long lowStockAlertCount = dashboardQueryRepository.countActiveAlertsByType(AlertType.LOW_STOCK);
+        long lowStockAlertCount = dashboardQueryRepository.countActiveAlertsByType(AlertType.LOW_STOCK, businessId);
 
         // Estimated monthly profit (based on current month sales)
         LocalDate firstOfMonth = today.withDayOfMonth(1);
         LocalDateTime startOfMonth = firstOfMonth.atStartOfDay();
-        BigDecimal monthSales = dashboardQueryRepository.sumSalesBetween(startOfMonth, endOfDay);
+        BigDecimal monthSales = dashboardQueryRepository.sumSalesBetween(startOfMonth, endOfDay, businessId);
         if (monthSales == null) {
             monthSales = BigDecimal.ZERO;
         }
@@ -76,7 +79,7 @@ public class DashboardService {
                 .setScale(2, RoundingMode.HALF_UP);
 
         // Recent sales (last 10)
-        List<DashboardResponse.RecentSale> recentSales = dashboardQueryRepository.findRecentSales(10);
+        List<DashboardResponse.RecentSale> recentSales = dashboardQueryRepository.findRecentSales(10, businessId);
 
         DashboardResponse response = new DashboardResponse(
                 todaySales.setScale(2, RoundingMode.HALF_UP),

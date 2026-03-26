@@ -26,4 +26,14 @@ public interface SupplierJpaRepository extends JpaRepository<SupplierEntity, Lon
     @Query("SELECT CASE WHEN COUNT(s) > 0 THEN true ELSE false END FROM SupplierEntity s " +
            "WHERE s.taxId = :taxId AND s.active = true AND (:excludeId IS NULL OR s.id != :excludeId)")
     boolean existsByTaxIdAndActiveTrueAndIdNot(@Param("taxId") String taxId, @Param("excludeId") Long excludeId);
+
+    // --- Multi-tenant scoped methods ---
+
+    @Query("SELECT CASE WHEN COUNT(s) > 0 THEN true ELSE false END FROM SupplierEntity s " +
+           "WHERE s.taxId = :taxId AND s.active = true AND (:excludeId IS NULL OR s.id != :excludeId) " +
+           "AND s.businessId = :businessId")
+    boolean existsByTaxIdAndActiveTrueAndIdNotAndBusinessId(
+            @Param("taxId") String taxId,
+            @Param("excludeId") Long excludeId,
+            @Param("businessId") Long businessId);
 }

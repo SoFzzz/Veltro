@@ -1,0 +1,60 @@
+Instrucciones Específicas de Modelado de Base de Datos
+Basado en el diagrama Entidad-Relación proporcionado y cruzando con los fallos reportados en la operación, el diseño actual es estructuralmente robusto (normalizado), pero requiere ajustes específicos en sus restricciones (constraints) y nuevas columnas para soportar la lógica de negocio requerida (IA, alertas personalizadas y gestión de proveedores).
+
+A continuación, las instrucciones exactas para reestructurar la base de datos (aplicable a Flyway/PostgreSQL o H2):
+
+1. 🏷️ Módulo de Categorías (CATEGORIA)
+El fallo de la "Categoría Padre Raíz" se debe a una restricción demasiado estricta en la base de datos.
+
+Ajuste de Columna: Asegurar que categoria_padre (FK) sea NULLABLE.
+
+Lógica de Modelado: No debe existir un registro "falso" llamado "Raíz". Una categoría principal simplemente tiene categoria_padre = NULL. Al eliminar una categoría padre, la base de datos debe tener configurado ON DELETE SET NULL en esta llave foránea para no romper la integridad de las subcategorías, o ON DELETE RESTRICT si se requiere que el usuario reasigne las subcategorías primero.
+
+2. 📦 Módulo de Productos e Integración IA (PRODUCTO)
+Para resolver el problema del reconocimiento por IA donde no existe código de barras físico y mantener la integridad:
+
+Ajuste de Columna (codigo_barras): Cambiar de NOT NULL a NULLABLE. Mantener la restricción UNIQUE (PostgreSQL permite múltiples valores NULL en columnas UNIQUE).
+
+Columna (sku): Asegurar que sea UNIQUE y NOT NULL.
+
+Lógica de Modelado (Flujo IA): Cuando la IA identifica un producto sin código de barras, el backend insertará el registro dejando codigo_barras = NULL y generará automáticamente un SKU interno único (ej. SKU-AI-001). El sku se convertirá en el identificador principal para el Punto de Venta (POS) y las transacciones de inventario.
+
+3. 📊 Módulo de Inventario (INVENTARIO y MOVIMIENTO_INVENTARIO)
+El diagrama separa correctamente PRODUCTO de INVENTARIO (relación 1:1 mediante producto_id UNIQUE). El fallo donde "no permite asignar stock inicial" es de orquestación transaccional, no de modelo.
+
+Instrucción de Integración: El modelo se mantiene igual, pero a nivel de Backend, el método crearProducto debe ser transaccional (@Transactional). Al hacer INSERT INTO PRODUCTO, debe ejecutar inmediatamente un INSERT INTO INVENTARIO (producto_id, stock_actual, stock_minimo, stock_maximo) y su respectivo INSERT INTO MOVIMIENTO_INVENTARIO por el saldo inicial.
+
+Restricción de Integridad: Mantener el CHECK (stock_actual >= 0) en INVENTARIO para evitar descuadres en el POS.
+
+4. ⚠️ Módulo de Alertas (CONFIGURACION_ALERTA)
+Para solucionar la falta de severidades (Crítica, Advertencia, Información) mencionadas en el reporte:
+
+Reestructuración de Columnas: Reemplazar los campos genéricos actuales por intervalos exactos.
+
+Modificar stock_minimo y stock_sobrestock.
+
+Implementar: umbral_critico (INTEGER), umbral_advertencia (INTEGER), y umbral_informacion (INTEGER).
+
+Lógica de Modelado: El AlertService del backend usará estos tres campos numéricos para comparar contra el INVENTARIO.stock_actual y generar el registro correspondiente en la tabla ALERTA con el enum correcto en la columna severidad (CRITICA, ADVERTENCIA, INFO).
+
+5. 🚚 Módulo de Órdenes de Compra (ORDEN_COMPRA y PROVEEDOR)
+Para solucionar el bloqueo en los proveedores y la falta de metadatos (fechas y comprobantes) en los pedidos:
+
+Ajustes en ORDEN_COMPRA:
+
+Agregar columna fecha_esperada_entrega (TIMESTAMP o DATE, NULLABLE).
+
+Agregar columna url_comprobante o comprobante_base64 (TEXT, NULLABLE) para almacenar la imagen del recibo del proveedor.
+
+Verificar que la columna estado sea un Enum o VARCHAR que soporte el ciclo completo: PENDIENTE, VENCIDA, RECIBIDA_PARCIAL, COMPLETADA.
+
+Ajustes en PROVEEDOR:
+
+Revisar la restricción de la columna ruc (UK). Si hay proveedores informales que no tienen número de registro/RUC, cambiar de NOT NULL a NULLABLE o crear un identificador interno alternativo autogenerado para evitar que el backend rechace la inserción.
+
+6. 🔐 Módulo de Usuarios (USUARIO)
+El modelo actual es idóneo para solucionar la falta de registro/login.
+
+Instrucción de Modelado: Mantener email (UK, NOT NULL) y password_hash (TEXT o VARCHAR(255)).
+
+Lógica: La base de datos ya soporta la creación de usuarios. El fallo reportado se remedia exclusivamente en el código, asegurando que el nuevo servicio de registro inserte los datos mapeando el email y encriptando la contraseña para insertarla en password_hash, asignando el rol correspondiente en la columna rol (VARCHAR).

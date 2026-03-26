@@ -4,12 +4,17 @@ import com.veltro.inventory.application.iam.dto.ChangePasswordRequest;
 import com.veltro.inventory.application.iam.dto.LoginRequest;
 import com.veltro.inventory.application.iam.dto.LoginResponse;
 import com.veltro.inventory.application.iam.dto.RefreshRequest;
+import com.veltro.inventory.application.iam.dto.RegisterRequest;
+import com.veltro.inventory.domain.iam.model.BusinessEntity;
+import com.veltro.inventory.domain.iam.model.Role;
 import com.veltro.inventory.domain.iam.model.UserEntity;
+import com.veltro.inventory.domain.iam.ports.BusinessRepository;
 import com.veltro.inventory.domain.iam.ports.UserRepository;
 import com.veltro.inventory.exception.NotFoundException;
 import com.veltro.inventory.infrastructure.adapters.config.JwtProperties;
 import com.veltro.inventory.infrastructure.adapters.security.CustomUserDetailsService;
 import com.veltro.inventory.infrastructure.adapters.security.JwtTokenProvider;
+import com.veltro.inventory.infrastructure.adapters.security.VeltroUserDetails;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -38,6 +43,7 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final CustomUserDetailsService userDetailsService;
     private final UserRepository userRepository;
+    private final BusinessRepository businessRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtProperties jwtProperties;
 
@@ -63,14 +69,20 @@ public class AuthService {
                 .map(a -> a.getAuthority().replace("ROLE_", ""))
                 .orElse("");
 
-        log.info("User '{}' logged in successfully", request.username());
+        Long businessId = null;
+        if (userDetails instanceof VeltroUserDetails v) {
+            businessId = v.getBusinessId();
+        }
+
+        log.info("User '{}' logged in successfully (bid={})", request.username(), businessId);
 
         return LoginResponse.of(
                 accessToken,
                 refreshToken,
                 jwtProperties.accessTokenExpiration(),
                 request.username(),
-                role);
+                role,
+                businessId);
     }
 
     // -------------------------------------------------------------------------
@@ -98,6 +110,11 @@ public class AuthService {
                 .map(a -> a.getAuthority().replace("ROLE_", ""))
                 .orElse("");
 
+        Long businessId = null;
+        if (userDetails instanceof VeltroUserDetails v) {
+            businessId = v.getBusinessId();
+        }
+
         log.debug("Access token refreshed for user '{}'", username);
 
         return LoginResponse.of(
@@ -105,7 +122,8 @@ public class AuthService {
                 token,
                 jwtProperties.accessTokenExpiration(),
                 username,
-                role);
+                role,
+                businessId);
     }
 
     // -------------------------------------------------------------------------
@@ -119,6 +137,92 @@ public class AuthService {
      */
     public void logout(String username) {
         log.info("User '{}' logged out (stateless — client must discard tokens)", username);
+    }
+
+    // -------------------------------------------------------------------------
+    // Register (ADMIN only — creates business + admin user)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Registers a new ADMIN user and creates their business.
+     * Only ADMIN role can self-register. Workers are created via {@link #createWorker}.
+     */
+    @Transactional
+    public void register(RegisterRequest request) {
+        if (request.businessName() == null || request.businessName().isBlank()) {
+            throw new IllegalArgumentException("Business name is required for registration");
+        }
+
+        if (userRepository.findByEmailAndActiveTrue(request.email()).isPresent()) {
+            throw new IllegalArgumentException("Email already in use");
+        }
+
+        // Create the business first (owner set after user creation)
+        BusinessEntity business = new BusinessEntity();
+        business.setName(request.businessName().trim());
+        business.setActive(true);
+        business = businessRepository.save(business);
+
+        // Create the ADMIN user linked to this business
+        UserEntity user = new UserEntity();
+        user.setUsername(request.username());
+        user.setEmail(request.email());
+        user.setPasswordHash(passwordEncoder.encode(request.password()));
+        user.setRole(Role.ADMIN);
+        user.setBusinessId(business.getId());
+        user.setActive(true);
+        user = userRepository.save(user);
+
+        // Set owner on business
+        business.setOwner(user);
+        businessRepository.save(business);
+
+        log.info("Admin '{}' registered with business '{}' (bid={})",
+                request.username(), business.getName(), business.getId());
+    }
+
+    // -------------------------------------------------------------------------
+    // Create worker (ADMIN creates CASHIER/WAREHOUSE in their business)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Creates a worker account (CASHIER or WAREHOUSE) in the admin's business.
+     *
+     * @param adminBusinessId the businessId of the admin creating the worker
+     * @param request         the worker details
+     * @return the created UserEntity
+     */
+    @Transactional
+    public UserEntity createWorker(Long adminBusinessId, RegisterRequest request) {
+        Role role;
+        try {
+            role = Role.valueOf(request.role().toUpperCase());
+        } catch (IllegalArgumentException | NullPointerException e) {
+            throw new IllegalArgumentException("Invalid role. Must be CASHIER or WAREHOUSE");
+        }
+        if (role == Role.ADMIN) {
+            throw new IllegalArgumentException("Cannot create ADMIN workers. Use registration instead.");
+        }
+
+        if (userRepository.findByUsernameAndBusinessId(request.username(), adminBusinessId).isPresent()) {
+            throw new IllegalArgumentException("Username already exists in this business");
+        }
+
+        if (userRepository.findByEmailAndActiveTrue(request.email()).isPresent()) {
+            throw new IllegalArgumentException("Email already in use");
+        }
+
+        UserEntity worker = new UserEntity();
+        worker.setUsername(request.username());
+        worker.setEmail(request.email());
+        worker.setPasswordHash(passwordEncoder.encode(request.password()));
+        worker.setRole(role);
+        worker.setBusinessId(adminBusinessId);
+        worker.setActive(true);
+        worker = userRepository.save(worker);
+
+        log.info("Worker '{}' ({}) created in business {}", worker.getUsername(), role, adminBusinessId);
+        return worker;
     }
 
     // -------------------------------------------------------------------------

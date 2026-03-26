@@ -50,7 +50,7 @@ class AuthControllerTest {
     // -------------------------------------------------------------------------
 
     private static LoginResponse stubResponse() {
-        return LoginResponse.of("access.token.here", "refresh.token.here", 900L, "alice", "ADMIN");
+        return LoginResponse.of("access.token.here", "refresh.token.here", 900L, "alice", "ADMIN", 1L);
     }
 
     private static UserDetails adminUser() {

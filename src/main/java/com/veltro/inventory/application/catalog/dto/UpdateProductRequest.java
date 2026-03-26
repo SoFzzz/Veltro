@@ -1,6 +1,7 @@
 package com.veltro.inventory.application.catalog.dto;
 
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -32,6 +33,16 @@ public record UpdateProductRequest(
         @DecimalMin(value = "0.0001", message = "Sale price must be greater than zero")
         BigDecimal salePrice,
 
-        Long categoryId
+        Long categoryId,
+
+        // Stock alert thresholds (P4 - Inventory Alerts)
+        @Min(value = 0, message = "Min stock info must be non-negative")
+        Integer minStockInfo,
+
+        @Min(value = 0, message = "Min stock warning must be non-negative")
+        Integer minStockWarning,
+
+        @Min(value = 0, message = "Min stock critical must be non-negative")
+        Integer minStockCritical
 ) {
 }

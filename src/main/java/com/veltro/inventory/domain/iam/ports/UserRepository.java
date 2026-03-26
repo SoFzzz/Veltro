@@ -19,5 +19,7 @@ public interface UserRepository {
 
     Optional<UserEntity> findById(Long id);
 
+    Optional<UserEntity> findByUsernameAndBusinessId(String username, Long businessId);
+
     UserEntity save(UserEntity user);
 }

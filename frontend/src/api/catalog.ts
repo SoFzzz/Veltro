@@ -30,7 +30,7 @@ export const productApi = {
   },
 
   delete: async (id: number): Promise<void> => {
-    await apiClient.delete(`/products/${id}`);
+    await apiClient.put(`/products/${id}/deactivate`);
   },
 };
 
@@ -40,8 +40,9 @@ export const categoryApi = {
     return response.data;
   },
 
+  // Backend's GET /categories already returns tree with subcategories
   getTree: async (): Promise<Category[]> => {
-    const response = await apiClient.get<Category[]>('/categories/tree');
+    const response = await apiClient.get<Category[]>('/categories');
     return response.data;
   },
 
@@ -61,6 +62,6 @@ export const categoryApi = {
   },
 
   delete: async (id: number): Promise<void> => {
-    await apiClient.delete(`/categories/${id}`);
+    await apiClient.put(`/categories/${id}/deactivate`);
   },
 };
