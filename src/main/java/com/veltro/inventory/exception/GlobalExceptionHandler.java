@@ -1,4 +1,4 @@
-package com.veltro.inventory.infrastructure.adapters.web;
+package com.veltro.inventory.exception;
 
 import com.veltro.inventory.exception.ErrorResponse;
 import com.veltro.inventory.exception.InsufficientStockException;
