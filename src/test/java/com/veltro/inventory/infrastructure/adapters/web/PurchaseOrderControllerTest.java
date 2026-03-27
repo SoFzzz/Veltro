@@ -5,7 +5,7 @@ import com.veltro.inventory.application.purchasing.dto.CreatePurchaseOrderReques
 import com.veltro.inventory.application.purchasing.dto.PurchaseOrderResponse;
 import com.veltro.inventory.application.purchasing.service.PurchaseOrderService;
 import com.veltro.inventory.application.shared.dto.AuditInfo;
-import com.veltro.inventory.domain.purchasing.model.PurchaseOrderStatus;
+import com.veltro.inventory.model.PurchaseOrderStatus;
 import com.veltro.inventory.exception.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

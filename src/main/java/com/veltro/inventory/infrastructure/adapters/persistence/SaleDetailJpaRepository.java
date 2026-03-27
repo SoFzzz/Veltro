@@ -1,6 +1,6 @@
 package com.veltro.inventory.infrastructure.adapters.persistence;
 
-import com.veltro.inventory.domain.pos.model.SaleDetailEntity;
+import com.veltro.inventory.model.SaleDetailEntity;
 import com.veltro.inventory.domain.pos.ports.SaleDetailRepository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

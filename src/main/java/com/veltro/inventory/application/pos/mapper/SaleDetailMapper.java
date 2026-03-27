@@ -2,7 +2,7 @@ package com.veltro.inventory.application.pos.mapper;
 
 import com.veltro.inventory.application.pos.dto.SaleDetailResponse;
 import com.veltro.inventory.application.shared.dto.AuditInfo;
-import com.veltro.inventory.domain.pos.model.SaleDetailEntity;
+import com.veltro.inventory.model.SaleDetailEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;

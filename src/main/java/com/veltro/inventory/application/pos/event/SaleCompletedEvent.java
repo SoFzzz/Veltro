@@ -1,6 +1,6 @@
 package com.veltro.inventory.application.pos.event;
 
-import com.veltro.inventory.domain.pos.model.PaymentMethod;
+import com.veltro.inventory.model.PaymentMethod;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

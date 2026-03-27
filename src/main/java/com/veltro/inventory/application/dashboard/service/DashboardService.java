@@ -1,7 +1,7 @@
 package com.veltro.inventory.application.dashboard.service;
 
 import com.veltro.inventory.application.dashboard.dto.DashboardResponse;
-import com.veltro.inventory.domain.inventory.model.AlertType;
+import com.veltro.inventory.model.AlertType;
 import com.veltro.inventory.security.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

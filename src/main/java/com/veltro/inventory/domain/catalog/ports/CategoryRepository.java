@@ -1,6 +1,6 @@
 package com.veltro.inventory.domain.catalog.ports;
 
-import com.veltro.inventory.domain.catalog.model.CategoryEntity;
+import com.veltro.inventory.model.CategoryEntity;
 
 import java.util.List;
 import java.util.Optional;

@@ -1,6 +1,6 @@
 package com.veltro.inventory.application.inventory.alert;
 
-import com.veltro.inventory.domain.inventory.model.AlertEntity;
+import com.veltro.inventory.model.AlertEntity;
 import java.util.ArrayList;
 import java.util.List;
 

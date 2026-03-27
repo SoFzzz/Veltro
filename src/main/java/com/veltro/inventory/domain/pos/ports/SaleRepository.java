@@ -1,6 +1,6 @@
 package com.veltro.inventory.domain.pos.ports;
 
-import com.veltro.inventory.domain.pos.model.SaleEntity;
+import com.veltro.inventory.model.SaleEntity;
 
 import java.util.Optional;
 

@@ -4,7 +4,7 @@ import com.veltro.inventory.application.purchasing.dto.CreateSupplierRequest;
 import com.veltro.inventory.application.purchasing.dto.SupplierResponse;
 import com.veltro.inventory.application.purchasing.dto.UpdateSupplierRequest;
 import com.veltro.inventory.application.purchasing.mapper.SupplierMapper;
-import com.veltro.inventory.domain.purchasing.model.SupplierEntity;
+import com.veltro.inventory.model.SupplierEntity;
 import com.veltro.inventory.domain.purchasing.ports.SupplierRepository;
 import com.veltro.inventory.exception.DuplicateResourceException;
 import com.veltro.inventory.exception.NotFoundException;
@@ -12,7 +12,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 

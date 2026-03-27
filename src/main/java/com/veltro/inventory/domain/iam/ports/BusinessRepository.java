@@ -1,6 +1,6 @@
 package com.veltro.inventory.domain.iam.ports;
 
-import com.veltro.inventory.domain.iam.model.BusinessEntity;
+import com.veltro.inventory.model.BusinessEntity;
 
 import java.util.Optional;
 

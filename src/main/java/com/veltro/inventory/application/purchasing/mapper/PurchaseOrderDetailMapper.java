@@ -1,7 +1,7 @@
 package com.veltro.inventory.application.purchasing.mapper;
 
 import com.veltro.inventory.application.purchasing.dto.PurchaseOrderDetailResponse;
-import com.veltro.inventory.domain.purchasing.model.PurchaseOrderDetailEntity;
+import com.veltro.inventory.model.PurchaseOrderDetailEntity;
 import com.veltro.inventory.application.shared.dto.AuditInfo;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

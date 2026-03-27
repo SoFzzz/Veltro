@@ -5,8 +5,6 @@ import com.veltro.inventory.application.inventory.dto.AlertResponse;
 import com.veltro.inventory.application.inventory.dto.UpdateAlertConfigurationRequest;
 import com.veltro.inventory.application.inventory.service.AlertConfigurationService;
 import com.veltro.inventory.application.inventory.service.AlertService;
-import com.veltro.inventory.domain.inventory.model.AlertSeverity;
-import com.veltro.inventory.domain.inventory.model.AlertType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

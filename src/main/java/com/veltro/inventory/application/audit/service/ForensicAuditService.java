@@ -3,7 +3,7 @@ package com.veltro.inventory.application.audit.service;
 import com.veltro.inventory.application.audit.dto.AuditFilterRequest;
 import com.veltro.inventory.application.audit.dto.AuditRecordResponse;
 import com.veltro.inventory.application.audit.mapper.AuditRecordMapper;
-import com.veltro.inventory.domain.audit.model.AuditEntityType;
+import com.veltro.inventory.model.AuditEntityType;
 import com.veltro.inventory.domain.audit.ports.AuditRecordRepository;
 import com.veltro.inventory.exception.NotFoundException;
 import com.veltro.inventory.security.TenantContext;

@@ -1,15 +1,15 @@
 package com.veltro.inventory.domain.pos.model.state;
 
-import com.veltro.inventory.domain.pos.model.PaymentMethod;
-import com.veltro.inventory.domain.pos.model.SaleDetailEntity;
-import com.veltro.inventory.domain.pos.model.SaleEntity;
-import com.veltro.inventory.domain.pos.model.SaleStatus;
+import com.veltro.inventory.model.PaymentMethod;
+import com.veltro.inventory.model.SaleDetailEntity;
+import com.veltro.inventory.model.SaleEntity;
+import com.veltro.inventory.model.SaleStatus;
 import com.veltro.inventory.exception.InvalidStateTransitionException;
+import com.veltro.inventory.state.CompletedState;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;

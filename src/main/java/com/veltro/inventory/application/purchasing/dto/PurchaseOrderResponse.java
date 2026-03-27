@@ -1,7 +1,7 @@
 package com.veltro.inventory.application.purchasing.dto;
 
 import com.veltro.inventory.application.shared.dto.AuditInfo;
-import com.veltro.inventory.domain.purchasing.model.PurchaseOrderStatus;
+import com.veltro.inventory.model.PurchaseOrderStatus;
 
 import java.time.OffsetDateTime;
 import java.util.List;

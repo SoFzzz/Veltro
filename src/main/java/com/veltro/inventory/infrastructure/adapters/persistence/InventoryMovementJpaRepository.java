@@ -1,6 +1,6 @@
 package com.veltro.inventory.infrastructure.adapters.persistence;
 
-import com.veltro.inventory.domain.inventory.model.InventoryMovementEntity;
+import com.veltro.inventory.model.InventoryMovementEntity;
 import com.veltro.inventory.domain.inventory.ports.InventoryMovementRepository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

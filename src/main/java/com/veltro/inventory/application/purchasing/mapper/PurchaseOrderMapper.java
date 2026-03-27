@@ -4,7 +4,7 @@ import com.veltro.inventory.application.purchasing.dto.CreatePurchaseOrderReques
 import com.veltro.inventory.application.purchasing.dto.PurchaseOrderDetailResponse;
 import com.veltro.inventory.application.purchasing.dto.PurchaseOrderResponse;
 import com.veltro.inventory.application.shared.dto.AuditInfo;
-import com.veltro.inventory.domain.purchasing.model.PurchaseOrderEntity;
+import com.veltro.inventory.model.PurchaseOrderEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;

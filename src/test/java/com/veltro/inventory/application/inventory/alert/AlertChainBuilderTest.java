@@ -1,7 +1,7 @@
 package com.veltro.inventory.application.inventory.alert;
 
-import com.veltro.inventory.domain.inventory.model.AlertEntity;
-import com.veltro.inventory.domain.inventory.model.AlertType;
+import com.veltro.inventory.model.AlertEntity;
+import com.veltro.inventory.model.AlertType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
