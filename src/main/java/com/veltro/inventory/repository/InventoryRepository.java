@@ -1,12 +1,11 @@
-package com.veltro.inventory.infrastructure.adapters.persistence;
+package com.veltro.inventory.repository;
 
 import com.veltro.inventory.model.InventoryEntity;
-import com.veltro.inventory.domain.inventory.ports.InventoryRepository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 /**
- * JPA adapter implementing the {@link InventoryRepository} output port.
+ * JPA adapter implementing the {@link com.veltro.inventory.domain.inventory.ports.InventoryRepository} output port.
  *
  * Spring Data JPA derives all declared query methods from method names.
  * The {@code findByProductIdAndActiveTrue} method uses the UNIQUE index on
@@ -14,6 +13,6 @@ import org.springframework.stereotype.Repository;
  * index scan on every lookup.
  */
 @Repository
-public interface InventoryJpaRepository
-        extends JpaRepository<InventoryEntity, Long>, InventoryRepository {
+public interface InventoryRepository
+        extends JpaRepository<InventoryEntity, Long>, com.veltro.inventory.domain.inventory.ports.InventoryRepository {
 }

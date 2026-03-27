@@ -1,7 +1,6 @@
-package com.veltro.inventory.infrastructure.adapters.persistence;
+package com.veltro.inventory.repository;
 
 import com.veltro.inventory.model.SupplierEntity;
-import com.veltro.inventory.domain.purchasing.ports.SupplierRepository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -10,11 +9,11 @@ import org.springframework.stereotype.Repository;
 /**
  * JPA repository for {@link SupplierEntity} (B2-04).
  *
- * <p>Extends the domain {@link SupplierRepository} port and provides
+ * <p>Extends the domain {@link com.veltro.inventory.domain.purchasing.ports.SupplierRepository} port and provides
  * query methods with Spring Data JPA.
  */
 @Repository
-public interface SupplierJpaRepository extends JpaRepository<SupplierEntity, Long>, SupplierRepository {
+public interface SupplierRepository extends JpaRepository<SupplierEntity, Long>, com.veltro.inventory.domain.purchasing.ports.SupplierRepository {
 
     /**
      * Checks if a tax ID already exists for an active supplier (excluding the given ID).

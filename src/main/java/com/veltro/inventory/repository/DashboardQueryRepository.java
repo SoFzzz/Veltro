@@ -1,7 +1,6 @@
-package com.veltro.inventory.infrastructure.adapters.persistence;
+package com.veltro.inventory.repository;
 
 import com.veltro.inventory.application.dashboard.dto.DashboardResponse;
-import com.veltro.inventory.application.dashboard.service.DashboardQueryRepository;
 import com.veltro.inventory.model.AlertType;
 import com.veltro.inventory.model.SaleStatus;
 import jakarta.persistence.EntityManager;
@@ -21,7 +20,7 @@ import java.util.List;
  */
 @Slf4j
 @Repository
-public class DashboardQueryJpaRepository implements DashboardQueryRepository {
+public class DashboardQueryRepository implements com.veltro.inventory.application.dashboard.service.DashboardQueryRepository {
 
     @PersistenceContext
     private EntityManager entityManager;
