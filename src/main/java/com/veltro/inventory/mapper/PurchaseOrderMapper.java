@@ -1,9 +1,10 @@
-package com.veltro.inventory.application.pos.mapper;
+package com.veltro.inventory.mapper;
 
-import com.veltro.inventory.dto.SaleDetailResponse;
-import com.veltro.inventory.dto.SaleResponse;
+import com.veltro.inventory.dto.CreatePurchaseOrderRequest;
+import com.veltro.inventory.dto.PurchaseOrderDetailResponse;
+import com.veltro.inventory.dto.PurchaseOrderResponse;
 import com.veltro.inventory.dto.AuditInfo;
-import com.veltro.inventory.model.SaleEntity;
+import com.veltro.inventory.model.PurchaseOrderEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -18,26 +19,38 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * MapStruct mapper for {@link SaleEntity} ↔ {@link SaleResponse} (B2-01).
+ * MapStruct mapper for {@link PurchaseOrderEntity} ↔ {@link PurchaseOrderResponse} (B2-04).
  *
- * <p>Monetary fields ({@code subtotal}, {@code total}, {@code amountReceived}, {@code change})
- * are converted from {@link BigDecimal} to {@link String} with 4 decimal places (ADR-005).
- *
- * <p>Only active details are included in the response (AC-05).
+ * <p>ADR-005: Monetary fields are converted to String with 4 decimal places.
+ * <p>AC-05: Only active details are included in the response.
  */
 @Mapper(componentModel = "spring")
-public abstract class SaleMapper {
+public abstract class PurchaseOrderMapper {
 
     @Autowired
-    protected SaleDetailMapper saleDetailMapper;
+    protected PurchaseOrderDetailMapper detailMapper;
 
-    @Mapping(target = "subtotal", source = "subtotal", qualifiedByName = "bigDecimalToString")
+    @Mapping(target = "supplierId", source = "supplier.id")
+    @Mapping(target = "supplierName", source = "supplier.companyName")
     @Mapping(target = "total", source = "total", qualifiedByName = "bigDecimalToString")
-    @Mapping(target = "amountReceived", source = "amountReceived", qualifiedByName = "bigDecimalToString")
-    @Mapping(target = "change", source = "change", qualifiedByName = "bigDecimalToString")
     @Mapping(target = "details", expression = "java(toActiveDetails(entity))")
     @Mapping(target = "auditInfo", expression = "java(toAuditInfo(entity))")
-    public abstract SaleResponse toResponse(SaleEntity entity);
+    public abstract PurchaseOrderResponse toResponse(PurchaseOrderEntity entity);
+
+    /**
+     * Maps a create request to a new entity.
+     * {@code id}, {@code supplier}, and audit fields are excluded; set by service.
+     */
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "orderNumber", ignore = true)
+    @Mapping(target = "status", ignore = true)
+    @Mapping(target = "supplier", ignore = true)
+    @Mapping(target = "total", ignore = true)
+    @Mapping(target = "details", ignore = true)
+    @Mapping(target = "version", ignore = true)
+    @Mapping(target = "state", ignore = true)
+    @Mapping(target = "requestedBy", ignore = true)
+    public abstract PurchaseOrderEntity toEntity(CreatePurchaseOrderRequest request);
 
     /**
      * Converts BigDecimal to String with 4 decimal places (ADR-005).
@@ -50,17 +63,17 @@ public abstract class SaleMapper {
     /**
      * Filters and maps only active details (AC-05).
      */
-    protected List<SaleDetailResponse> toActiveDetails(SaleEntity entity) {
+    protected List<PurchaseOrderDetailResponse> toActiveDetails(PurchaseOrderEntity entity) {
         return entity.getDetails().stream()
                 .filter(d -> d.isActive())
-                .map(saleDetailMapper::toResponse)
+                .map(detailMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
     /**
      * Extracts audit information from entity.
      */
-    protected AuditInfo toAuditInfo(SaleEntity entity) {
+    protected AuditInfo toAuditInfo(PurchaseOrderEntity entity) {
         return new AuditInfo(
                 instantToLocalDateTime(entity.getCreatedAt()),
                 entity.getCreatedBy(),

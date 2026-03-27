@@ -3,7 +3,7 @@ package com.veltro.inventory.application.purchasing.service;
 import com.veltro.inventory.dto.CreateSupplierRequest;
 import com.veltro.inventory.dto.SupplierResponse;
 import com.veltro.inventory.dto.UpdateSupplierRequest;
-import com.veltro.inventory.application.purchasing.mapper.SupplierMapper;
+import com.veltro.inventory.mapper.SupplierMapper;
 import com.veltro.inventory.model.SupplierEntity;
 import com.veltro.inventory.domain.purchasing.ports.SupplierRepository;
 import com.veltro.inventory.exception.DuplicateResourceException;

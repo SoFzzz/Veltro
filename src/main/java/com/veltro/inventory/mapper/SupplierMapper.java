@@ -1,4 +1,4 @@
-package com.veltro.inventory.application.purchasing.mapper;
+package com.veltro.inventory.mapper;
 
 import com.veltro.inventory.dto.CreateSupplierRequest;
 import com.veltro.inventory.dto.SupplierResponse;

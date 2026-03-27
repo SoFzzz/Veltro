@@ -10,7 +10,7 @@ import com.veltro.inventory.dto.SaleResponse;
 import com.veltro.inventory.application.pos.event.SaleCompletedEvent;
 import com.veltro.inventory.application.pos.event.SaleItemInfo;
 import com.veltro.inventory.application.pos.event.SaleVoidedEvent;
-import com.veltro.inventory.application.pos.mapper.SaleMapper;
+import com.veltro.inventory.mapper.SaleMapper;
 import com.veltro.inventory.model.AuditAction;
 import com.veltro.inventory.model.AuditEntityType;
 import com.veltro.inventory.model.ProductEntity;

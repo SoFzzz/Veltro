@@ -3,7 +3,7 @@ package com.veltro.inventory.application.catalog.service;
 import com.veltro.inventory.dto.CategoryResponse;
 import com.veltro.inventory.dto.CreateCategoryRequest;
 import com.veltro.inventory.dto.UpdateCategoryRequest;
-import com.veltro.inventory.application.catalog.mapper.CategoryMapper;
+import com.veltro.inventory.mapper.CategoryMapper;
 import com.veltro.inventory.model.CategoryEntity;
 import com.veltro.inventory.domain.catalog.ports.CategoryRepository;
 import com.veltro.inventory.exception.NotFoundException;

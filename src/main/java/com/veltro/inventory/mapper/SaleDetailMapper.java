@@ -1,4 +1,4 @@
-package com.veltro.inventory.application.pos.mapper;
+package com.veltro.inventory.mapper;
 
 import com.veltro.inventory.dto.SaleDetailResponse;
 import com.veltro.inventory.dto.AuditInfo;
