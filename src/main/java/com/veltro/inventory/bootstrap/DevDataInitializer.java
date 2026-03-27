@@ -1,4 +1,4 @@
-package com.veltro.inventory.infrastructure.bootstrap;
+package com.veltro.inventory.bootstrap;
 
 import com.veltro.inventory.domain.iam.model.Role;
 import com.veltro.inventory.domain.iam.model.UserEntity;
