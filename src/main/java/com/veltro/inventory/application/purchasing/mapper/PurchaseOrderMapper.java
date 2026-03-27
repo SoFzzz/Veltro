@@ -1,9 +1,9 @@
 package com.veltro.inventory.application.purchasing.mapper;
 
-import com.veltro.inventory.application.purchasing.dto.CreatePurchaseOrderRequest;
-import com.veltro.inventory.application.purchasing.dto.PurchaseOrderDetailResponse;
-import com.veltro.inventory.application.purchasing.dto.PurchaseOrderResponse;
-import com.veltro.inventory.application.shared.dto.AuditInfo;
+import com.veltro.inventory.dto.CreatePurchaseOrderRequest;
+import com.veltro.inventory.dto.PurchaseOrderDetailResponse;
+import com.veltro.inventory.dto.PurchaseOrderResponse;
+import com.veltro.inventory.dto.AuditInfo;
 import com.veltro.inventory.model.PurchaseOrderEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

@@ -2,7 +2,7 @@ package com.veltro.inventory.application.scanner.strategy;
 
 import com.veltro.inventory.application.scanner.client.OpenAiVisionClient;
 import com.veltro.inventory.application.scanner.config.OpenAiConfig;
-import com.veltro.inventory.application.scanner.dto.ProductSuggestionResponse;
+import com.veltro.inventory.dto.ProductSuggestionResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

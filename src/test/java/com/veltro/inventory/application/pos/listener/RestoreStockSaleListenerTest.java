@@ -1,13 +1,12 @@
 package com.veltro.inventory.application.pos.listener;
 
-import com.veltro.inventory.application.inventory.dto.StockEntryRequest;
+import com.veltro.inventory.dto.StockEntryRequest;
 import com.veltro.inventory.application.inventory.service.InventoryService;
 import com.veltro.inventory.application.pos.event.SaleItemInfo;
 import com.veltro.inventory.application.pos.event.SaleVoidedEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 

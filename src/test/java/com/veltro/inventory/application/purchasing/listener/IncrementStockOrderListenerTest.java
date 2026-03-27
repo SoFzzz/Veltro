@@ -1,6 +1,6 @@
 package com.veltro.inventory.application.purchasing.listener;
 
-import com.veltro.inventory.application.inventory.dto.StockEntryRequest;
+import com.veltro.inventory.dto.StockEntryRequest;
 import com.veltro.inventory.application.inventory.service.InventoryService;
 import com.veltro.inventory.application.purchasing.event.OrderReceivedEvent;
 import com.veltro.inventory.application.purchasing.event.ReceivedItemInfo;

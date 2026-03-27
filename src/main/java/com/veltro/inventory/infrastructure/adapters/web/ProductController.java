@@ -1,8 +1,8 @@
 package com.veltro.inventory.infrastructure.adapters.web;
 
-import com.veltro.inventory.application.catalog.dto.CreateProductRequest;
-import com.veltro.inventory.application.catalog.dto.ProductResponse;
-import com.veltro.inventory.application.catalog.dto.UpdateProductRequest;
+import com.veltro.inventory.dto.CreateProductRequest;
+import com.veltro.inventory.dto.ProductResponse;
+import com.veltro.inventory.dto.UpdateProductRequest;
 import com.veltro.inventory.application.catalog.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

@@ -1,8 +1,8 @@
 package com.veltro.inventory.infrastructure.adapters.web;
 
-import com.veltro.inventory.application.inventory.dto.AlertConfigurationResponse;
-import com.veltro.inventory.application.inventory.dto.AlertResponse;
-import com.veltro.inventory.application.inventory.dto.UpdateAlertConfigurationRequest;
+import com.veltro.inventory.dto.AlertConfigurationResponse;
+import com.veltro.inventory.dto.AlertResponse;
+import com.veltro.inventory.dto.UpdateAlertConfigurationRequest;
 import com.veltro.inventory.application.inventory.service.AlertConfigurationService;
 import com.veltro.inventory.application.inventory.service.AlertService;
 import org.junit.jupiter.api.BeforeEach;

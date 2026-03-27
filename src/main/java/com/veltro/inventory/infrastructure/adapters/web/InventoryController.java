@@ -1,11 +1,11 @@
 package com.veltro.inventory.infrastructure.adapters.web;
 
-import com.veltro.inventory.application.inventory.dto.InventoryMovementResponse;
-import com.veltro.inventory.application.inventory.dto.InventoryResponse;
-import com.veltro.inventory.application.inventory.dto.StockAdjustmentRequest;
-import com.veltro.inventory.application.inventory.dto.StockEntryRequest;
-import com.veltro.inventory.application.inventory.dto.StockExitRequest;
-import com.veltro.inventory.application.inventory.dto.UpdateStockLimitsRequest;
+import com.veltro.inventory.dto.InventoryMovementResponse;
+import com.veltro.inventory.dto.InventoryResponse;
+import com.veltro.inventory.dto.StockAdjustmentRequest;
+import com.veltro.inventory.dto.StockEntryRequest;
+import com.veltro.inventory.dto.StockExitRequest;
+import com.veltro.inventory.dto.UpdateStockLimitsRequest;
 import com.veltro.inventory.application.inventory.service.InventoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

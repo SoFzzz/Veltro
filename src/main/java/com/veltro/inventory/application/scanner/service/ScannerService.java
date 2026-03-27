@@ -1,6 +1,6 @@
 package com.veltro.inventory.application.scanner.service;
 
-import com.veltro.inventory.application.scanner.dto.ProductSuggestionResponse;
+import com.veltro.inventory.dto.ProductSuggestionResponse;
 import com.veltro.inventory.application.scanner.strategy.AiVisionStrategy;
 import com.veltro.inventory.application.scanner.strategy.ScannerStrategy;
 import lombok.RequiredArgsConstructor;

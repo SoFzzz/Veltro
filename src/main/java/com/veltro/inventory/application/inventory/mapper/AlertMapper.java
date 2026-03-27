@@ -1,6 +1,6 @@
 package com.veltro.inventory.application.inventory.mapper;
 
-import com.veltro.inventory.application.inventory.dto.AlertResponse;
+import com.veltro.inventory.dto.AlertResponse;
 import com.veltro.inventory.model.AlertEntity;
 import java.time.OffsetDateTime;
 import org.mapstruct.Mapper;

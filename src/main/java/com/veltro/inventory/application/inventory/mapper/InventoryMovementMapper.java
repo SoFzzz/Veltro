@@ -1,6 +1,6 @@
 package com.veltro.inventory.application.inventory.mapper;
 
-import com.veltro.inventory.application.inventory.dto.InventoryMovementResponse;
+import com.veltro.inventory.dto.InventoryMovementResponse;
 import com.veltro.inventory.model.InventoryMovementEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

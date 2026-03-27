@@ -1,8 +1,8 @@
 package com.veltro.inventory.infrastructure.adapters.web;
 
-import com.veltro.inventory.application.purchasing.dto.CreateSupplierRequest;
-import com.veltro.inventory.application.purchasing.dto.SupplierResponse;
-import com.veltro.inventory.application.purchasing.dto.UpdateSupplierRequest;
+import com.veltro.inventory.dto.CreateSupplierRequest;
+import com.veltro.inventory.dto.SupplierResponse;
+import com.veltro.inventory.dto.UpdateSupplierRequest;
 import com.veltro.inventory.application.purchasing.service.SupplierService;
 import com.veltro.inventory.exception.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;

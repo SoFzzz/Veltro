@@ -1,6 +1,6 @@
 package com.veltro.inventory.application.scanner.strategy;
 
-import com.veltro.inventory.application.scanner.dto.ProductSuggestionResponse;
+import com.veltro.inventory.dto.ProductSuggestionResponse;
 import org.springframework.stereotype.Component;
 
 /**

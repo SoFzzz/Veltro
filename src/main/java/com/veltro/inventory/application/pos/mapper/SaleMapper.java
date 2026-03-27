@@ -1,8 +1,8 @@
 package com.veltro.inventory.application.pos.mapper;
 
-import com.veltro.inventory.application.pos.dto.SaleDetailResponse;
-import com.veltro.inventory.application.pos.dto.SaleResponse;
-import com.veltro.inventory.application.shared.dto.AuditInfo;
+import com.veltro.inventory.dto.SaleDetailResponse;
+import com.veltro.inventory.dto.SaleResponse;
+import com.veltro.inventory.dto.AuditInfo;
 import com.veltro.inventory.model.SaleEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

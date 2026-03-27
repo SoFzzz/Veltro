@@ -1,7 +1,6 @@
 package com.veltro.inventory.application.scanner.strategy;
 
-import com.veltro.inventory.application.scanner.dto.ProductSuggestionResponse;
-import org.springframework.web.multipart.MultipartFile;
+import com.veltro.inventory.dto.ProductSuggestionResponse;
 
 /**
  * Strategy Pattern interface for product scanning (B3-01).

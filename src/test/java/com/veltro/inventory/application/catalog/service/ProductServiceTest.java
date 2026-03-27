@@ -1,7 +1,7 @@
 package com.veltro.inventory.application.catalog.service;
 
-import com.veltro.inventory.application.catalog.dto.CreateProductRequest;
-import com.veltro.inventory.application.catalog.dto.ProductResponse;
+import com.veltro.inventory.dto.CreateProductRequest;
+import com.veltro.inventory.dto.ProductResponse;
 import com.veltro.inventory.application.catalog.mapper.ProductMapper;
 import com.veltro.inventory.application.inventory.service.InventoryService;
 import com.veltro.inventory.model.ProductEntity;

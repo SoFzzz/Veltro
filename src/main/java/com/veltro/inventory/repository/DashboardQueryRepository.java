@@ -1,6 +1,6 @@
 package com.veltro.inventory.repository;
 
-import com.veltro.inventory.application.dashboard.dto.DashboardResponse;
+import com.veltro.inventory.dto.DashboardResponse;
 import com.veltro.inventory.model.AlertType;
 import com.veltro.inventory.model.SaleStatus;
 import jakarta.persistence.EntityManager;
