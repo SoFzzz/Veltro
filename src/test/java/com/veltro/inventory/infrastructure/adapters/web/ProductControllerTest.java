@@ -3,7 +3,7 @@ package com.veltro.inventory.infrastructure.adapters.web;
 import com.veltro.inventory.dto.CreateProductRequest;
 import com.veltro.inventory.dto.ProductResponse;
 import com.veltro.inventory.dto.UpdateProductRequest;
-import com.veltro.inventory.application.catalog.service.ProductService;
+import com.veltro.inventory.service.ProductService;
 import com.veltro.inventory.exception.InvalidPriceException;
 import com.veltro.inventory.exception.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;

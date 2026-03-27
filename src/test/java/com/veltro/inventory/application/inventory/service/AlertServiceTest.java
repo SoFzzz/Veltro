@@ -1,7 +1,7 @@
 package com.veltro.inventory.application.inventory.service;
 
-import com.veltro.inventory.application.inventory.alert.AlertHandler;
-import com.veltro.inventory.application.inventory.alert.StockEvaluationContext;
+import com.veltro.inventory.service.AlertHandler;
+import com.veltro.inventory.service.StockEvaluationContext;
 import com.veltro.inventory.dto.AlertResponse;
 import com.veltro.inventory.mapper.AlertMapper;
 import com.veltro.inventory.model.ProductEntity;
@@ -13,6 +13,7 @@ import com.veltro.inventory.model.InventoryEntity;
 import com.veltro.inventory.domain.inventory.ports.AlertConfigurationRepository;
 import com.veltro.inventory.domain.inventory.ports.AlertRepository;
 import com.veltro.inventory.domain.inventory.ports.InventoryRepository;
+import com.veltro.inventory.service.AlertService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

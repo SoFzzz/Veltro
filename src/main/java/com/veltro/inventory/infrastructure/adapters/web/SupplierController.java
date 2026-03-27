@@ -3,7 +3,7 @@ package com.veltro.inventory.infrastructure.adapters.web;
 import com.veltro.inventory.dto.CreateSupplierRequest;
 import com.veltro.inventory.dto.SupplierResponse;
 import com.veltro.inventory.dto.UpdateSupplierRequest;
-import com.veltro.inventory.application.purchasing.service.SupplierService;
+import com.veltro.inventory.service.SupplierService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

@@ -16,6 +16,7 @@ import com.veltro.inventory.domain.inventory.ports.InventoryMovementRepository;
 import com.veltro.inventory.domain.inventory.ports.InventoryRepository;
 import com.veltro.inventory.exception.InsufficientStockException;
 import com.veltro.inventory.exception.NotFoundException;
+import com.veltro.inventory.service.InventoryService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

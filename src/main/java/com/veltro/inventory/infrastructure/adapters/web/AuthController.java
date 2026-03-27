@@ -5,7 +5,7 @@ import com.veltro.inventory.dto.LoginRequest;
 import com.veltro.inventory.dto.LoginResponse;
 import com.veltro.inventory.dto.RefreshRequest;
 import com.veltro.inventory.dto.RegisterRequest;
-import com.veltro.inventory.application.iam.service.AuthService;
+import com.veltro.inventory.service.AuthService;
 import com.veltro.inventory.model.UserEntity;
 import com.veltro.inventory.security.TenantContext;
 import jakarta.validation.Valid;

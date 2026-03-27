@@ -2,8 +2,8 @@ package com.veltro.inventory.infrastructure.adapters.web;
 
 import com.veltro.inventory.dto.AlertResponse;
 import com.veltro.inventory.dto.UpdateAlertConfigurationRequest;
-import com.veltro.inventory.application.inventory.service.AlertConfigurationService;
-import com.veltro.inventory.application.inventory.service.AlertService;
+import com.veltro.inventory.service.AlertConfigurationService;
+import com.veltro.inventory.service.AlertService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

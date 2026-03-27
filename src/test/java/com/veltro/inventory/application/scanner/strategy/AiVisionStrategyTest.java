@@ -1,7 +1,8 @@
 package com.veltro.inventory.application.scanner.strategy;
 
-import com.veltro.inventory.application.scanner.client.OpenAiVisionClient;
-import com.veltro.inventory.application.scanner.config.OpenAiConfig;
+import com.veltro.inventory.service.AiVisionStrategy;
+import com.veltro.inventory.service.OpenAiVisionClient;
+import com.veltro.inventory.config.OpenAiConfig;
 import com.veltro.inventory.dto.ProductSuggestionResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

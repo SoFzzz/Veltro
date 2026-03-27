@@ -1,7 +1,7 @@
 package com.veltro.inventory.application.pos.listener;
 
 import com.veltro.inventory.dto.StockExitRequest;
-import com.veltro.inventory.application.inventory.service.InventoryService;
+import com.veltro.inventory.service.InventoryService;
 import com.veltro.inventory.application.pos.event.SaleCompletedEvent;
 import com.veltro.inventory.application.pos.event.SaleItemInfo;
 import org.junit.jupiter.api.BeforeEach;

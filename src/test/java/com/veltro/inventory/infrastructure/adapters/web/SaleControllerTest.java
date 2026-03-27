@@ -4,7 +4,7 @@ import com.veltro.inventory.dto.AddItemRequest;
 import com.veltro.inventory.dto.ConfirmSaleRequest;
 import com.veltro.inventory.dto.ModifyItemRequest;
 import com.veltro.inventory.dto.SaleResponse;
-import com.veltro.inventory.application.pos.service.SaleService;
+import com.veltro.inventory.service.SaleService;
 import com.veltro.inventory.model.PaymentMethod;
 import com.veltro.inventory.model.SaleStatus;
 import com.veltro.inventory.exception.InvalidPaymentException;

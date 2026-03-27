@@ -1,7 +1,7 @@
 package com.veltro.inventory.infrastructure.adapters.web;
 
 import com.veltro.inventory.dto.ProductSuggestionResponse;
-import com.veltro.inventory.application.scanner.service.ScannerService;
+import com.veltro.inventory.service.ScannerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;

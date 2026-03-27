@@ -18,6 +18,7 @@ import com.veltro.inventory.domain.pos.ports.SaleRepository;
 import com.veltro.inventory.exception.InvalidPaymentException;
 import com.veltro.inventory.exception.InvalidStateTransitionException;
 import com.veltro.inventory.exception.NotFoundException;
+import com.veltro.inventory.service.SaleService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

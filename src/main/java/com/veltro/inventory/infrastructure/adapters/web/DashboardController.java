@@ -1,7 +1,7 @@
 package com.veltro.inventory.infrastructure.adapters.web;
 
 import com.veltro.inventory.dto.DashboardResponse;
-import com.veltro.inventory.application.dashboard.service.DashboardService;
+import com.veltro.inventory.service.DashboardService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;

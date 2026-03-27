@@ -6,7 +6,7 @@ import com.veltro.inventory.dto.StockAdjustmentRequest;
 import com.veltro.inventory.dto.StockEntryRequest;
 import com.veltro.inventory.dto.StockExitRequest;
 import com.veltro.inventory.dto.UpdateStockLimitsRequest;
-import com.veltro.inventory.application.inventory.service.InventoryService;
+import com.veltro.inventory.service.InventoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

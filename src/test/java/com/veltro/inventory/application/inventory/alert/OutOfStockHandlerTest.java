@@ -4,6 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.veltro.inventory.model.AlertEntity;
 import java.util.List;
+
+import com.veltro.inventory.service.OutOfStockHandler;
+import com.veltro.inventory.service.StockEvaluationContext;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
