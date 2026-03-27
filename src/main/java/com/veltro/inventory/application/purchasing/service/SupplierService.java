@@ -8,7 +8,7 @@ import com.veltro.inventory.domain.purchasing.model.SupplierEntity;
 import com.veltro.inventory.domain.purchasing.ports.SupplierRepository;
 import com.veltro.inventory.exception.DuplicateResourceException;
 import com.veltro.inventory.exception.NotFoundException;
-import com.veltro.inventory.infrastructure.adapters.security.TenantContext;
+import com.veltro.inventory.security.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

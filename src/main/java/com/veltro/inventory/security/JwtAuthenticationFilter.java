@@ -1,4 +1,4 @@
-package com.veltro.inventory.infrastructure.adapters.security;
+package com.veltro.inventory.security;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

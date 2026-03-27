@@ -1,4 +1,4 @@
-package com.veltro.inventory.infrastructure.adapters.security;
+package com.veltro.inventory.security;
 
 import com.veltro.inventory.domain.iam.model.UserEntity;
 import com.veltro.inventory.domain.iam.ports.UserRepository;

@@ -21,7 +21,7 @@ import com.veltro.inventory.domain.inventory.ports.InventoryMovementRepository;
 import com.veltro.inventory.domain.inventory.ports.InventoryRepository;
 import com.veltro.inventory.exception.InsufficientStockException;
 import com.veltro.inventory.exception.NotFoundException;
-import com.veltro.inventory.infrastructure.adapters.security.TenantContext;
+import com.veltro.inventory.security.TenantContext;
 import java.time.OffsetDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;

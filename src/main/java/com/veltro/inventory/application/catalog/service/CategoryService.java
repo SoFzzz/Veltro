@@ -7,7 +7,7 @@ import com.veltro.inventory.application.catalog.mapper.CategoryMapper;
 import com.veltro.inventory.domain.catalog.model.CategoryEntity;
 import com.veltro.inventory.domain.catalog.ports.CategoryRepository;
 import com.veltro.inventory.exception.NotFoundException;
-import com.veltro.inventory.infrastructure.adapters.security.TenantContext;
+import com.veltro.inventory.security.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

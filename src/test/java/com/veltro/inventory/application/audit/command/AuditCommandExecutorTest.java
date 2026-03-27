@@ -5,7 +5,7 @@ import com.veltro.inventory.domain.audit.model.AuditAction;
 import com.veltro.inventory.domain.audit.model.AuditEntityType;
 import com.veltro.inventory.domain.audit.model.AuditRecordEntity;
 import com.veltro.inventory.domain.audit.ports.AuditRecordRepository;
-import com.veltro.inventory.infrastructure.adapters.security.VeltroUserDetails;
+import com.veltro.inventory.security.VeltroUserDetails;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

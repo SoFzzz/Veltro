@@ -22,7 +22,7 @@ import com.veltro.inventory.domain.pos.model.SaleStatus;
 import com.veltro.inventory.domain.pos.ports.SaleRepository;
 import com.veltro.inventory.exception.InvalidPaymentException;
 import com.veltro.inventory.exception.NotFoundException;
-import com.veltro.inventory.infrastructure.adapters.security.TenantContext;
+import com.veltro.inventory.security.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
