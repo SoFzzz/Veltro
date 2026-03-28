@@ -1,5 +1,6 @@
 package com.veltro.inventory.infrastructure.adapters.web;
 
+import com.veltro.inventory.controller.InventoryController;
 import com.veltro.inventory.dto.InventoryMovementResponse;
 import com.veltro.inventory.dto.InventoryResponse;
 import com.veltro.inventory.dto.StockAdjustmentRequest;

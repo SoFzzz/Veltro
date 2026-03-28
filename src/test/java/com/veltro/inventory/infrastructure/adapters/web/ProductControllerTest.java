@@ -1,5 +1,6 @@
 package com.veltro.inventory.infrastructure.adapters.web;
 
+import com.veltro.inventory.controller.ProductController;
 import com.veltro.inventory.dto.CreateProductRequest;
 import com.veltro.inventory.dto.ProductResponse;
 import com.veltro.inventory.dto.UpdateProductRequest;

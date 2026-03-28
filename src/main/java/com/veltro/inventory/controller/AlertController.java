@@ -1,4 +1,4 @@
-package com.veltro.inventory.infrastructure.adapters.web;
+package com.veltro.inventory.controller;
 
 import com.veltro.inventory.dto.AlertResponse;
 import com.veltro.inventory.dto.UpdateAlertConfigurationRequest;

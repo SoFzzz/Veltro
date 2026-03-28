@@ -1,5 +1,6 @@
 package com.veltro.inventory.infrastructure.adapters.web;
 
+import com.veltro.inventory.controller.DashboardController;
 import com.veltro.inventory.dto.DashboardResponse;
 import com.veltro.inventory.service.DashboardService;
 import org.junit.jupiter.api.BeforeEach;

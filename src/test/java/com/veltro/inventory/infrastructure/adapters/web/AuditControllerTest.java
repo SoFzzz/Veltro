@@ -1,5 +1,6 @@
 package com.veltro.inventory.infrastructure.adapters.web;
 
+import com.veltro.inventory.controller.AuditController;
 import com.veltro.inventory.dto.AuditFilterRequest;
 import com.veltro.inventory.dto.AuditRecordResponse;
 import com.veltro.inventory.service.ForensicAuditService;

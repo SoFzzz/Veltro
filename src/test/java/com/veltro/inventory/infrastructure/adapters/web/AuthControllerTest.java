@@ -1,5 +1,6 @@
 package com.veltro.inventory.infrastructure.adapters.web;
 
+import com.veltro.inventory.controller.AuthController;
 import com.veltro.inventory.dto.ChangePasswordRequest;
 import com.veltro.inventory.dto.LoginRequest;
 import com.veltro.inventory.dto.LoginResponse;

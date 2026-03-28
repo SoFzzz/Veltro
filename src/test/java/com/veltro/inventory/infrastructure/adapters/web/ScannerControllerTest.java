@@ -1,5 +1,6 @@
 package com.veltro.inventory.infrastructure.adapters.web;
 
+import com.veltro.inventory.controller.ScannerController;
 import com.veltro.inventory.dto.ProductSuggestionResponse;
 import com.veltro.inventory.service.ScannerService;
 import org.junit.jupiter.api.BeforeEach;
