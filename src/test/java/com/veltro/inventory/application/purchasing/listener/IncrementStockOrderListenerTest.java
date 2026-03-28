@@ -1,9 +1,10 @@
 package com.veltro.inventory.application.purchasing.listener;
 
 import com.veltro.inventory.dto.StockEntryRequest;
+import com.veltro.inventory.listener.IncrementStockOrderListener;
 import com.veltro.inventory.service.InventoryService;
-import com.veltro.inventory.application.purchasing.event.OrderReceivedEvent;
-import com.veltro.inventory.application.purchasing.event.ReceivedItemInfo;
+import com.veltro.inventory.event.OrderReceivedEvent;
+import com.veltro.inventory.event.ReceivedItemInfo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

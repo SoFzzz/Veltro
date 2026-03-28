@@ -8,7 +8,7 @@ import com.veltro.inventory.dto.StockAdjustmentRequest;
 import com.veltro.inventory.dto.StockEntryRequest;
 import com.veltro.inventory.dto.StockExitRequest;
 import com.veltro.inventory.dto.UpdateStockLimitsRequest;
-import com.veltro.inventory.application.inventory.event.StockChangedEvent;
+import com.veltro.inventory.event.StockChangedEvent;
 import com.veltro.inventory.mapper.InventoryMapper;
 import com.veltro.inventory.mapper.InventoryMovementMapper;
 import com.veltro.inventory.model.AuditAction;

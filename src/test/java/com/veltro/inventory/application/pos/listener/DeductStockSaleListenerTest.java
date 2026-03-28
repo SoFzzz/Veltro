@@ -1,9 +1,10 @@
 package com.veltro.inventory.application.pos.listener;
 
 import com.veltro.inventory.dto.StockExitRequest;
+import com.veltro.inventory.listener.DeductStockSaleListener;
 import com.veltro.inventory.service.InventoryService;
-import com.veltro.inventory.application.pos.event.SaleCompletedEvent;
-import com.veltro.inventory.application.pos.event.SaleItemInfo;
+import com.veltro.inventory.event.SaleCompletedEvent;
+import com.veltro.inventory.event.SaleItemInfo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;

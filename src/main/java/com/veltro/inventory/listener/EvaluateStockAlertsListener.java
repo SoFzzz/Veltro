@@ -1,6 +1,6 @@
-package com.veltro.inventory.application.inventory.listener;
+package com.veltro.inventory.listener;
 
-import com.veltro.inventory.application.inventory.event.StockChangedEvent;
+import com.veltro.inventory.event.StockChangedEvent;
 import com.veltro.inventory.service.AlertService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
