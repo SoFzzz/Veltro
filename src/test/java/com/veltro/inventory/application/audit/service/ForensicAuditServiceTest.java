@@ -18,6 +18,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.Instant;
 import java.util.List;
@@ -36,6 +39,9 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class ForensicAuditServiceTest {
 
+    private static final Long USER_ID = 10L;
+    private static final Long BUSINESS_ID = 100L;
+
     @Mock
     private AuditRecordRepository auditRepository;
 
@@ -46,7 +52,13 @@ class ForensicAuditServiceTest {
 
     @BeforeEach
     void setUp() {
+        authenticateAsTenantUser();
         auditService = new ForensicAuditService(auditRepository, mapper);
+    }
+
+    @org.junit.jupiter.api.AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -62,7 +74,7 @@ class ForensicAuditServiceTest {
         AuditRecordResponse response1 = createAuditResponse(1L, AuditEntityType.SALE, 100L, AuditAction.CONFIRM);
         AuditRecordResponse response2 = createAuditResponse(2L, AuditEntityType.PURCHASE_ORDER, 200L, AuditAction.RECEIVE);
 
-        when(auditRepository.findByFilters(null, null, null, null, null, pageable))
+        when(auditRepository.findByFiltersAndBusinessId(null, null, null, null, null, BUSINESS_ID, pageable))
                 .thenReturn(entityPage);
         when(mapper.toResponse(entity1)).thenReturn(response1);
         when(mapper.toResponse(entity2)).thenReturn(response2);
@@ -88,7 +100,8 @@ class ForensicAuditServiceTest {
 
         AuditRecordResponse response = createAuditResponse(1L, AuditEntityType.SALE, 100L, AuditAction.CONFIRM);
 
-        when(auditRepository.findByFilters(eq(AuditEntityType.SALE), eq(null), eq(null), eq(null), eq(null), eq(pageable)))
+        when(auditRepository.findByFiltersAndBusinessId(
+                eq(AuditEntityType.SALE), eq(null), eq(null), eq(null), eq(null), eq(BUSINESS_ID), eq(pageable)))
                 .thenReturn(entityPage);
         when(mapper.toResponse(entity)).thenReturn(response);
 
@@ -111,7 +124,8 @@ class ForensicAuditServiceTest {
 
         AuditRecordResponse response = createAuditResponse(1L, AuditEntityType.SALE, 100L, AuditAction.VOID);
 
-        when(auditRepository.findByFilters(eq(null), eq(AuditAction.VOID), eq(null), eq(null), eq(null), eq(pageable)))
+        when(auditRepository.findByFiltersAndBusinessId(
+                eq(null), eq(AuditAction.VOID), eq(null), eq(null), eq(null), eq(BUSINESS_ID), eq(pageable)))
                 .thenReturn(entityPage);
         when(mapper.toResponse(entity)).thenReturn(response);
 
@@ -135,7 +149,8 @@ class ForensicAuditServiceTest {
 
         AuditRecordResponse response = createAuditResponse(1L, AuditEntityType.SALE, 100L, AuditAction.CONFIRM);
 
-        when(auditRepository.findByFilters(eq(null), eq(null), eq("john.doe"), eq(null), eq(null), eq(pageable)))
+        when(auditRepository.findByFiltersAndBusinessId(
+                eq(null), eq(null), eq("john.doe"), eq(null), eq(null), eq(BUSINESS_ID), eq(pageable)))
                 .thenReturn(entityPage);
         when(mapper.toResponse(entity)).thenReturn(response);
 
@@ -144,7 +159,7 @@ class ForensicAuditServiceTest {
 
         // Then
         assertThat(result.getTotalElements()).isEqualTo(1);
-        verify(auditRepository).findByFilters(null, null, "john.doe", null, null, pageable);
+        verify(auditRepository).findByFiltersAndBusinessId(null, null, "john.doe", null, null, BUSINESS_ID, pageable);
     }
 
     @Test
@@ -161,7 +176,8 @@ class ForensicAuditServiceTest {
 
         AuditRecordResponse response = createAuditResponse(1L, AuditEntityType.INVENTORY, 50L, AuditAction.ADJUST);
 
-        when(auditRepository.findByFilters(eq(null), eq(null), eq(null), eq(from), eq(to), eq(pageable)))
+        when(auditRepository.findByFiltersAndBusinessId(
+                eq(null), eq(null), eq(null), eq(from), eq(to), eq(BUSINESS_ID), eq(pageable)))
                 .thenReturn(entityPage);
         when(mapper.toResponse(entity)).thenReturn(response);
 
@@ -192,12 +208,13 @@ class ForensicAuditServiceTest {
 
         AuditRecordResponse response = createAuditResponse(1L, AuditEntityType.PURCHASE_ORDER, 200L, AuditAction.RECEIVE);
 
-        when(auditRepository.findByFilters(
+        when(auditRepository.findByFiltersAndBusinessId(
                 eq(AuditEntityType.PURCHASE_ORDER),
                 eq(AuditAction.RECEIVE),
                 eq("warehouse.user"),
                 eq(from),
                 eq(null),
+                eq(BUSINESS_ID),
                 eq(pageable)
         )).thenReturn(entityPage);
         when(mapper.toResponse(entity)).thenReturn(response);
@@ -220,7 +237,8 @@ class ForensicAuditServiceTest {
 
         Page<AuditRecordEntity> emptyPage = new PageImpl<>(List.of(), pageable, 0);
 
-        when(auditRepository.findByFilters(eq(AuditEntityType.SALE), eq(null), eq(null), eq(null), eq(null), eq(pageable)))
+        when(auditRepository.findByFiltersAndBusinessId(
+                eq(AuditEntityType.SALE), eq(null), eq(null), eq(null), eq(null), eq(BUSINESS_ID), eq(pageable)))
                 .thenReturn(emptyPage);
 
         // When
@@ -274,7 +292,7 @@ class ForensicAuditServiceTest {
         AuditRecordResponse response1 = createAuditResponse(1L, entityType, entityId, AuditAction.CONFIRM);
         AuditRecordResponse response2 = createAuditResponse(2L, entityType, entityId, AuditAction.VOID);
 
-        when(auditRepository.findByEntityTypeAndEntityIdOrderByCreatedAtDesc(entityType, entityId))
+        when(auditRepository.findByEntityTypeAndEntityIdAndBusinessIdOrderByCreatedAtDesc(entityType, entityId, BUSINESS_ID))
                 .thenReturn(entities);
         when(mapper.toResponse(entity1)).thenReturn(response1);
         when(mapper.toResponse(entity2)).thenReturn(response2);
@@ -316,5 +334,18 @@ class ForensicAuditServiceTest {
                 "192.168.1.1",
                 Instant.now()
         );
+    }
+
+    private void authenticateAsTenantUser() {
+        com.veltro.inventory.security.VeltroUserDetails principal = new com.veltro.inventory.security.VeltroUserDetails(
+                "audit-tester",
+                "password",
+                List.of(new SimpleGrantedAuthority("ROLE_ADMIN")),
+                USER_ID,
+                BUSINESS_ID
+        );
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(principal, principal.getPassword(), principal.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 }

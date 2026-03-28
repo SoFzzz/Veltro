@@ -5,7 +5,7 @@ import com.veltro.inventory.model.AlertSeverity;
 import com.veltro.inventory.model.AlertType;
 import com.veltro.inventory.service.AlertHandler;
 import com.veltro.inventory.service.LowStockHandler;
-import com.veltro.inventory.service.StockEvaluationContext;
+import com.veltro.inventory.service.StockAlertEvaluationContext;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,7 +35,7 @@ class LowStockHandlerTest {
         // Arrange
         LowStockHandler handler = new LowStockHandler();
         handler.setNext(nextHandler);
-        StockEvaluationContext context = new StockEvaluationContext(
+        StockAlertEvaluationContext context = new StockAlertEvaluationContext(
                 1L, "Test Product", 5, 2, 5, 20); // current=5, critical=2, min=5, overstock=20
 
         // Act
@@ -59,7 +59,7 @@ class LowStockHandlerTest {
         // Arrange
         LowStockHandler handler = new LowStockHandler();
         handler.setNext(nextHandler);
-        StockEvaluationContext context = new StockEvaluationContext(
+        StockAlertEvaluationContext context = new StockAlertEvaluationContext(
                 2L, "Widget", 3, 1, 5, 15); // current=3, critical=1, min=5, overstock=15
 
         // Act
@@ -83,7 +83,7 @@ class LowStockHandlerTest {
         // Arrange
         LowStockHandler handler = new LowStockHandler();
         handler.setNext(nextHandler);
-        StockEvaluationContext context = new StockEvaluationContext(
+        StockAlertEvaluationContext context = new StockAlertEvaluationContext(
                 3L, "Gadget", 10, 2, 5, 20); // current=10, critical=2, min=5, overstock=20
 
         // Act
@@ -102,7 +102,7 @@ class LowStockHandlerTest {
         // Arrange
         LowStockHandler handler = new LowStockHandler();
         handler.setNext(nextHandler);
-        StockEvaluationContext context = new StockEvaluationContext(
+        StockAlertEvaluationContext context = new StockAlertEvaluationContext(
                 4L, "Item", 1, 1, 5, 20); // current=1, critical=1, min=5, overstock=20
 
         // Act
@@ -121,7 +121,7 @@ class LowStockHandlerTest {
         // Arrange
         LowStockHandler handler = new LowStockHandler();
         // No next handler set
-        StockEvaluationContext context = new StockEvaluationContext(
+        StockAlertEvaluationContext context = new StockAlertEvaluationContext(
                 5L, "Product", 3, 1, 5, 20);
 
         // Act

@@ -16,9 +16,9 @@ import java.time.Instant;
  *
  * <p>This entity is intentionally NOT a subclass of AbstractAuditableEntity because:
  * <ul>
- *   <li>No update lifecycle — {@code updatedAt}/{@code updatedBy} are not needed</li>
- *   <li>No soft-delete — {@code active} flag is not needed</li>
- *   <li>No {@code @CreatedBy} — {@code username} field manually set from SecurityContextHolder</li>
+ *   <li>No update lifecycle 窶・{@code updatedAt}/{@code updatedBy} are not needed</li>
+ *   <li>No soft-delete 窶・{@code active} flag is not needed</li>
+ *   <li>No {@code @CreatedBy} 窶・{@code username} field manually set from SecurityContextHolder</li>
  * </ul>
  *
  * <p>Audit records are immutable once persisted. They capture before/after JSON snapshots
@@ -28,7 +28,7 @@ import java.time.Instant;
  * {@code SecurityContextHolder}, falls back to "SYSTEM" for unauthenticated contexts.
  *
  * <p>IP address is captured from {@code HttpServletRequest} in controllers and passed via
- * {@code AuditContext}.
+ * {@code RequestAuditContext}.
  *
  * @see AuditCommandExecutor
  * @see VeltroAuditorAware
@@ -80,7 +80,7 @@ public class AuditRecordEntity {
 
     /**
      * Client IP address (IPv4 or IPv6).
-     * Captured from {@code HttpServletRequest} in controllers, passed via {@code AuditContext}.
+     * Captured from {@code HttpServletRequest} in controllers, passed via {@code RequestAuditContext}.
      * Nullable for operations not triggered by HTTP requests.
      */
     @Column(name = "ip_address", length = 45)
@@ -97,3 +97,4 @@ public class AuditRecordEntity {
     @Column(name = "business_id", nullable = false)
     private Long businessId;
 }
+

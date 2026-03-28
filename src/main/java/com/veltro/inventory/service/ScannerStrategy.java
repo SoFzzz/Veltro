@@ -7,14 +7,14 @@ import com.veltro.inventory.dto.ProductSuggestionResponse;
  *
  * <p>Defines a common contract for different scanning strategies:
  * <ul>
- *   <li>{@link BarcodeStrategy} - Traditional barcode/QR scanning (handled by frontend)</li>
+ *   <li>{@link BarcodeRecognitionStrategy} - Traditional barcode/QR scanning (handled by frontend)</li>
  *   <li>{@link AiVisionStrategy} - AI-powered image recognition for unlabeled products</li>
  * </ul>
  *
  * <p>This pattern allows the system to swap scanning algorithms at runtime
  * based on the type of input (barcode string vs. product image).
  *
- * @see BarcodeStrategy
+ * @see BarcodeRecognitionStrategy
  * @see AiVisionStrategy
  */
 public interface ScannerStrategy {
@@ -43,3 +43,4 @@ public interface ScannerStrategy {
      */
     boolean supports(Object input);
 }
+

@@ -237,7 +237,7 @@ public class PurchaseOrderService {
                 () -> beforeSnapshot,
                 () -> updated,
                 (result) -> buildOrderSnapshot(updated),
-                AuditContext.empty()
+                RequestAuditContext.empty()
         );
 
         log.info("Voided purchase order: {}", order.getOrderNumber());
@@ -287,7 +287,7 @@ public class PurchaseOrderService {
                 () -> beforeSnapshot,
                 () -> updated,
                 (result) -> buildOrderSnapshot(updated),
-                AuditContext.empty()
+                RequestAuditContext.empty()
         );
         
         log.info("Marked purchase order {} as fully received", order.getOrderNumber());
@@ -414,3 +414,4 @@ public class PurchaseOrderService {
         return snapshot;
     }
 }
+

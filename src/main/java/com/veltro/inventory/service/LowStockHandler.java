@@ -14,7 +14,7 @@ public class LowStockHandler implements AlertHandler {
     }
 
     @Override
-    public void handle(StockEvaluationContext context) {
+    public void handle(StockAlertEvaluationContext context) {
         int stock = context.getCurrentStock();
         if (stock > context.getCriticalStock() && stock <= context.getMinStock()) {
             AlertEntity alert = new AlertEntity();
@@ -28,3 +28,4 @@ public class LowStockHandler implements AlertHandler {
         }
     }
 }
+

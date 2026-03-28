@@ -45,7 +45,7 @@ public class AlertService {
         int min = configuration != null ? configuration.getMinStock() : inventory.getMinStock();
         int overstock = configuration != null ? configuration.getOverstockThreshold() : inventory.getMaxStock();
 
-        StockEvaluationContext context = new StockEvaluationContext(
+        StockAlertEvaluationContext context = new StockAlertEvaluationContext(
                 productId,
                 inventory.getProduct().getName(),
                 inventory.getCurrentStock(),
@@ -112,3 +112,4 @@ public class AlertService {
         return alertRepository.countByReadFalseAndResolvedFalseAndBusinessId(businessId);
     }
 }
+

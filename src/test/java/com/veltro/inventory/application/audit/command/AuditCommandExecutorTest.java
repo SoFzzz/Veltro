@@ -7,7 +7,7 @@ import com.veltro.inventory.model.AuditRecordEntity;
 import com.veltro.inventory.repository.AuditRecordRepository;
 import com.veltro.inventory.security.VeltroUserDetails;
 import com.veltro.inventory.service.AuditCommandExecutor;
-import com.veltro.inventory.service.AuditContext;
+import com.veltro.inventory.service.RequestAuditContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -76,7 +76,7 @@ class AuditCommandExecutorTest {
         when(objectMapper.writeValueAsString(beforeData)).thenReturn("{\"status\":\"PENDING\"}");
         when(objectMapper.writeValueAsString(afterData)).thenReturn("{\"status\":\"CONFIRMED\"}");
 
-        AuditContext context = new AuditContext("192.168.1.100");
+        RequestAuditContext context = new RequestAuditContext("192.168.1.100");
         String expectedResult = "Operation completed";
 
         // When
@@ -115,7 +115,7 @@ class AuditCommandExecutorTest {
         Map<String, Object> afterData = Map.of("status", "CONFIRMED");
         when(objectMapper.writeValueAsString(afterData)).thenReturn("{\"status\":\"CONFIRMED\"}");
 
-        AuditContext context = new AuditContext("10.0.0.1");
+        RequestAuditContext context = new RequestAuditContext("10.0.0.1");
 
         // When
         String result = executor.execute(
@@ -148,7 +148,7 @@ class AuditCommandExecutorTest {
         Map<String, Object> beforeData = Map.of("status", "PENDING");
         when(objectMapper.writeValueAsString(beforeData)).thenReturn("{\"status\":\"PENDING\"}");
 
-        AuditContext context = new AuditContext("172.16.0.1");
+        RequestAuditContext context = new RequestAuditContext("172.16.0.1");
 
         // When
         String result = executor.execute(
@@ -175,7 +175,7 @@ class AuditCommandExecutorTest {
 
     @Test
     void shouldUseSYSTEMWhenNoAuthentication() throws Exception {
-        // Given — no authentication set, SecurityContext is empty
+        // Given 窶・no authentication set, SecurityContext is empty
         // TenantContext.getBusinessId() will throw, so this test verifies
         // that the executor fails gracefully when there's no VeltroUserDetails.
         // In practice, audit operations always happen within authenticated requests.
@@ -191,7 +191,7 @@ class AuditCommandExecutorTest {
         when(objectMapper.writeValueAsString(beforeData)).thenReturn("{\"stock\":10}");
         when(objectMapper.writeValueAsString(afterData)).thenReturn("{\"stock\":20}");
 
-        AuditContext context = new AuditContext("127.0.0.1");
+        RequestAuditContext context = new RequestAuditContext("127.0.0.1");
 
         // When
         String result = executor.execute(
@@ -226,7 +226,7 @@ class AuditCommandExecutorTest {
         when(objectMapper.writeValueAsString(beforeData)).thenReturn("{\"status\":\"PENDING\",\"receivedQuantity\":0}");
         when(objectMapper.writeValueAsString(afterData)).thenReturn("{\"status\":\"RECEIVED\",\"receivedQuantity\":100}");
 
-        AuditContext context = new AuditContext("192.168.10.50");
+        RequestAuditContext context = new RequestAuditContext("192.168.10.50");
 
         // When
         String result = executor.execute(
@@ -263,7 +263,7 @@ class AuditCommandExecutorTest {
         when(objectMapper.writeValueAsString(beforeData)).thenReturn("{\"currentStock\":50,\"minStock\":10}");
         when(objectMapper.writeValueAsString(afterData)).thenReturn("{\"currentStock\":75,\"minStock\":10}");
 
-        AuditContext context = new AuditContext("192.168.1.200");
+        RequestAuditContext context = new RequestAuditContext("192.168.1.200");
 
         // When
         String result = executor.execute(
@@ -296,7 +296,7 @@ class AuditCommandExecutorTest {
         Map<String, Object> beforeData = Map.of("status", "PENDING");
         lenient().when(objectMapper.writeValueAsString(beforeData)).thenReturn("{\"status\":\"PENDING\"}");
 
-        AuditContext context = new AuditContext("192.168.1.1");
+        RequestAuditContext context = new RequestAuditContext("192.168.1.1");
         RuntimeException operationError = new RuntimeException("Operation failed");
 
         // When/Then
@@ -327,7 +327,7 @@ class AuditCommandExecutorTest {
         lenient().when(objectMapper.writeValueAsString(any()))
                 .thenThrow(new RuntimeException("JSON serialization failed"));
 
-        AuditContext context = new AuditContext("192.168.1.1");
+        RequestAuditContext context = new RequestAuditContext("192.168.1.1");
 
         // When/Then
         assertThatThrownBy(() -> executor.execute(
@@ -345,13 +345,13 @@ class AuditCommandExecutorTest {
 
     @Test
     void shouldSetCorrectBusinessIdForDifferentTenants() throws Exception {
-        // Given — authenticate as business 2
+        // Given 窶・authenticate as business 2
         authenticateAs("owner_test", 5L, 2L);
 
         Map<String, Object> afterData = Map.of("status", "CONFIRMED");
         when(objectMapper.writeValueAsString(afterData)).thenReturn("{\"status\":\"CONFIRMED\"}");
 
-        AuditContext context = new AuditContext("10.0.0.1");
+        RequestAuditContext context = new RequestAuditContext("10.0.0.1");
 
         // When
         executor.execute(
@@ -364,7 +364,7 @@ class AuditCommandExecutorTest {
                 context
         );
 
-        // Then — verify businessId is 2, not 1
+        // Then 窶・verify businessId is 2, not 1
         ArgumentCaptor<AuditRecordEntity> captor = ArgumentCaptor.forClass(AuditRecordEntity.class);
         verify(auditRepository).save(captor.capture());
 
@@ -373,3 +373,4 @@ class AuditCommandExecutorTest {
         assertThat(saved.getUsername()).isEqualTo("owner_test");
     }
 }
+

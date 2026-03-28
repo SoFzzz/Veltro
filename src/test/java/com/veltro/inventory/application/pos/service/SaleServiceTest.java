@@ -19,7 +19,9 @@ import com.veltro.inventory.repository.SaleRepository;
 import com.veltro.inventory.exception.InvalidPaymentException;
 import com.veltro.inventory.exception.InvalidStateTransitionException;
 import com.veltro.inventory.exception.NotFoundException;
+import com.veltro.inventory.security.VeltroUserDetails;
 import com.veltro.inventory.service.SaleService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,8 +32,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -52,6 +52,9 @@ import static org.mockito.Mockito.when;
  */
 @ExtendWith(MockitoExtension.class)
 class SaleServiceTest {
+
+    private static final Long USER_ID = 100L;
+    private static final Long BUSINESS_ID = 100L;
 
     @Mock
     private SaleRepository saleRepository;
@@ -74,15 +77,12 @@ class SaleServiceTest {
     void setUp() {
         // Manual service instantiation
         saleService = new SaleService(saleRepository, productRepository, saleMapper, applicationEventPublisher, auditCommandExecutor);
-        
-        // Mock authenticated user
-        UserDetails userDetails = User.withUsername("testuser")
-                .password("password")
-                .authorities(List.of(new SimpleGrantedAuthority("ROLE_CASHIER")))
-                .build();
-        UsernamePasswordAuthenticationToken auth =
-                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(auth);
+        authenticateAsTenantUser();
+    }
+
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
     }
 
     // -------------------------------------------------------------------------
@@ -150,7 +150,7 @@ class SaleServiceTest {
     @DisplayName("findById returns sale when exists")
     void findById_existingSale_returnsSaleResponse() {
         SaleEntity sale = createSale(1L, "VLT-2026-000001", SaleStatus.IN_PROGRESS);
-        when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong()));
+        when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong())).thenReturn(Optional.of(sale));
         when(saleMapper.toResponse(sale)).thenReturn(createSaleResponse(1L, "VLT-2026-000001"));
 
         SaleResponse response = saleService.findById(1L);
@@ -161,7 +161,7 @@ class SaleServiceTest {
     @Test
     @DisplayName("findById throws NotFoundException when sale not found")
     void findById_nonExistentSale_throwsNotFoundException() {
-        when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(999L), anyLong()));
+        when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(999L), anyLong())).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> saleService.findById(999L))
                 .isInstanceOf(NotFoundException.class)
@@ -179,8 +179,8 @@ class SaleServiceTest {
         ProductEntity product = createProduct(10L, "Widget", new BigDecimal("15.0000"));
         AddItemRequest request = new AddItemRequest(10L, 2);
 
-        when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong()));
-        when(productRepository.findByIdAndActiveTrueAndBusinessId(eq(10L), anyLong()));
+        when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong())).thenReturn(Optional.of(sale));
+        when(productRepository.findByIdAndActiveTrueAndBusinessId(eq(10L), anyLong())).thenReturn(Optional.of(product));
         when(saleRepository.save(sale)).thenReturn(sale);
         when(saleMapper.toResponse(sale)).thenReturn(createSaleResponse(1L, "VLT-2026-000001"));
 
@@ -202,8 +202,8 @@ class SaleServiceTest {
         SaleEntity sale = createSale(1L, "VLT-2026-000001", SaleStatus.IN_PROGRESS);
         AddItemRequest request = new AddItemRequest(999L, 2);
 
-        when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong()));
-        when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(999L), anyLong()));
+        when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong())).thenReturn(Optional.of(sale));
+        when(productRepository.findByIdAndActiveTrueAndBusinessId(eq(999L), anyLong())).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> saleService.addItem(1L, request))
                 .isInstanceOf(NotFoundException.class)
@@ -225,7 +225,7 @@ class SaleServiceTest {
 
         ModifyItemRequest request = new ModifyItemRequest(4);
 
-        when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong()));
+        when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong())).thenReturn(Optional.of(sale));
         when(saleRepository.save(sale)).thenReturn(sale);
         when(saleMapper.toResponse(sale)).thenReturn(createSaleResponse(1L, "VLT-2026-000001"));
 
@@ -241,7 +241,7 @@ class SaleServiceTest {
         SaleEntity sale = createSale(1L, "VLT-2026-000001", SaleStatus.IN_PROGRESS);
         ModifyItemRequest request = new ModifyItemRequest(3);
 
-        when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong()));
+        when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong())).thenReturn(Optional.of(sale));
 
         assertThatThrownBy(() -> saleService.modifyItem(1L, 999L, request))
                 .isInstanceOf(NotFoundException.class)
@@ -261,7 +261,7 @@ class SaleServiceTest {
         detail.setId(5L);
         sale.addItem(detail);
 
-        when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong()));
+        when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong())).thenReturn(Optional.of(sale));
         when(saleRepository.save(sale)).thenReturn(sale);
         when(saleMapper.toResponse(sale)).thenReturn(createSaleResponse(1L, "VLT-2026-000001"));
 
@@ -285,7 +285,7 @@ class SaleServiceTest {
 
         ConfirmSaleRequest request = new ConfirmSaleRequest(PaymentMethod.CASH, null);
 
-        when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong()));
+        when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong())).thenReturn(Optional.of(sale));
 
         assertThatThrownBy(() -> saleService.confirm(1L, request))
                 .isInstanceOf(InvalidPaymentException.class)
@@ -297,14 +297,14 @@ class SaleServiceTest {
     void confirm_cash_amountLessThanTotal_throws() {
         SaleEntity sale = createSale(1L, "VLT-2026-000001", SaleStatus.IN_PROGRESS);
         ProductEntity product = createProduct(10L, "Widget", new BigDecimal("50.0000"));
-SaleDetailEntity detail = createSaleDetail(product, 1, new BigDecimal("50.0000"));
-sale.addItem(detail);
-sale.recalculateTotals();
+        SaleDetailEntity detail = createSaleDetail(product, 1, new BigDecimal("50.0000"));
+        sale.addItem(detail);
+        sale.recalculateTotals();
 
 
         ConfirmSaleRequest request = new ConfirmSaleRequest(PaymentMethod.CASH, new BigDecimal("40.0000"));
 
-        when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong()));
+        when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong())).thenReturn(Optional.of(sale));
 
         assertThatThrownBy(() -> saleService.confirm(1L, request))
                 .isInstanceOf(InvalidPaymentException.class)
@@ -316,14 +316,14 @@ sale.recalculateTotals();
     void confirm_cash_valid_calculatesChange() {
         SaleEntity sale = createSale(1L, "VLT-2026-000001", SaleStatus.IN_PROGRESS);
         ProductEntity product = createProduct(10L, "Widget", new BigDecimal("30.0000"));
-SaleDetailEntity detail = createSaleDetail(product, 2, new BigDecimal("30.0000"));
-sale.addItem(detail);
-sale.recalculateTotals();
+        SaleDetailEntity detail = createSaleDetail(product, 2, new BigDecimal("30.0000"));
+        sale.addItem(detail);
+        sale.recalculateTotals();
 
 
         ConfirmSaleRequest request = new ConfirmSaleRequest(PaymentMethod.CASH, new BigDecimal("100.0000"));
 
-        when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong()));
+        when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong())).thenReturn(Optional.of(sale));
         when(saleRepository.save(sale)).thenReturn(sale);
         when(saleMapper.toResponse(sale)).thenReturn(createSaleResponse(1L, "VLT-2026-000001"));
 
@@ -345,7 +345,7 @@ sale.recalculateTotals();
 
         ConfirmSaleRequest request = new ConfirmSaleRequest(PaymentMethod.CARD, null);
 
-        when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong()));
+        when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong())).thenReturn(Optional.of(sale));
         when(saleRepository.save(sale)).thenReturn(sale);
         when(saleMapper.toResponse(sale)).thenReturn(createSaleResponse(1L, "VLT-2026-000001"));
 
@@ -366,7 +366,7 @@ sale.recalculateTotals();
     void voidSale_completedSale_transitionsToVoided() {
         SaleEntity sale = createSale(1L, "VLT-2026-000001", SaleStatus.COMPLETED);
 
-        when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong()));
+        when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong())).thenReturn(Optional.of(sale));
         when(saleRepository.save(sale)).thenReturn(sale);
         when(saleMapper.toResponse(sale)).thenReturn(createSaleResponse(1L, "VLT-2026-000001"));
 
@@ -381,10 +381,23 @@ sale.recalculateTotals();
     void voidSale_inProgressSale_throwsInvalidStateTransition() {
         SaleEntity sale = createSale(1L, "VLT-2026-000001", SaleStatus.IN_PROGRESS);
 
-        when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong()));
+        when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong())).thenReturn(Optional.of(sale));
 
         assertThatThrownBy(() -> saleService.voidSale(1L))
                 .isInstanceOf(InvalidStateTransitionException.class)
                 .hasMessageContaining("Sale VLT-2026-000001 is in IN_PROGRESS status. Only completed sales can be voided.");
+    }
+
+    private void authenticateAsTenantUser() {
+        VeltroUserDetails principal = new VeltroUserDetails(
+                "testuser",
+                "password",
+                List.of(new SimpleGrantedAuthority("ROLE_CASHIER")),
+                USER_ID,
+                BUSINESS_ID
+        );
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(principal, principal.getPassword(), principal.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 }

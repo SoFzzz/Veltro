@@ -27,15 +27,15 @@ import java.util.function.Supplier;
  * <p><strong>ADR:</strong> Uses a generic functional approach with {@code @FunctionalInterface}
  * + lambdas instead of concrete command classes (e.g., ConfirmSaleCommand). The append-only
  * nature of audit logging does not require undo/redo, queuing, or multi-method command
- * objects — the three core reasons GoF Command uses concrete classes. This keeps the
+ * objects 窶・the three core reasons GoF Command uses concrete classes. This keeps the
  * integration with SaleService and InventoryService clean and avoids unnecessary class
  * proliferation.
  * 
  * <p>Username is retrieved from {@code SecurityContextHolder}, following the same pattern
  * as {@code VeltroAuditorAware}. Falls back to "SYSTEM" for unauthenticated contexts.
  * 
- * @see AuditableAction
- * @see AuditContext
+ * @see AuditableCommand
+ * @see RequestAuditContext
  * @see VeltroAuditorAware
  */
 @Slf4j
@@ -80,9 +80,9 @@ public class AuditCommandExecutor {
             Long entityId,
             AuditAction action,
             Supplier<Object> beforeSnapshot,
-            AuditableAction<T> operation,
+            AuditableCommand<T> operation,
             Function<T, Object> afterSnapshot,
-            AuditContext context) {
+            RequestAuditContext context) {
 
         log.debug("Executing auditable operation: {} {} for entity {} with ID {}",
                 action, entityType, entityType, entityId);
@@ -127,7 +127,7 @@ public class AuditCommandExecutor {
             AuditAction action,
             String beforeJson,
             String afterJson,
-            AuditContext context) {
+            RequestAuditContext context) {
 
         AuditRecordEntity record = new AuditRecordEntity();
         record.setEntityType(entityType);
@@ -179,3 +179,4 @@ public class AuditCommandExecutor {
         }
     }
 }
+

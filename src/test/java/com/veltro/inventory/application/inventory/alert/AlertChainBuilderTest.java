@@ -5,7 +5,7 @@ import com.veltro.inventory.model.AlertType;
 import com.veltro.inventory.service.AlertChainBuilder;
 import com.veltro.inventory.service.AlertHandler;
 import com.veltro.inventory.service.OutOfStockHandler;
-import com.veltro.inventory.service.StockEvaluationContext;
+import com.veltro.inventory.service.StockAlertEvaluationContext;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -40,7 +40,7 @@ class AlertChainBuilderTest {
         // Arrange
         AlertChainBuilder builder = new AlertChainBuilder();
         AlertHandler chain = builder.alertHandlerChain();
-        StockEvaluationContext context = new StockEvaluationContext(
+        StockAlertEvaluationContext context = new StockAlertEvaluationContext(
                 1L, "Product", 0, 2, 5, 20); // current=0, critical=2, min=5, overstock=20
 
         // Act
@@ -58,7 +58,7 @@ class AlertChainBuilderTest {
         // Arrange
         AlertChainBuilder builder = new AlertChainBuilder();
         AlertHandler chain = builder.alertHandlerChain();
-        StockEvaluationContext context = new StockEvaluationContext(
+        StockAlertEvaluationContext context = new StockAlertEvaluationContext(
                 2L, "Widget", 4, 1, 5, 20); // current=4, critical=1, min=5, overstock=20
 
         // Act
@@ -76,7 +76,7 @@ class AlertChainBuilderTest {
         // Arrange
         AlertChainBuilder builder = new AlertChainBuilder();
         AlertHandler chain = builder.alertHandlerChain();
-        StockEvaluationContext context = new StockEvaluationContext(
+        StockAlertEvaluationContext context = new StockAlertEvaluationContext(
                 3L, "Gadget", 25, 2, 5, 20); // current=25, critical=2, min=5, overstock=20
 
         // Act
@@ -97,11 +97,11 @@ class AlertChainBuilderTest {
         
         // This scenario shouldn't create multiple alerts simultaneously in practice,
         // but tests that all handlers execute
-        StockEvaluationContext context1 = new StockEvaluationContext(
+        StockAlertEvaluationContext context1 = new StockAlertEvaluationContext(
                 4L, "Item1", 0, 2, 5, 20); // OUT_OF_STOCK
-        StockEvaluationContext context2 = new StockEvaluationContext(
+        StockAlertEvaluationContext context2 = new StockAlertEvaluationContext(
                 5L, "Item2", 3, 1, 5, 20); // LOW_STOCK
-        StockEvaluationContext context3 = new StockEvaluationContext(
+        StockAlertEvaluationContext context3 = new StockAlertEvaluationContext(
                 6L, "Item3", 30, 2, 5, 20); // OVERSTOCK
 
         // Act
@@ -126,7 +126,7 @@ class AlertChainBuilderTest {
         // Arrange
         AlertChainBuilder builder = new AlertChainBuilder();
         AlertHandler chain = builder.alertHandlerChain();
-        StockEvaluationContext context = new StockEvaluationContext(
+        StockAlertEvaluationContext context = new StockAlertEvaluationContext(
                 7L, "Normal Product", 10, 2, 5, 20); // current=10, all conditions normal
 
         // Act

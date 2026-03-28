@@ -3,7 +3,7 @@ package com.veltro.inventory.application.inventory.service;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import com.veltro.inventory.service.AlertHandler;
-import com.veltro.inventory.service.StockEvaluationContext;
+import com.veltro.inventory.service.StockAlertEvaluationContext;
 import com.veltro.inventory.dto.AlertResponse;
 import com.veltro.inventory.mapper.AlertMapper;
 import com.veltro.inventory.model.ProductEntity;
@@ -15,7 +15,9 @@ import com.veltro.inventory.model.InventoryEntity;
 import com.veltro.inventory.repository.AlertConfigurationRepository;
 import com.veltro.inventory.repository.AlertRepository;
 import com.veltro.inventory.repository.InventoryRepository;
+import com.veltro.inventory.security.VeltroUserDetails;
 import com.veltro.inventory.service.AlertService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,6 +29,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -44,6 +49,8 @@ import static org.mockito.Mockito.*;
  */
 @ExtendWith(MockitoExtension.class)
 class AlertServiceTest {
+
+    private static final Long BUSINESS_ID = 100L;
 
     @Mock
     private AlertRepository alertRepository;
@@ -64,7 +71,13 @@ class AlertServiceTest {
 
     @BeforeEach
     void setUp() {
+        authenticateAsTenantUser();
         alertService = new AlertService(alertRepository, configurationRepository, inventoryRepository, alertMapper, alertHandlerChain);
+    }
+
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
     }
 
     // -------------------------------------------------------------------------
@@ -104,6 +117,19 @@ class AlertServiceTest {
         return alert;
     }
 
+    private void authenticateAsTenantUser() {
+        VeltroUserDetails principal = new VeltroUserDetails(
+                "alert-tester",
+                "password",
+                List.of(new SimpleGrantedAuthority("ROLE_ADMIN")),
+                10L,
+                BUSINESS_ID
+        );
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(principal, principal.getPassword(), principal.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+    }
+
     // -------------------------------------------------------------------------
     // evaluateStock Tests
     // -------------------------------------------------------------------------
@@ -115,25 +141,28 @@ class AlertServiceTest {
         Long productId = 1L;
         InventoryEntity inventory = createInventory(productId, "Test Product", 3, 5, 20);
 
-        when(inventoryRepository.findByProductIdAndActiveTrueAndBusinessId(eq(productId), anyLong()));
-        when(configurationRepository.findByProductIdAndActiveTrueAndBusinessId(eq(productId), anyLong()));
-        when(alertRepository.findByProductIdAndResolvedFalseAndBusinessId(eq(productId), anyLong()));
+        when(inventoryRepository.findByProductIdAndActiveTrueAndBusinessId(eq(productId), eq(BUSINESS_ID)))
+                .thenReturn(Optional.of(inventory));
+        when(configurationRepository.findByProductIdAndActiveTrueAndBusinessId(eq(productId), eq(BUSINESS_ID)))
+                .thenReturn(Optional.empty());
+        when(alertRepository.findByProductIdAndResolvedFalseAndBusinessId(eq(productId), eq(BUSINESS_ID)))
+                .thenReturn(List.of());
         
         doAnswer(invocation -> {
-            StockEvaluationContext context = invocation.getArgument(0);
+            StockAlertEvaluationContext context = invocation.getArgument(0);
             AlertEntity alert = new AlertEntity();
             alert.setType(AlertType.LOW_STOCK);
             alert.setSeverity(AlertSeverity.WARNING);
             alert.setMessage("Low stock alert");
             context.addAlert(alert);
             return null;
-        }).when(alertHandlerChain).handle(any(StockEvaluationContext.class));
+        }).when(alertHandlerChain).handle(any(StockAlertEvaluationContext.class));
 
         // Act
         alertService.evaluateStock(productId);
 
         // Assert
-        verify(alertHandlerChain).handle(any(StockEvaluationContext.class));
+        verify(alertHandlerChain).handle(any(StockAlertEvaluationContext.class));
         verify(alertRepository).save(any(AlertEntity.class));
         verify(alertRepository, never()).save(argThat(alert -> alert.isResolved()));
     }
@@ -146,12 +175,15 @@ class AlertServiceTest {
         InventoryEntity inventory = createInventory(productId, "Test Product", 10, 5, 20);
         AlertEntity existingAlert = createAlert(1L, AlertType.LOW_STOCK, productId, false, false);
 
-        when(inventoryRepository.findByProductIdAndActiveTrueAndBusinessId(eq(productId), anyLong()));
-        when(configurationRepository.findByProductIdAndActiveTrueAndBusinessId(eq(productId), anyLong()));
-        when(alertRepository.findByProductIdAndResolvedFalseAndBusinessId(eq(productId), anyLong()));
+        when(inventoryRepository.findByProductIdAndActiveTrueAndBusinessId(eq(productId), eq(BUSINESS_ID)))
+                .thenReturn(Optional.of(inventory));
+        when(configurationRepository.findByProductIdAndActiveTrueAndBusinessId(eq(productId), eq(BUSINESS_ID)))
+                .thenReturn(Optional.empty());
+        when(alertRepository.findByProductIdAndResolvedFalseAndBusinessId(eq(productId), eq(BUSINESS_ID)))
+                .thenReturn(List.of(existingAlert));
         
         // No alerts generated (condition resolved)
-        doNothing().when(alertHandlerChain).handle(any(StockEvaluationContext.class));
+        doNothing().when(alertHandlerChain).handle(any(StockAlertEvaluationContext.class));
 
         // Act
         alertService.evaluateStock(productId);
@@ -173,25 +205,28 @@ class AlertServiceTest {
         InventoryEntity inventory = createInventory(productId, "Test Product", 3, 5, 20);
         AlertEntity existingAlert = createAlert(1L, AlertType.LOW_STOCK, productId, false, false);
 
-        when(inventoryRepository.findByProductIdAndActiveTrueAndBusinessId(eq(productId), anyLong()));
-        when(configurationRepository.findByProductIdAndActiveTrueAndBusinessId(eq(productId), anyLong()));
-        when(alertRepository.findByProductIdAndResolvedFalseAndBusinessId(eq(productId), anyLong()));
+        when(inventoryRepository.findByProductIdAndActiveTrueAndBusinessId(eq(productId), eq(BUSINESS_ID)))
+                .thenReturn(Optional.of(inventory));
+        when(configurationRepository.findByProductIdAndActiveTrueAndBusinessId(eq(productId), eq(BUSINESS_ID)))
+                .thenReturn(Optional.empty());
+        when(alertRepository.findByProductIdAndResolvedFalseAndBusinessId(eq(productId), eq(BUSINESS_ID)))
+                .thenReturn(List.of(existingAlert));
         
         doAnswer(invocation -> {
-            StockEvaluationContext context = invocation.getArgument(0);
+            StockAlertEvaluationContext context = invocation.getArgument(0);
             AlertEntity alert = new AlertEntity();
             alert.setType(AlertType.LOW_STOCK);
             alert.setSeverity(AlertSeverity.WARNING);
             alert.setMessage("Low stock alert");
             context.addAlert(alert);
             return null;
-        }).when(alertHandlerChain).handle(any(StockEvaluationContext.class));
+        }).when(alertHandlerChain).handle(any(StockAlertEvaluationContext.class));
 
         // Act
         alertService.evaluateStock(productId);
 
         // Assert
-        verify(alertHandlerChain).handle(any(StockEvaluationContext.class));
+        verify(alertHandlerChain).handle(any(StockAlertEvaluationContext.class));
         // Should not save existing alert (not resolved)
         verify(alertRepository, never()).save(eq(existingAlert));
         // Should not create new alert (already exists)
@@ -209,18 +244,22 @@ class AlertServiceTest {
         config.setMinStock(15);
         config.setOverstockThreshold(100);
 
-        when(inventoryRepository.findByProductIdAndActiveTrueAndBusinessId(eq(productId), anyLong()));
-        when(configurationRepository.findByProductIdAndActiveTrueAndBusinessId(eq(productId), anyLong()));
-        when(alertRepository.findByProductIdAndResolvedFalseAndBusinessId(eq(productId), anyLong()));
+        when(inventoryRepository.findByProductIdAndActiveTrueAndBusinessId(eq(productId), eq(BUSINESS_ID)))
+                .thenReturn(Optional.of(inventory));
+        when(configurationRepository.findByProductIdAndActiveTrueAndBusinessId(eq(productId), eq(BUSINESS_ID)))
+                .thenReturn(Optional.of(config));
+        when(alertRepository.findByProductIdAndResolvedFalseAndBusinessId(eq(productId), eq(BUSINESS_ID)))
+                .thenReturn(List.of());
+        doNothing().when(alertHandlerChain).handle(any(StockAlertEvaluationContext.class));
 
         // Act
         alertService.evaluateStock(productId);
 
         // Assert
-        ArgumentCaptor<StockEvaluationContext> contextCaptor = ArgumentCaptor.forClass(StockEvaluationContext.class);
+        ArgumentCaptor<StockAlertEvaluationContext> contextCaptor = ArgumentCaptor.forClass(StockAlertEvaluationContext.class);
         verify(alertHandlerChain).handle(contextCaptor.capture());
         
-        StockEvaluationContext context = contextCaptor.getValue();
+        StockAlertEvaluationContext context = contextCaptor.getValue();
         assertThat(context.getCurrentStock()).isEqualTo(8);
         assertThat(context.getCriticalStock()).isEqualTo(2);
         assertThat(context.getMinStock()).isEqualTo(15);
@@ -228,11 +267,12 @@ class AlertServiceTest {
     }
 
     @Test
-    @DisplayName("evaluateStock throws IllegalStateException when inventory not found")
+        @DisplayName("evaluateStock throws IllegalStateException when inventory not found")
     void evaluateStock_inventoryNotFound_throwsException() {
         // Arrange
         Long productId = 99L;
-        when(inventoryRepository.findByProductIdAndActiveTrueAndBusinessId(eq(productId), anyLong()));
+        when(inventoryRepository.findByProductIdAndActiveTrueAndBusinessId(eq(productId), eq(BUSINESS_ID)))
+                .thenReturn(Optional.empty());
 
         // Act & Assert
         assertThatThrownBy(() -> alertService.evaluateStock(productId))
@@ -258,7 +298,8 @@ class AlertServiceTest {
         AlertResponse response2 = new AlertResponse(2L, 2L, "Product 2", "LOW_STOCK", 
                 "WARNING", "Low stock", false, true, OffsetDateTime.now());
 
-        when(alertRepository.findByResolvedFalseAndBusinessIdOrderBySeverityDescCreatedAtAsc(anyLong(), eq(pageable)));
+        when(alertRepository.findByResolvedFalseAndBusinessIdOrderBySeverityDescCreatedAtAsc(eq(BUSINESS_ID), eq(pageable)))
+                .thenReturn(alertPage);
         when(alertMapper.toResponse(alert1)).thenReturn(response1);
         when(alertMapper.toResponse(alert2)).thenReturn(response2);
 
@@ -279,7 +320,8 @@ class AlertServiceTest {
         Long alertId = 1L;
         AlertEntity alert = createAlert(alertId, AlertType.LOW_STOCK, 1L, false, false);
 
-        when(alertRepository.findByIdAndActiveTrueAndBusinessId(eq(alertId), anyLong()));
+        when(alertRepository.findByIdAndActiveTrueAndBusinessId(eq(alertId), eq(BUSINESS_ID)))
+                .thenReturn(Optional.of(alert));
 
         // Act
         alertService.markAsRead(alertId);
@@ -300,7 +342,8 @@ class AlertServiceTest {
         Long alertId = 1L;
         AlertEntity alert = createAlert(alertId, AlertType.LOW_STOCK, 1L, false, false);
 
-        when(alertRepository.findByIdAndActiveTrueAndBusinessId(eq(alertId), anyLong()));
+        when(alertRepository.findByIdAndActiveTrueAndBusinessId(eq(alertId), eq(BUSINESS_ID)))
+                .thenReturn(Optional.of(alert));
 
         // Act
         alertService.markAsResolved(alertId);
@@ -318,22 +361,23 @@ class AlertServiceTest {
     @DisplayName("unreadCount returns count of unread and unresolved alerts")
     void unreadCount_returnsCorrectCount() {
         // Arrange
-        when(alertRepository.countByReadFalseAndResolvedFalseAndBusinessId(anyLong()));
+        when(alertRepository.countByReadFalseAndResolvedFalseAndBusinessId(eq(BUSINESS_ID)))
+                .thenReturn(5L);
 
         // Act
         long count = alertService.unreadCount();
 
         // Assert
         assertThat(count).isEqualTo(5L);
-        when(alertRepository.countByReadFalseAndResolvedFalseAndBusinessId(anyLong()));
     }
 
     @Test
-    @DisplayName("markAsRead throws exception when alert not found")
+        @DisplayName("markAsRead throws exception when alert not found")
     void markAsRead_alertNotFound_throwsException() {
         // Arrange
         Long alertId = 99L;
-        when(alertRepository.findByIdAndActiveTrueAndBusinessId(eq(alertId), anyLong()));
+        when(alertRepository.findByIdAndActiveTrueAndBusinessId(eq(alertId), eq(BUSINESS_ID)))
+                .thenReturn(Optional.empty());
 
         // Act & Assert
         assertThatThrownBy(() -> alertService.markAsRead(alertId))
@@ -342,11 +386,12 @@ class AlertServiceTest {
     }
 
     @Test
-    @DisplayName("markAsResolved throws exception when alert not found")
+        @DisplayName("markAsResolved throws exception when alert not found")
     void markAsResolved_alertNotFound_throwsException() {
         // Arrange
         Long alertId = 99L;
-        when(alertRepository.findByIdAndActiveTrueAndBusinessId(eq(alertId), anyLong()));
+        when(alertRepository.findByIdAndActiveTrueAndBusinessId(eq(alertId), eq(BUSINESS_ID)))
+                .thenReturn(Optional.empty());
 
         // Act & Assert
         assertThatThrownBy(() -> alertService.markAsResolved(alertId))

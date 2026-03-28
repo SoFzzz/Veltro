@@ -2,7 +2,7 @@ package com.veltro.inventory.infrastructure.adapters.web;
 
 import com.veltro.inventory.controller.ScannerController;
 import com.veltro.inventory.dto.ProductSuggestionResponse;
-import com.veltro.inventory.service.ScannerService;
+import com.veltro.inventory.service.ProductRecognitionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -34,7 +34,7 @@ import static org.mockito.Mockito.when;
 class ScannerControllerTest {
 
     @Mock
-    private ScannerService scannerService;
+    private ProductRecognitionService scannerService;
 
     private ScannerController scannerController;
 
@@ -150,3 +150,4 @@ class ScannerControllerTest {
         assertThat(response.getBody()).containsEntry("available", true);
     }
 }
+

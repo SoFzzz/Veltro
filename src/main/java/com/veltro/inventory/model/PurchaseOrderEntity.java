@@ -1,10 +1,10 @@
 package com.veltro.inventory.model;
 
-import com.veltro.inventory.state.PendingState;
-import com.veltro.inventory.state.PartialState;
+import com.veltro.inventory.state.PurchaseOrderPendingState;
+import com.veltro.inventory.state.PurchaseOrderPartialState;
 import com.veltro.inventory.state.PurchaseOrderState;
-import com.veltro.inventory.state.ReceivedState;
-import com.veltro.inventory.state.VoidedStatePurchasing;
+import com.veltro.inventory.state.PurchaseOrderReceivedState;
+import com.veltro.inventory.state.PurchaseOrderVoidedState;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -19,7 +19,7 @@ import java.util.List;
 /**
  * Purchase order entity for B2-04 with State Pattern (ADR-006).
  *
- * Lifecycle: PENDING → PARTIAL → RECEIVED (terminal) or VOIDED (terminal)
+ * Lifecycle: PENDING 竊・PARTIAL 竊・RECEIVED (terminal) or VOIDED (terminal)
  * Follows the same pattern as SaleEntity but for purchasing workflow.
  */
 @Entity
@@ -106,10 +106,10 @@ public class PurchaseOrderEntity extends AbstractAuditableEntity {
     @PostUpdate
     private void initializeState() {
         this.state = switch (this.status) {
-            case PENDING -> new PendingState();
-            case PARTIAL -> new PartialState();
-            case RECEIVED -> new ReceivedState();
-            case VOIDED -> new VoidedStatePurchasing();
+            case PENDING -> new PurchaseOrderPendingState();
+            case PARTIAL -> new PurchaseOrderPartialState();
+            case RECEIVED -> new PurchaseOrderReceivedState();
+            case VOIDED -> new PurchaseOrderVoidedState();
         };
     }
 

@@ -53,33 +53,31 @@ cd frontend && npx tsc --noEmit
 
 ## Arquitectura
 
-### Backend — Hexagonal
+### Backend — MVC Clásico
+
+La estructura backend ya no sigue el layout hexagonal anterior. El proyecto fue refactorizado hacia una organización clásica de Spring Boot con capas técnicas más directas:
 
 ```
-src/
-├── domain/              # Entidades, eventos, reglas de negocio (sin Spring)
-│   ├── iam/            # User, Role
-│   ├── catalog/        # Product, Category
-│   ├── inventory/      # Inventory, InventoryMovement, Alert
-│   ├── pos/            # Sale, SaleDetail, State Pattern
-│   ├── purchasing/     # Supplier, PurchaseOrder, PurchaseOrderDetail
-│   └── audit/          # AuditRecord
-│
-├── application/        # Servicios, listeners, strategies
-│   ├── iam/           # AuthService, JwtTokenProvider
-│   ├── catalog/       # ProductService, CategoryService
-│   ├── inventory/     # InventoryService, AlertService, AlertChainBuilder
-│   ├── pos/           # SaleService, DeductStockListener, RestoreStockListener
-│   ├── purchasing/    # PurchaseOrderService, SupplierService
-│   ├── scanner/       # ScannerService, AiVisionStrategy, OpenAiVisionClient
-│   └── audit/         # AuditCommandExecutor
-│
-└── infrastructure/     # Controllers REST, JPA repos, config
-    ├── rest/          # @RestController (controladores delgados)
-    ├── persistence/   # Repositorios JPA
-    ├── config/        # Security, CORS, application.yaml
-    └── db/migration/  # Flyway SQL (V1__* a V6__*)
+src/main/java/com/veltro/inventory/
+├── controller/         # REST controllers
+├── service/            # Servicios, listeners, strategies y facades
+├── repository/         # Spring Data JPA repositories
+├── model/              # Entidades JPA, enums y estados de dominio
+├── dto/                # Request/response DTOs
+├── mapper/             # MapStruct mappers
+├── security/           # JWT, TenantContext, VeltroUserDetails, filtros
+├── config/             # Security, CORS, auditoría y beans
+├── exception/          # Excepciones de negocio e infraestructura
+├── event/              # Eventos de dominio/aplicación
+└── VeltroApplication.java
 ```
+
+**Implicaciones de esta refactorización:**
+- La documentación histórica que mencionaba `domain/`, `application/` e `infrastructure/` debe considerarse obsoleta.
+- Los controladores exponen endpoints REST y delegan directamente en servicios Spring.
+- Los servicios concentran la lógica de aplicación, la orquestación multi-tenant, la auditoría y la publicación de eventos.
+- Los repositorios exponen métodos tenant-aware con sufijo `AndBusinessId(...)`.
+- `security/` dejó de ser un detalle periférico y ahora es una pieza central del flujo de negocio por la dependencia de `TenantContext`.
 
 ### Frontend
 
@@ -378,6 +376,11 @@ Campos planos (sin objetos anidados):
 6. Product/Category delete → cambiado a PUT deactivate (soft delete)
 7. PO `requested_by` NOT NULL → `UserRepository` + `SecurityContextHolder`
 8. DB constraint `ck_alert_type` → ALTER CHECK para incluir 6 tipos
+9. Refactorización backend → migración desde layout hexagonal a MVC clásico (`controller/service/repository/model/security/config`)
+10. Tests de servicios multi-tenant → adopción del patrón con `VeltroUserDetails` en `SecurityContextHolder` para que `TenantContext` funcione en unit tests
+11. `ForensicAuditServiceTest` y `DashboardServiceTest` → actualización de stubs a firmas tenant-aware con `businessId`
+12. `SaleServiceTest` y `SupplierServiceTest` → corrección de `when(...)` incompletos y limpieza explícita de `SecurityContextHolder` en `tearDown`
+13. `VeltroApplicationTests` → deshabilitado con `@Disabled("Requiere PostgreSQL real, no compatible con H2 en tests")` porque Flyway usa SQL específico de PostgreSQL
 
 ### Frontend
 9. `SaleReceipt` → reescrito para matchear backend
@@ -423,6 +426,10 @@ Campos planos (sin objetos anidados):
 ### Backend
 | Archivo | Cambio |
 |---------|--------|
+| `controller/*` | Controladores REST del MVC clásico |
+| `service/*` | Servicios de aplicación, listeners, estrategias y facades |
+| `repository/*` | Repositorios JPA tenant-aware |
+| `model/*` | Entidades JPA, enums y estados de negocio |
 | `application.yaml` | GitHub AI API config (gpt-4o-mini) |
 | `PurchaseOrderService.java` | Fix requestedBy NOT NULL |
 | `AlertType.java` | 6 tipos de alerta |
@@ -482,6 +489,32 @@ Campos planos (sin objetos anidados):
 | `pages/settings/WorkersPage.tsx` | UI para crear CASHIER/WAREHOUSE (solo ADMIN) |
 | `App.tsx` | Ruta /settings/workers |
 | `components/layout/MainLayout.tsx` | Nav "Empleados" para ADMIN |
+
+### Backend — Testing Multi-Tenant
+| Archivo | Descripción |
+|---------|-------------|
+| `src/test/java/.../AlertServiceTest.java` | Patrón base de test tenant-aware con `VeltroUserDetails` |
+| `src/test/java/.../ForensicAuditServiceTest.java` | Contexto tenant-aware + stubs con `businessId` |
+| `src/test/java/.../ProductServiceTest.java` | Contexto tenant-aware para `TenantContext` |
+| `src/test/java/.../DashboardServiceTest.java` | Stubs con firmas nuevas `(..., businessId)` |
+| `src/test/java/.../InventoryServiceTest.java` | Contexto tenant-aware para operaciones de inventario |
+| `src/test/java/.../PurchaseOrderServiceTest.java` | Contexto tenant-aware con username real para `getCurrentUser()` |
+| `src/test/java/.../SaleServiceTest.java` | Contexto tenant-aware + corrección de stubs incompletos |
+| `src/test/java/.../SupplierServiceTest.java` | Contexto tenant-aware + corrección de stubs incompletos |
+| `src/test/java/com/veltro/inventory/VeltroApplicationTests.java` | `@Disabled` por dependencia en PostgreSQL real/Flyway |
+
+---
+
+## Estrategia de Testing Actual
+
+- Los unit tests de servicios que usen `TenantContext` deben autenticarse con `VeltroUserDetails`, no con `String`, `User` de Spring ni principals genéricos.
+- El patrón recomendado es el de `AlertServiceTest`: autenticación en `@BeforeEach` y `SecurityContextHolder.clearContext()` en `@AfterEach`.
+- Si un servicio usa repositorios tenant-aware, los `when(...)` deben coincidir exactamente con las firmas actuales que incluyen `businessId`.
+- Los errores típicos después de cambios multi-tenant son:
+- `IllegalStateException: No authenticated VeltroUserDetails found in SecurityContext`
+- `PotentialStubbingProblem` por stubs con firmas viejas
+- `UnfinishedStubbingException` por `when(...)` sin `thenReturn(...)`
+- Estado actual de la suite Maven: todos los tests pasan y `VeltroApplicationTests` queda en `skipped` porque requiere PostgreSQL real y no H2.
 
 ---
 

@@ -4,5 +4,6 @@ public interface AlertHandler {
 
     void setNext(AlertHandler handler);
 
-    void handle(StockEvaluationContext context);
+    void handle(StockAlertEvaluationContext context);
 }
+

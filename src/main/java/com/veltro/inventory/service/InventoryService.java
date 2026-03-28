@@ -141,7 +141,7 @@ public class InventoryService {
                 () -> beforeSnapshot,
                 () -> saved,
                 (result) -> buildInventorySnapshot(saved),
-                AuditContext.empty()
+                RequestAuditContext.empty()
         );
 
         log.info("Stock ADJUSTMENT: productId={}, stock {} -> {}",
@@ -222,3 +222,4 @@ public class InventoryService {
         return snapshot;
     }
 }
+

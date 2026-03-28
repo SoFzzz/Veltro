@@ -14,7 +14,7 @@ public class OverstockHandler implements AlertHandler {
     }
 
     @Override
-    public void handle(StockEvaluationContext context) {
+    public void handle(StockAlertEvaluationContext context) {
         int threshold = context.getOverstockThreshold();
         if (threshold > 0 && context.getCurrentStock() > threshold) {
             AlertEntity alert = new AlertEntity();
@@ -28,3 +28,4 @@ public class OverstockHandler implements AlertHandler {
         }
     }
 }
+
