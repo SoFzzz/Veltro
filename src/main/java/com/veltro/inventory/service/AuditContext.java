@@ -1,4 +1,4 @@
-package com.veltro.inventory.application.audit.command;
+package com.veltro.inventory.service;
 
 /**
  * Holds optional request context for audit records (B3-03).

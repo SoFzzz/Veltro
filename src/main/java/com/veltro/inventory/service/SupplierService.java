@@ -5,7 +5,7 @@ import com.veltro.inventory.dto.SupplierResponse;
 import com.veltro.inventory.dto.UpdateSupplierRequest;
 import com.veltro.inventory.mapper.SupplierMapper;
 import com.veltro.inventory.model.SupplierEntity;
-import com.veltro.inventory.domain.purchasing.ports.SupplierRepository;
+import com.veltro.inventory.repository.SupplierRepository;
 import com.veltro.inventory.exception.DuplicateResourceException;
 import com.veltro.inventory.exception.NotFoundException;
 import com.veltro.inventory.security.TenantContext;

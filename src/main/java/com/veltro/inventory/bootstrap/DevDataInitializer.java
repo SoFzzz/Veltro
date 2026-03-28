@@ -2,7 +2,7 @@ package com.veltro.inventory.bootstrap;
 
 import com.veltro.inventory.model.Role;
 import com.veltro.inventory.model.UserEntity;
-import com.veltro.inventory.domain.iam.ports.UserRepository;
+import com.veltro.inventory.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;

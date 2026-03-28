@@ -1,5 +1,7 @@
 package com.veltro.inventory.application.inventory.service;
 
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import com.veltro.inventory.service.AlertHandler;
 import com.veltro.inventory.service.StockEvaluationContext;
 import com.veltro.inventory.dto.AlertResponse;
@@ -10,9 +12,9 @@ import com.veltro.inventory.model.AlertEntity;
 import com.veltro.inventory.model.AlertSeverity;
 import com.veltro.inventory.model.AlertType;
 import com.veltro.inventory.model.InventoryEntity;
-import com.veltro.inventory.domain.inventory.ports.AlertConfigurationRepository;
-import com.veltro.inventory.domain.inventory.ports.AlertRepository;
-import com.veltro.inventory.domain.inventory.ports.InventoryRepository;
+import com.veltro.inventory.repository.AlertConfigurationRepository;
+import com.veltro.inventory.repository.AlertRepository;
+import com.veltro.inventory.repository.InventoryRepository;
 import com.veltro.inventory.service.AlertService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -112,10 +114,10 @@ class AlertServiceTest {
         // Arrange
         Long productId = 1L;
         InventoryEntity inventory = createInventory(productId, "Test Product", 3, 5, 20);
-        
-        when(inventoryRepository.findByProductIdAndActiveTrue(productId)).thenReturn(Optional.of(inventory));
-        when(configurationRepository.findByProductIdAndActiveTrue(productId)).thenReturn(Optional.empty());
-        when(alertRepository.findByProductIdAndResolvedFalse(productId)).thenReturn(List.of());
+
+        when(inventoryRepository.findByProductIdAndActiveTrueAndBusinessId(eq(productId), anyLong()));
+        when(configurationRepository.findByProductIdAndActiveTrueAndBusinessId(eq(productId), anyLong()));
+        when(alertRepository.findByProductIdAndResolvedFalseAndBusinessId(eq(productId), anyLong()));
         
         doAnswer(invocation -> {
             StockEvaluationContext context = invocation.getArgument(0);
@@ -143,10 +145,10 @@ class AlertServiceTest {
         Long productId = 1L;
         InventoryEntity inventory = createInventory(productId, "Test Product", 10, 5, 20);
         AlertEntity existingAlert = createAlert(1L, AlertType.LOW_STOCK, productId, false, false);
-        
-        when(inventoryRepository.findByProductIdAndActiveTrue(productId)).thenReturn(Optional.of(inventory));
-        when(configurationRepository.findByProductIdAndActiveTrue(productId)).thenReturn(Optional.empty());
-        when(alertRepository.findByProductIdAndResolvedFalse(productId)).thenReturn(List.of(existingAlert));
+
+        when(inventoryRepository.findByProductIdAndActiveTrueAndBusinessId(eq(productId), anyLong()));
+        when(configurationRepository.findByProductIdAndActiveTrueAndBusinessId(eq(productId), anyLong()));
+        when(alertRepository.findByProductIdAndResolvedFalseAndBusinessId(eq(productId), anyLong()));
         
         // No alerts generated (condition resolved)
         doNothing().when(alertHandlerChain).handle(any(StockEvaluationContext.class));
@@ -170,10 +172,10 @@ class AlertServiceTest {
         Long productId = 1L;
         InventoryEntity inventory = createInventory(productId, "Test Product", 3, 5, 20);
         AlertEntity existingAlert = createAlert(1L, AlertType.LOW_STOCK, productId, false, false);
-        
-        when(inventoryRepository.findByProductIdAndActiveTrue(productId)).thenReturn(Optional.of(inventory));
-        when(configurationRepository.findByProductIdAndActiveTrue(productId)).thenReturn(Optional.empty());
-        when(alertRepository.findByProductIdAndResolvedFalse(productId)).thenReturn(List.of(existingAlert));
+
+        when(inventoryRepository.findByProductIdAndActiveTrueAndBusinessId(eq(productId), anyLong()));
+        when(configurationRepository.findByProductIdAndActiveTrueAndBusinessId(eq(productId), anyLong()));
+        when(alertRepository.findByProductIdAndResolvedFalseAndBusinessId(eq(productId), anyLong()));
         
         doAnswer(invocation -> {
             StockEvaluationContext context = invocation.getArgument(0);
@@ -206,10 +208,10 @@ class AlertServiceTest {
         config.setCriticalStock(2);
         config.setMinStock(15);
         config.setOverstockThreshold(100);
-        
-        when(inventoryRepository.findByProductIdAndActiveTrue(productId)).thenReturn(Optional.of(inventory));
-        when(configurationRepository.findByProductIdAndActiveTrue(productId)).thenReturn(Optional.of(config));
-        when(alertRepository.findByProductIdAndResolvedFalse(productId)).thenReturn(List.of());
+
+        when(inventoryRepository.findByProductIdAndActiveTrueAndBusinessId(eq(productId), anyLong()));
+        when(configurationRepository.findByProductIdAndActiveTrueAndBusinessId(eq(productId), anyLong()));
+        when(alertRepository.findByProductIdAndResolvedFalseAndBusinessId(eq(productId), anyLong()));
 
         // Act
         alertService.evaluateStock(productId);
@@ -230,7 +232,7 @@ class AlertServiceTest {
     void evaluateStock_inventoryNotFound_throwsException() {
         // Arrange
         Long productId = 99L;
-        when(inventoryRepository.findByProductIdAndActiveTrue(productId)).thenReturn(Optional.empty());
+        when(inventoryRepository.findByProductIdAndActiveTrueAndBusinessId(eq(productId), anyLong()));
 
         // Act & Assert
         assertThatThrownBy(() -> alertService.evaluateStock(productId))
@@ -255,8 +257,8 @@ class AlertServiceTest {
                 "CRITICAL", "Out of stock", false, false, OffsetDateTime.now());
         AlertResponse response2 = new AlertResponse(2L, 2L, "Product 2", "LOW_STOCK", 
                 "WARNING", "Low stock", false, true, OffsetDateTime.now());
-        
-        when(alertRepository.findByResolvedFalseOrderBySeverityDescCreatedAtAsc(pageable)).thenReturn(alertPage);
+
+        when(alertRepository.findByResolvedFalseAndBusinessIdOrderBySeverityDescCreatedAtAsc(anyLong(), eq(pageable)));
         when(alertMapper.toResponse(alert1)).thenReturn(response1);
         when(alertMapper.toResponse(alert2)).thenReturn(response2);
 
@@ -276,8 +278,8 @@ class AlertServiceTest {
         // Arrange
         Long alertId = 1L;
         AlertEntity alert = createAlert(alertId, AlertType.LOW_STOCK, 1L, false, false);
-        
-        when(alertRepository.findByIdAndActiveTrue(alertId)).thenReturn(Optional.of(alert));
+
+        when(alertRepository.findByIdAndActiveTrueAndBusinessId(eq(alertId), anyLong()));
 
         // Act
         alertService.markAsRead(alertId);
@@ -297,8 +299,8 @@ class AlertServiceTest {
         // Arrange
         Long alertId = 1L;
         AlertEntity alert = createAlert(alertId, AlertType.LOW_STOCK, 1L, false, false);
-        
-        when(alertRepository.findByIdAndActiveTrue(alertId)).thenReturn(Optional.of(alert));
+
+        when(alertRepository.findByIdAndActiveTrueAndBusinessId(eq(alertId), anyLong()));
 
         // Act
         alertService.markAsResolved(alertId);
@@ -316,14 +318,14 @@ class AlertServiceTest {
     @DisplayName("unreadCount returns count of unread and unresolved alerts")
     void unreadCount_returnsCorrectCount() {
         // Arrange
-        when(alertRepository.countByReadFalseAndResolvedFalse()).thenReturn(5L);
+        when(alertRepository.countByReadFalseAndResolvedFalseAndBusinessId(anyLong()));
 
         // Act
         long count = alertService.unreadCount();
 
         // Assert
         assertThat(count).isEqualTo(5L);
-        verify(alertRepository).countByReadFalseAndResolvedFalse();
+        when(alertRepository.countByReadFalseAndResolvedFalseAndBusinessId(anyLong()));
     }
 
     @Test
@@ -331,7 +333,7 @@ class AlertServiceTest {
     void markAsRead_alertNotFound_throwsException() {
         // Arrange
         Long alertId = 99L;
-        when(alertRepository.findByIdAndActiveTrue(alertId)).thenReturn(Optional.empty());
+        when(alertRepository.findByIdAndActiveTrueAndBusinessId(eq(alertId), anyLong()));
 
         // Act & Assert
         assertThatThrownBy(() -> alertService.markAsRead(alertId))
@@ -344,7 +346,7 @@ class AlertServiceTest {
     void markAsResolved_alertNotFound_throwsException() {
         // Arrange
         Long alertId = 99L;
-        when(alertRepository.findByIdAndActiveTrue(alertId)).thenReturn(Optional.empty());
+        when(alertRepository.findByIdAndActiveTrueAndBusinessId(eq(alertId), anyLong()));
 
         // Act & Assert
         assertThatThrownBy(() -> alertService.markAsResolved(alertId))

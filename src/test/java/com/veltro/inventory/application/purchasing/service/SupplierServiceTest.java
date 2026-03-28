@@ -1,11 +1,12 @@
 package com.veltro.inventory.application.purchasing.service;
 
+import static org.mockito.ArgumentMatchers.anyLong;
 import com.veltro.inventory.dto.CreateSupplierRequest;
 import com.veltro.inventory.dto.SupplierResponse;
 import com.veltro.inventory.dto.UpdateSupplierRequest;
 import com.veltro.inventory.mapper.SupplierMapper;
 import com.veltro.inventory.model.SupplierEntity;
-import com.veltro.inventory.domain.purchasing.ports.SupplierRepository;
+import com.veltro.inventory.repository.SupplierRepository;
 import com.veltro.inventory.exception.DuplicateResourceException;
 import com.veltro.inventory.exception.NotFoundException;
 import com.veltro.inventory.service.SupplierService;
@@ -83,7 +84,7 @@ class SupplierServiceTest {
     @DisplayName("Should find all active suppliers")
     void shouldFindAllActiveSuppliers() {
         // Given
-        when(supplierRepository.findAllByActiveTrue()).thenReturn(List.of(supplierEntity));
+        when(supplierRepository.findAllByActiveTrueAndBusinessId(anyLong())).thenReturn(List.of(supplierEntity));
         when(supplierMapper.toResponse(supplierEntity)).thenReturn(supplierResponse);
 
         // When
@@ -92,7 +93,7 @@ class SupplierServiceTest {
         // Then
         assertThat(result).hasSize(1);
         assertThat(result.get(0)).isEqualTo(supplierResponse);
-        verify(supplierRepository, times(1)).findAllByActiveTrue();
+        verify(supplierRepository, times(1)).findAllByActiveTrueAndBusinessId(anyLong());
         verify(supplierMapper, times(1)).toResponse(supplierEntity);
     }
 
@@ -100,7 +101,7 @@ class SupplierServiceTest {
     @DisplayName("Should find supplier by ID")
     void shouldFindSupplierById() {
         // Given
-        when(supplierRepository.findByIdAndActiveTrue(1L)).thenReturn(Optional.of(supplierEntity));
+        when(supplierRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong())).thenReturn(Optional.of(supplierEntity));
         when(supplierMapper.toResponse(supplierEntity)).thenReturn(supplierResponse);
 
         // When
@@ -108,7 +109,7 @@ class SupplierServiceTest {
 
         // Then
         assertThat(result).isEqualTo(supplierResponse);
-        verify(supplierRepository, times(1)).findByIdAndActiveTrue(1L);
+        verify(supplierRepository, times(1)).findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong());
         verify(supplierMapper, times(1)).toResponse(supplierEntity);
     }
 
@@ -116,7 +117,7 @@ class SupplierServiceTest {
     @DisplayName("Should throw NotFoundException when supplier ID not found")
     void shouldThrowNotFoundExceptionWhenSupplierIdNotFound() {
         // Given
-        when(supplierRepository.findByIdAndActiveTrue(99L)).thenReturn(Optional.empty());
+        when(supplierRepository.findByIdAndActiveTrueAndBusinessId(eq(99L), anyLong())).thenReturn(Optional.empty());
 
         // When/Then
         assertThatThrownBy(() -> supplierService.findById(99L))
@@ -129,7 +130,7 @@ class SupplierServiceTest {
     void shouldFindSupplierByTaxId() {
         // Given
         String taxId = "12345678901";
-        when(supplierRepository.findByTaxIdAndActiveTrue(taxId)).thenReturn(Optional.of(supplierEntity));
+        when(supplierRepository.findByTaxIdAndActiveTrueAndBusinessId(eq(taxId), anyLong()));
         when(supplierMapper.toResponse(supplierEntity)).thenReturn(supplierResponse);
 
         // When
@@ -137,7 +138,7 @@ class SupplierServiceTest {
 
         // Then
         assertThat(result).isEqualTo(supplierResponse);
-        verify(supplierRepository, times(1)).findByTaxIdAndActiveTrue(taxId);
+        verify(supplierRepository.findByTaxIdAndActiveTrueAndBusinessId(eq(taxId), anyLong()));
         verify(supplierMapper, times(1)).toResponse(supplierEntity);
     }
 
@@ -146,8 +147,7 @@ class SupplierServiceTest {
     void shouldCreateNewSupplierSuccessfully() {
         // Given
         SupplierEntity newEntity = new SupplierEntity();
-        when(supplierRepository.existsByTaxIdAndActiveTrueAndIdNot(createRequest.taxId(), null))
-                .thenReturn(false);
+        when(supplierRepository.existsByTaxIdAndActiveTrueAndIdNotAndBusinessId(eq(createRequest.taxId()), eq(null), anyLong()));
         when(supplierMapper.toEntity(createRequest)).thenReturn(newEntity);
         when(supplierRepository.save(newEntity)).thenReturn(supplierEntity);
         when(supplierMapper.toResponse(supplierEntity)).thenReturn(supplierResponse);
@@ -157,7 +157,7 @@ class SupplierServiceTest {
 
         // Then
         assertThat(result).isEqualTo(supplierResponse);
-        verify(supplierRepository, times(1)).existsByTaxIdAndActiveTrueAndIdNot(createRequest.taxId(), null);
+        verify(supplierRepository.existsByTaxIdAndActiveTrueAndIdNotAndBusinessId(eq(createRequest.taxId()), eq(null), anyLong()));
         verify(supplierMapper, times(1)).toEntity(createRequest);
         verify(supplierRepository, times(1)).save(newEntity);
         verify(supplierMapper, times(1)).toResponse(supplierEntity);
@@ -167,8 +167,7 @@ class SupplierServiceTest {
     @DisplayName("Should throw DuplicateResourceException when tax ID exists")
     void shouldThrowDuplicateResourceExceptionWhenTaxIdExists() {
         // Given
-        when(supplierRepository.existsByTaxIdAndActiveTrueAndIdNot(createRequest.taxId(), null))
-                .thenReturn(true);
+        when(supplierRepository.existsByTaxIdAndActiveTrueAndIdNotAndBusinessId(eq(createRequest.taxId()), eq(null), anyLong()));
 
         // When/Then
         assertThatThrownBy(() -> supplierService.create(createRequest))
@@ -180,7 +179,7 @@ class SupplierServiceTest {
     @DisplayName("Should update supplier successfully")
     void shouldUpdateSupplierSuccessfully() {
         // Given
-        when(supplierRepository.findByIdAndActiveTrue(1L)).thenReturn(Optional.of(supplierEntity));
+        when(supplierRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong())).thenReturn(Optional.of(supplierEntity));
         when(supplierRepository.save(supplierEntity)).thenReturn(supplierEntity);
         when(supplierMapper.toResponse(supplierEntity)).thenReturn(supplierResponse);
 
@@ -189,7 +188,7 @@ class SupplierServiceTest {
 
         // Then
         assertThat(result).isEqualTo(supplierResponse);
-        verify(supplierRepository, times(1)).findByIdAndActiveTrue(1L);
+        verify(supplierRepository, times(1)).findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong());
         verify(supplierMapper, times(1)).updateEntity(updateRequest, supplierEntity);
         verify(supplierRepository, times(1)).save(supplierEntity);
         verify(supplierMapper, times(1)).toResponse(supplierEntity);
@@ -199,14 +198,14 @@ class SupplierServiceTest {
     @DisplayName("Should soft delete supplier successfully")
     void shouldSoftDeleteSupplierSuccessfully() {
         // Given
-        when(supplierRepository.findByIdAndActiveTrue(1L)).thenReturn(Optional.of(supplierEntity));
+        when(supplierRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong())).thenReturn(Optional.of(supplierEntity));
         when(supplierRepository.save(supplierEntity)).thenReturn(supplierEntity);
 
         // When
         supplierService.delete(1L);
 
         // Then
-        verify(supplierRepository, times(1)).findByIdAndActiveTrue(1L);
+        verify(supplierRepository, times(1)).findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong());
         verify(supplierRepository, times(1)).save(supplierEntity);
         // Note: setActive(false) call is tested through integration or by verifying the entity state
     }

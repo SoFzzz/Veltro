@@ -6,31 +6,21 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-/**
- * JPA repository for {@link SupplierEntity} (B2-04).
- *
- * <p>Extends the domain {@link com.veltro.inventory.domain.purchasing.ports.SupplierRepository} port and provides
- * query methods with Spring Data JPA.
- */
+import java.util.List;
+import java.util.Optional;
+
 @Repository
-public interface SupplierRepository extends JpaRepository<SupplierEntity, Long>, com.veltro.inventory.domain.purchasing.ports.SupplierRepository {
+public interface SupplierRepository extends JpaRepository<SupplierEntity, Long> {
 
-    /**
-     * Checks if a tax ID already exists for an active supplier (excluding the given ID).
-     *
-     * @param taxId the tax ID to check
-     * @param excludeId the ID to exclude from the check (null for new suppliers)
-     * @return true if tax ID exists
-     */
-    @Query("SELECT CASE WHEN COUNT(s) > 0 THEN true ELSE false END FROM SupplierEntity s " +
-           "WHERE s.taxId = :taxId AND s.active = true AND (:excludeId IS NULL OR s.id != :excludeId)")
-    boolean existsByTaxIdAndActiveTrueAndIdNot(@Param("taxId") String taxId, @Param("excludeId") Long excludeId);
+    Optional<SupplierEntity> findByIdAndActiveTrueAndBusinessId(Long id, Long businessId);
 
-    // --- Multi-tenant scoped methods ---
+    List<SupplierEntity> findAllByActiveTrueAndBusinessId(Long businessId);
+
+    Optional<SupplierEntity> findByTaxIdAndActiveTrueAndBusinessId(String taxId, Long businessId);
 
     @Query("SELECT CASE WHEN COUNT(s) > 0 THEN true ELSE false END FROM SupplierEntity s " +
-           "WHERE s.taxId = :taxId AND s.active = true AND (:excludeId IS NULL OR s.id != :excludeId) " +
-           "AND s.businessId = :businessId")
+            "WHERE s.taxId = :taxId AND s.active = true AND (:excludeId IS NULL OR s.id != :excludeId) " +
+            "AND s.businessId = :businessId")
     boolean existsByTaxIdAndActiveTrueAndIdNotAndBusinessId(
             @Param("taxId") String taxId,
             @Param("excludeId") Long excludeId,

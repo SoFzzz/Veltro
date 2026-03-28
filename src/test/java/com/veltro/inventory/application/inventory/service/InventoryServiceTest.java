@@ -1,6 +1,7 @@
 package com.veltro.inventory.application.inventory.service;
 
-import com.veltro.inventory.application.audit.command.AuditCommandExecutor;
+import static org.mockito.ArgumentMatchers.anyLong;
+import com.veltro.inventory.service.AuditCommandExecutor;
 import com.veltro.inventory.dto.InventoryResponse;
 import com.veltro.inventory.dto.StockAdjustmentRequest;
 import com.veltro.inventory.dto.StockEntryRequest;
@@ -12,8 +13,8 @@ import com.veltro.inventory.model.ProductEntity;
 import com.veltro.inventory.model.InventoryEntity;
 import com.veltro.inventory.model.InventoryMovementEntity;
 import com.veltro.inventory.model.MovementType;
-import com.veltro.inventory.domain.inventory.ports.InventoryMovementRepository;
-import com.veltro.inventory.domain.inventory.ports.InventoryRepository;
+import com.veltro.inventory.repository.InventoryMovementRepository;
+import com.veltro.inventory.repository.InventoryRepository;
 import com.veltro.inventory.exception.InsufficientStockException;
 import com.veltro.inventory.exception.NotFoundException;
 import com.veltro.inventory.service.InventoryService;
@@ -106,7 +107,7 @@ class InventoryServiceTest {
         InventoryEntity inv = stubInventory(1L, 10L, 50);
         InventoryResponse expected = stubResponse(1L, 10L, 50);
 
-        when(inventoryRepository.findByProductIdAndActiveTrue(10L)).thenReturn(Optional.of(inv));
+        when(inventoryRepository.findByProductIdAndActiveTrueAndBusinessId(eq(10L), anyLong())).thenReturn(Optional.of(inv));
         when(inventoryMapper.toResponse(inv)).thenReturn(expected);
 
         InventoryResponse result = inventoryService.findByProductId(10L);
@@ -117,7 +118,7 @@ class InventoryServiceTest {
     @Test
     @DisplayName("findByProductId throws NotFoundException when no inventory exists for product")
     void findByProductId_unknownProduct_throwsNotFoundException() {
-        when(inventoryRepository.findByProductIdAndActiveTrue(99L)).thenReturn(Optional.empty());
+        when(inventoryRepository.findByProductIdAndActiveTrueAndBusinessId(eq(99L), anyLong())).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> inventoryService.findByProductId(99L))
                 .isInstanceOf(NotFoundException.class)
@@ -136,7 +137,7 @@ class InventoryServiceTest {
         InventoryResponse expected = stubResponse(1L, 10L, 25);
         StockEntryRequest request = new StockEntryRequest(5, "restock");
 
-        when(inventoryRepository.findByProductIdAndActiveTrue(10L)).thenReturn(Optional.of(inv));
+        when(inventoryRepository.findByProductIdAndActiveTrueAndBusinessId(eq(10L), anyLong())).thenReturn(Optional.of(inv));
         when(inventoryRepository.save(inv)).thenReturn(savedInv);
         when(movementRepository.save(any(InventoryMovementEntity.class))).thenAnswer(i -> i.getArgument(0));
         when(inventoryMapper.toResponse(savedInv)).thenReturn(expected);
@@ -154,7 +155,7 @@ class InventoryServiceTest {
         InventoryEntity savedInv = stubInventory(1L, 10L, 13);
         StockEntryRequest request = new StockEntryRequest(3, "received goods");
 
-        when(inventoryRepository.findByProductIdAndActiveTrue(10L)).thenReturn(Optional.of(inv));
+        when(inventoryRepository.findByProductIdAndActiveTrueAndBusinessId(eq(10L), anyLong())).thenReturn(Optional.of(inv));
         when(inventoryRepository.save(inv)).thenReturn(savedInv);
         when(movementRepository.save(any(InventoryMovementEntity.class))).thenAnswer(i -> i.getArgument(0));
         when(inventoryMapper.toResponse(any())).thenReturn(stubResponse(1L, 10L, 13));
@@ -184,7 +185,7 @@ class InventoryServiceTest {
         InventoryResponse expected = stubResponse(1L, 10L, 20);
         StockExitRequest request = new StockExitRequest(10, "shrinkage");
 
-        when(inventoryRepository.findByProductIdAndActiveTrue(10L)).thenReturn(Optional.of(inv));
+        when(inventoryRepository.findByProductIdAndActiveTrueAndBusinessId(eq(10L), anyLong())).thenReturn(Optional.of(inv));
         when(inventoryRepository.save(inv)).thenReturn(savedInv);
         when(movementRepository.save(any(InventoryMovementEntity.class))).thenAnswer(i -> i.getArgument(0));
         when(inventoryMapper.toResponse(savedInv)).thenReturn(expected);
@@ -201,7 +202,7 @@ class InventoryServiceTest {
         InventoryEntity savedInv = stubInventory(1L, 10L, 0);
         StockExitRequest request = new StockExitRequest(5, "cleared");
 
-        when(inventoryRepository.findByProductIdAndActiveTrue(10L)).thenReturn(Optional.of(inv));
+        when(inventoryRepository.findByProductIdAndActiveTrueAndBusinessId(eq(10L), anyLong())).thenReturn(Optional.of(inv));
         when(inventoryRepository.save(inv)).thenReturn(savedInv);
         when(movementRepository.save(any(InventoryMovementEntity.class))).thenAnswer(i -> i.getArgument(0));
         when(inventoryMapper.toResponse(savedInv)).thenReturn(stubResponse(1L, 10L, 0));
@@ -217,7 +218,7 @@ class InventoryServiceTest {
         InventoryEntity inv = stubInventory(1L, 10L, 3);
         StockExitRequest request = new StockExitRequest(10, "overshoot");
 
-        when(inventoryRepository.findByProductIdAndActiveTrue(10L)).thenReturn(Optional.of(inv));
+        when(inventoryRepository.findByProductIdAndActiveTrueAndBusinessId(eq(10L), anyLong())).thenReturn(Optional.of(inv));
 
         assertThatThrownBy(() -> inventoryService.recordExit(10L, request))
                 .isInstanceOf(InsufficientStockException.class)
@@ -231,7 +232,7 @@ class InventoryServiceTest {
         InventoryEntity savedInv = stubInventory(1L, 10L, 15);
         StockExitRequest request = new StockExitRequest(5, "sale");
 
-        when(inventoryRepository.findByProductIdAndActiveTrue(10L)).thenReturn(Optional.of(inv));
+        when(inventoryRepository.findByProductIdAndActiveTrueAndBusinessId(eq(10L), anyLong())).thenReturn(Optional.of(inv));
         when(inventoryRepository.save(inv)).thenReturn(savedInv);
         when(movementRepository.save(any(InventoryMovementEntity.class))).thenAnswer(i -> i.getArgument(0));
         when(inventoryMapper.toResponse(any())).thenReturn(stubResponse(1L, 10L, 15));
@@ -259,7 +260,7 @@ class InventoryServiceTest {
         InventoryEntity savedInv = stubInventory(1L, 10L, 45);
         StockAdjustmentRequest request = new StockAdjustmentRequest(45, "physical count");
 
-        when(inventoryRepository.findByProductIdAndActiveTrue(10L)).thenReturn(Optional.of(inv));
+        when(inventoryRepository.findByProductIdAndActiveTrueAndBusinessId(eq(10L), anyLong())).thenReturn(Optional.of(inv));
         when(inventoryRepository.save(inv)).thenReturn(savedInv);
         when(movementRepository.save(any(InventoryMovementEntity.class))).thenAnswer(i -> i.getArgument(0));
         when(inventoryMapper.toResponse(savedInv)).thenReturn(stubResponse(1L, 10L, 45));
@@ -277,7 +278,7 @@ class InventoryServiceTest {
         InventoryEntity savedInv = stubInventory(1L, 10L, 35);
         StockAdjustmentRequest request = new StockAdjustmentRequest(35, "recount");
 
-        when(inventoryRepository.findByProductIdAndActiveTrue(10L)).thenReturn(Optional.of(inv));
+        when(inventoryRepository.findByProductIdAndActiveTrueAndBusinessId(eq(10L), anyLong())).thenReturn(Optional.of(inv));
         when(inventoryRepository.save(inv)).thenReturn(savedInv);
         when(movementRepository.save(any(InventoryMovementEntity.class))).thenAnswer(i -> i.getArgument(0));
         when(inventoryMapper.toResponse(any())).thenReturn(stubResponse(1L, 10L, 35));
@@ -301,7 +302,7 @@ class InventoryServiceTest {
         InventoryEntity savedInv = stubInventory(1L, 10L, 10);
         StockAdjustmentRequest request = new StockAdjustmentRequest(10, "confirm count");
 
-        when(inventoryRepository.findByProductIdAndActiveTrue(10L)).thenReturn(Optional.of(inv));
+        when(inventoryRepository.findByProductIdAndActiveTrueAndBusinessId(eq(10L), anyLong())).thenReturn(Optional.of(inv));
         when(inventoryRepository.save(inv)).thenReturn(savedInv);
         when(movementRepository.save(any(InventoryMovementEntity.class))).thenAnswer(i -> i.getArgument(0));
         when(inventoryMapper.toResponse(any())).thenReturn(stubResponse(1L, 10L, 10));
@@ -327,7 +328,7 @@ class InventoryServiceTest {
         savedInv.setMaxStock(200);
         UpdateStockLimitsRequest request = new UpdateStockLimitsRequest(5, 200);
 
-        when(inventoryRepository.findByProductIdAndActiveTrue(10L)).thenReturn(Optional.of(inv));
+        when(inventoryRepository.findByProductIdAndActiveTrueAndBusinessId(eq(10L), anyLong())).thenReturn(Optional.of(inv));
         when(inventoryRepository.save(inv)).thenReturn(savedInv);
         when(inventoryMapper.toResponse(savedInv))
                 .thenReturn(new InventoryResponse(1L, 10L, "Widget", 20, 5, 200, true, 0L));

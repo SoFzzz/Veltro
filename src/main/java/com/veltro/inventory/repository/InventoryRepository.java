@@ -1,18 +1,17 @@
 package com.veltro.inventory.repository;
 
 import com.veltro.inventory.model.InventoryEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-/**
- * JPA adapter implementing the {@link com.veltro.inventory.domain.inventory.ports.InventoryRepository} output port.
- *
- * Spring Data JPA derives all declared query methods from method names.
- * The {@code findByProductIdAndActiveTrue} method uses the UNIQUE index on
- * {@code inventory.product_id} created in V2 migration — effectively an
- * index scan on every lookup.
- */
+import java.util.Optional;
+
 @Repository
-public interface InventoryRepository
-        extends JpaRepository<InventoryEntity, Long>, com.veltro.inventory.domain.inventory.ports.InventoryRepository {
+public interface InventoryRepository extends JpaRepository<InventoryEntity, Long> {
+
+    Optional<InventoryEntity> findByProductIdAndActiveTrueAndBusinessId(Long productId, Long businessId);
+
+    Page<InventoryEntity> findAllByActiveTrueAndBusinessId(Long businessId, Pageable pageable);
 }

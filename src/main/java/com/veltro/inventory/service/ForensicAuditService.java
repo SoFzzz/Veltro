@@ -4,7 +4,7 @@ import com.veltro.inventory.dto.AuditFilterRequest;
 import com.veltro.inventory.dto.AuditRecordResponse;
 import com.veltro.inventory.mapper.AuditRecordMapper;
 import com.veltro.inventory.model.AuditEntityType;
-import com.veltro.inventory.domain.audit.ports.AuditRecordRepository;
+import com.veltro.inventory.repository.AuditRecordRepository;
 import com.veltro.inventory.exception.NotFoundException;
 import com.veltro.inventory.security.TenantContext;
 import lombok.RequiredArgsConstructor;

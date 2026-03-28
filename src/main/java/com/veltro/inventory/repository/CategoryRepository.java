@@ -4,13 +4,13 @@ import com.veltro.inventory.model.CategoryEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-/**
- * Spring Data JPA adapter for {@link com.veltro.inventory.domain.catalog.ports.CategoryRepository}.
- *
- * Method names are derived from the port interface — Spring Data generates
- * the queries automatically. No additional annotations required.
- */
+import java.util.List;
+import java.util.Optional;
+
 @Repository
-public interface CategoryRepository
-        extends JpaRepository<CategoryEntity, Long>, com.veltro.inventory.domain.catalog.ports.CategoryRepository {
+public interface CategoryRepository extends JpaRepository<CategoryEntity, Long> {
+
+    List<CategoryEntity> findAllByParentCategoryIsNullAndActiveTrueAndBusinessId(Long businessId);
+
+    Optional<CategoryEntity> findByIdAndActiveTrueAndBusinessId(Long id, Long businessId);
 }

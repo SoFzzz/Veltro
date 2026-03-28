@@ -13,29 +13,12 @@ import org.springframework.stereotype.Repository;
 import java.time.Instant;
 import java.util.List;
 
-/**
- * JPA repository adapter for audit records (B3-03).
- * 
- * <p>Implements the {@link com.veltro.inventory.domain.audit.ports.AuditRecordRepository} port defined in the domain layer.
- * Provides custom queries for filtering by entity type, action, username, and date range.
- */
 @Repository
-public interface AuditRecordRepository extends JpaRepository<AuditRecordEntity, Long>, com.veltro.inventory.domain.audit.ports.AuditRecordRepository {
+public interface AuditRecordRepository extends JpaRepository<AuditRecordEntity, Long> {
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     List<AuditRecordEntity> findByEntityTypeAndEntityIdOrderByCreatedAtDesc(
             AuditEntityType entityType, Long entityId);
 
-    /**
-     * {@inheritDoc}
-     * 
-     * <p>Custom JPQL query with dynamic filters. Null parameters are ignored.
-     * Results ordered by created_at DESC for recent-first display.
-     */
-    @Override
     @Query("""
             SELECT a FROM AuditRecordEntity a
             WHERE (CAST(:entityType AS string) IS NULL OR a.entityType = :entityType)
@@ -53,9 +36,6 @@ public interface AuditRecordRepository extends JpaRepository<AuditRecordEntity, 
             @Param("endDate") Instant endDate,
             Pageable pageable);
 
-    // --- Multi-tenant scoped methods ---
-
-    @Override
     @Query("""
             SELECT a FROM AuditRecordEntity a
             WHERE (CAST(:entityType AS string) IS NULL OR a.entityType = :entityType)
@@ -75,7 +55,6 @@ public interface AuditRecordRepository extends JpaRepository<AuditRecordEntity, 
             @Param("businessId") Long businessId,
             Pageable pageable);
 
-    @Override
     List<AuditRecordEntity> findByEntityTypeAndEntityIdAndBusinessIdOrderByCreatedAtDesc(
             AuditEntityType entityType, Long entityId, Long businessId);
 }

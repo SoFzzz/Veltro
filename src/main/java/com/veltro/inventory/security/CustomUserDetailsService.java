@@ -1,7 +1,7 @@
 package com.veltro.inventory.security;
 
 import com.veltro.inventory.model.UserEntity;
-import com.veltro.inventory.domain.iam.ports.UserRepository;
+import com.veltro.inventory.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
