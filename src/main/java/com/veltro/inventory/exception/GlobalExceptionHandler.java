@@ -16,7 +16,11 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.stream.Collectors;
@@ -191,6 +195,66 @@ public class GlobalExceptionHandler {
                 .body(ErrorResponse.of(
                         "ACCESS_DENIED",
                         "You do not have permission to perform this action.",
+                        request.getRequestURI()));
+    }
+
+    // -------------------------------------------------------------------------
+    // 401 Unauthorized — authentication failures (BUG-02 fix)
+    // -------------------------------------------------------------------------
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleBadCredentials(
+            BadCredentialsException ex, HttpServletRequest request) {
+
+        log.warn("Invalid credentials for login on {}", request.getRequestURI());
+
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(ErrorResponse.of(
+                        "INVALID_CREDENTIALS",
+                        "Invalid username or password.",
+                        request.getRequestURI()));
+    }
+
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleUsernameNotFound(
+            UsernameNotFoundException ex, HttpServletRequest request) {
+
+        log.warn("Username not found during login on {}", request.getRequestURI());
+
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(ErrorResponse.of(
+                        "INVALID_CREDENTIALS",
+                        "Invalid username or password.",
+                        request.getRequestURI()));
+    }
+
+    @ExceptionHandler(DisabledException.class)
+    public ResponseEntity<ErrorResponse> handleAccountDisabled(
+            DisabledException ex, HttpServletRequest request) {
+
+        log.info("Disabled account login attempt on {}", request.getRequestURI());
+
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(ErrorResponse.of(
+                        "ACCOUNT_DISABLED",
+                        "Your account is disabled.",
+                        request.getRequestURI()));
+    }
+
+    @ExceptionHandler(LockedException.class)
+    public ResponseEntity<ErrorResponse> handleAccountLocked(
+            LockedException ex, HttpServletRequest request) {
+
+        log.info("Locked account login attempt on {}", request.getRequestURI());
+
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(ErrorResponse.of(
+                        "ACCOUNT_LOCKED",
+                        "Your account is locked. Contact support.",
                         request.getRequestURI()));
     }
 

@@ -1,0 +1,115 @@
+REPORTE DE BUGS REORGANIZADO
+
+Los bugs detectados se reorganizan por problema raiz, no solo por endpoint. Esto ayuda a priorizar mejor y evita duplicar bugs que en realidad son dos caras del mismo problema.
+
+==================================================
+1. CONTRATO HTTP / MANEJO DE EXCEPCIONES
+==================================================
+
+BUG-02 | Login fallido devuelve 500 en lugar de 401
+
+Endpoint: POST /api/v1/auth/login
+Sintoma: Credenciales incorrectas devuelven 500 INTERNAL_ERROR en lugar de 401 Unauthorized.
+Causa: BadCredentialsException y UsernameNotFoundException caen en el handler generico. DisabledException y LockedException tambien quedarian fuera si no se manejan.
+Fix: Agregar @ExceptionHandler en GlobalExceptionHandler para BadCredentialsException, UsernameNotFoundException, DisabledException y LockedException que devuelva 401 UNAUTHORIZED con mensaje uniforme: "Invalid username or password".
+
+
+BUG-06 | IllegalArgumentException devuelve 500 en lugar de 400
+
+Endpoint: POST /api/v1/auth/workers
+Sintoma: Enviar "role": "ADMIN" lanza IllegalArgumentException en AuthService y termina devolviendo 500 INTERNAL_ERROR.
+Causa: No existe @ExceptionHandler(IllegalArgumentException.class) en GlobalExceptionHandler.
+Fix: Agregar un handler especifico que devuelva 400 BAD_REQUEST con el mensaje de negocio correspondiente.
+
+
+BUG-08 | DataIntegrityViolationException devuelve 500 en lugar de 409
+
+Endpoints: POST /api/v1/products y cualquier endpoint afectado por constraints unicas
+Sintoma: Intentar insertar datos duplicados (barcode, SKU, tax_id, username, email, order_number, etc.) lanza DataIntegrityViolationException y termina en 500 INTERNAL_ERROR.
+Causa: La excepcion de persistencia cae en el handler generico de Exception.
+Fix: Agregar @ExceptionHandler(DataIntegrityViolationException.class) en GlobalExceptionHandler que devuelva 409 CONFLICT con mensaje claro y uniforme.
+
+
+==================================================
+2. SOFT DELETE / REACTIVACION INCONSISTENTE
+==================================================
+
+BUG-07 | No existe estrategia consistente para categorias desactivadas
+
+Endpoint: POST /api/v1/categories
+Sintoma: El sistema no maneja de forma clara la existencia de categorias desactivadas al intentar crear una nueva con el mismo nombre dentro del mismo negocio.
+Causa: La logica de negocio no define explicitamente que hacer cuando existe una categoria inactiva equivalente.
+Fix: En CategoryService.create(), verificar si ya existe una categoria con el mismo nombre y businessId, activa o inactiva. Si existe activa, rechazar como duplicado. Si existe inactiva, ofrecer reactivarla o manejar el caso explicitamente en lugar de crear una nueva fila.
+
+
+BUG-15 | No se puede crear producto con barcode/SKU de uno desactivado
+
+Endpoint: POST /api/v1/products
+Sintoma: Si un producto esta desactivado, su barcode y SKU siguen ocupados por la constraint unica. Al intentar crear uno nuevo con esos mismos valores, PostgreSQL rechaza el INSERT con DataIntegrityViolationException.
+Causa: El flujo de creacion no contempla que ya exista un producto inactivo con el mismo barcode/SKU. Ademas no existe endpoint ni logica de reactivacion de productos.
+Impacto relacionado:
+- Explica por que GET /products/barcode/{barcode} devuelve 404 si el producto existe pero esta inactivo.
+- Dispara BUG-08 porque el conflicto termina explotando como error tecnico de BD.
+Fix: En ProductService.create(), verificar si ya existe un producto con ese barcode/SKU dentro del mismo businessId, activo o inactivo. Si existe activo, rechazar como duplicado. Si existe inactivo, ofrecer reactivarlo o manejar ese caso explicitamente en vez de intentar insertar uno nuevo.
+
+
+==================================================
+3. INVENTARIO NO RESPETA EL ESTADO ACTIVO DEL PRODUCTO
+==================================================
+
+BUG-09 | GET /inventory muestra inventario de productos desactivados
+
+Endpoints: GET /api/v1/inventory, GET /api/v1/inventory/{productId}
+Sintoma: El listado y consulta de inventario incluyen productos cuya fila en products tiene active = false.
+Causa: La consulta de inventario no esta alineada con el estado activo del producto asociado.
+Fix: En InventoryService o en el repositorio, agregar filtro para excluir productos inactivos, por ejemplo haciendo JOIN con products y filtrando products.active = true.
+
+
+BUG-10 | Se permiten movimientos de inventario en productos desactivados
+
+Endpoints:
+- POST /api/v1/inventory/{productId}/entry
+- POST /api/v1/inventory/{productId}/exit
+- POST /api/v1/inventory/{productId}/adjustment
+
+Sintoma: Se pueden registrar entradas, salidas y ajustes de stock para productos con active = false.
+Causa: InventoryService no valida que el producto este activo antes de modificar existencias.
+Fix: Antes de procesar cualquier movimiento, verificar que el producto este activo. Si esta inactivo, devolver 400 BAD_REQUEST o 422 con mensaje claro como "Cannot modify stock of an inactive product".
+
+
+==================================================
+4. VALIDACIONES DE NEGOCIO INCOMPLETAS
+==================================================
+
+BUG-05 | Validacion de contrasena incompleta
+
+Endpoints:
+- PUT /api/v1/auth/change-password
+- POST /api/v1/auth/register
+- POST /api/v1/auth/workers
+
+Sintomas:
+- Una contrasena de solo espacios en blanco es aceptada.
+- Los espacios cuentan como caracteres validos para el minimo.
+- No hay limite maximo efectivo razonable para evitar abuso de BCrypt.
+
+Fix: En RegisterRequest y ChangePasswordRequest:
+- Reemplazar la validacion actual por @NotBlank + @Size(min=8, max=40)
+- Aplicar trim() antes de validar longitud o usar @Pattern para rechazar espacios como contenido valido
+
+
+BUG-11 | Record Stock Entry no valida limite maximo de stock
+
+Endpoint: POST /api/v1/inventory/{productId}/entry
+Sintoma: Se pueden agregar mas unidades que el maxStock configurado. Por ejemplo, con maxStock = 100 el sistema permitio agregar 200 unidades sin error.
+Causa: InventoryService.recordEntry() no valida que currentStock + quantity <= maxStock.
+Fix: Agregar validacion previa al movimiento. Si se excede maxStock, devolver 422 con mensaje como "Stock entry would exceed maximum stock limit of {maxStock} units".
+
+
+==================================================
+RELACIONES ENTRE BUGS
+==================================================
+
+- BUG-07 y BUG-15 pertenecen a la misma familia: soft delete sin politica clara de reactivacion.
+- BUG-08 no es el bug de negocio principal en esos casos, sino la consecuencia tecnica de dejar que la BD detecte tarde el conflicto.
+- BUG-09 y BUG-10 pertenecen al mismo problema raiz: inventario no esta alineado con products.active.
