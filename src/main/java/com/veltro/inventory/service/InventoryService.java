@@ -18,6 +18,7 @@ import com.veltro.inventory.model.MovementType;
 import com.veltro.inventory.repository.InventoryMovementRepository;
 import com.veltro.inventory.repository.InventoryRepository;
 import com.veltro.inventory.exception.InsufficientStockException;
+import com.veltro.inventory.exception.MaxStockExceededException;
 import com.veltro.inventory.exception.NotFoundException;
 import com.veltro.inventory.security.TenantContext;
 import java.time.OffsetDateTime;
@@ -73,6 +74,13 @@ public class InventoryService {
         InventoryEntity inventory = requireByProductId(productId, businessId);
         int previousStock = inventory.getCurrentStock();
         int newStock = previousStock + request.quantity();
+
+        // BUG-11: Validate max stock limit (only if maxStock is configured > 0)
+        int maxStock = inventory.getMaxStock();
+        if (maxStock > 0 && newStock > maxStock) {
+            throw new MaxStockExceededException(
+                    inventory.getProduct().getName(), previousStock, request.quantity(), maxStock);
+        }
 
         inventory.setCurrentStock(newStock);
         InventoryEntity saved = inventoryRepository.save(inventory);
