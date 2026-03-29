@@ -6,6 +6,8 @@ import com.veltro.inventory.dto.UpdateCategoryRequest;
 import com.veltro.inventory.mapper.CategoryMapper;
 import com.veltro.inventory.model.CategoryEntity;
 import com.veltro.inventory.repository.CategoryRepository;
+import com.veltro.inventory.exception.DuplicateResourceException;
+import com.veltro.inventory.exception.InactiveResourceExistsException;
 import com.veltro.inventory.exception.NotFoundException;
 import com.veltro.inventory.security.TenantContext;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Application service for category management (B1-03).
@@ -60,6 +63,10 @@ public class CategoryService {
     @Transactional
     public CategoryResponse create(CreateCategoryRequest request) {
         Long businessId = TenantContext.getBusinessId();
+
+        // BUG-07: Check for existing category with same name (active or inactive)
+        checkForDuplicateName(request.name(), businessId);
+
         CategoryEntity entity = categoryMapper.toEntity(request);
         entity.setBusinessId(businessId);
 
@@ -107,6 +114,24 @@ public class CategoryService {
     // -------------------------------------------------------------------------
     // Internal helpers
     // -------------------------------------------------------------------------
+
+    /**
+     * Checks if a category with the given name already exists for the business.
+     * Distinguishes between active duplicates (error) and inactive ones (suggest reactivation).
+     * BUG-07 fix.
+     */
+    private void checkForDuplicateName(String name, Long businessId) {
+        Optional<CategoryEntity> existing = categoryRepository.findByNameAndBusinessId(name, businessId);
+        
+        if (existing.isPresent()) {
+            CategoryEntity category = existing.get();
+            if (category.getActive()) {
+                throw new DuplicateResourceException("Category", "name", name);
+            } else {
+                throw new InactiveResourceExistsException("category", "name", name, category.getId());
+            }
+        }
+    }
 
     private CategoryEntity requireActive(Long id, Long businessId) {
         return categoryRepository.findByIdAndActiveTrueAndBusinessId(id, businessId)
