@@ -54,7 +54,19 @@ Quick overview for non-technical stakeholders. Contains:
 
 ---
 
-### 4. **SESSION_SUMMARY.md** (9KB)
+### 4. **REPORT_TECHNOLOGIES_AND_CLASS_STRUCTURE.md**
+Technical report focused on the current repository state. Contains:
+- Validated technology stack from `pom.xml`, `package.json`, and config files
+- Backend package/class structure
+- Frontend module/component structure
+- Main functional domains and layer dependencies
+- Discrepancies between documentation and current code
+
+**Best for:** Developers, reviewers, onboarding, architecture audits
+
+---
+
+### 5. **SESSION_SUMMARY.md** (9KB)
 Summary of the latest project audit session (March 23, 2026). Contains:
 - Session accomplishments
 - Final project status
@@ -108,7 +120,9 @@ Summary of the latest project audit session (March 23, 2026). Contains:
 - **AGENTS.md** - Complete technical documentation
 - **PROJECT_COMPLETION_REPORT.md** - Completion details
 - **EXECUTIVE_SUMMARY.md** - High-level overview
+- **REPORT_TECHNOLOGIES_AND_CLASS_STRUCTURE.md** - Current stack and class/module structure report
 - **SESSION_SUMMARY.md** - Latest audit summary
+- **Veltro.postman_collection.json** - Importable Postman collection with auth token auto-save
 
 ### In Root Project
 - **pom.xml** - Backend dependencies (Maven)
