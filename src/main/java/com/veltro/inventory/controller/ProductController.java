@@ -97,4 +97,14 @@ public class ProductController {
         productService.deactivate(id);
         return ResponseEntity.noContent().build();
     }
+
+    /**
+     * Reactivates a soft-deleted product (BUG-14 fix).
+     * Sets {@code active=true} so the product appears in listings again.
+     */
+    @PutMapping("/{id}/activate")
+    @PreAuthorize("hasAnyRole('ADMIN', 'WAREHOUSE')")
+    public ResponseEntity<ProductResponse> activate(@PathVariable Long id) {
+        return ResponseEntity.ok(productService.reactivate(id));
+    }
 }

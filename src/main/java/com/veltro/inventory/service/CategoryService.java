@@ -111,6 +111,26 @@ public class CategoryService {
         log.info("Category deactivated: id={}", id);
     }
 
+    /**
+     * Reactivates a soft-deleted category (BUG-14 fix).
+     * Sets {@code active=true} so the category appears in listings again.
+     */
+    @Transactional
+    public CategoryResponse reactivate(Long id) {
+        Long businessId = TenantContext.getBusinessId();
+        CategoryEntity entity = categoryRepository.findByIdAndBusinessId(id, businessId)
+                .orElseThrow(() -> new NotFoundException("Category not found with id: " + id));
+
+        if (entity.isActive()) {
+            throw new IllegalArgumentException("Category with id " + id + " is already active.");
+        }
+
+        entity.setActive(true);
+        CategoryEntity saved = categoryRepository.save(entity);
+        log.info("Category reactivated: id={}", id);
+        return categoryMapper.toResponse(saved);
+    }
+
     // -------------------------------------------------------------------------
     // Internal helpers
     // -------------------------------------------------------------------------
@@ -125,7 +145,7 @@ public class CategoryService {
         
         if (existing.isPresent()) {
             CategoryEntity category = existing.get();
-            if (category.getActive()) {
+            if (category.isActive()) {
                 throw new DuplicateResourceException("Category", "name", name);
             } else {
                 throw new InactiveResourceExistsException("category", "name", name, category.getId());

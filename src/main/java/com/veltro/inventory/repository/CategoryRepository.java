@@ -19,4 +19,10 @@ public interface CategoryRepository extends JpaRepository<CategoryEntity, Long> 
      * Used to detect duplicates including soft-deleted categories (BUG-07).
      */
     Optional<CategoryEntity> findByNameAndBusinessId(String name, Long businessId);
+
+    /**
+     * Finds a category by ID and business, regardless of active status.
+     * Used for reactivation (BUG-14).
+     */
+    Optional<CategoryEntity> findByIdAndBusinessId(Long id, Long businessId);
 }
