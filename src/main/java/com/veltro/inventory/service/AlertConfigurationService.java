@@ -25,7 +25,7 @@ public class AlertConfigurationService {
     private final InventoryRepository inventoryRepository;
     private final AlertConfigurationMapper configurationMapper;
 
-    @Transactional(readOnly = true)
+    @Transactional
     public AlertConfigurationResponse getConfiguration(Long productId) {
         Long businessId = TenantContext.getBusinessId();
         return configurationRepository.findByProductIdAndActiveTrueAndBusinessId(productId, businessId)

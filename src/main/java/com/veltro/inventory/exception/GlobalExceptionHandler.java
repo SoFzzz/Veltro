@@ -9,6 +9,7 @@ import com.veltro.inventory.exception.NotFoundException;
 import jakarta.persistence.OptimisticLockException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -51,6 +52,68 @@ public class GlobalExceptionHandler {
                         "CONCURRENCY_CONFLICT",
                         "The resource was modified by another operation. Please verify availability and retry.",
                         request.getRequestURI()));
+    }
+
+    // -------------------------------------------------------------------------
+    // 409 Conflict — unique constraint violations (BUG-08)
+    // -------------------------------------------------------------------------
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(
+            DataIntegrityViolationException ex, HttpServletRequest request) {
+
+        log.warn("Data integrity violation on {}: {}", request.getRequestURI(), ex.getMessage());
+
+        String message = extractConstraintViolationMessage(ex);
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ErrorResponse.of(
+                        "DUPLICATE_RESOURCE",
+                        message,
+                        request.getRequestURI()));
+    }
+
+    /**
+     * Extracts a user-friendly message from a DataIntegrityViolationException.
+     * Attempts to identify the violated constraint and provide a clear message.
+     */
+    private String extractConstraintViolationMessage(DataIntegrityViolationException ex) {
+        String rootMessage = ex.getMostSpecificCause().getMessage();
+        if (rootMessage == null) {
+            return "A resource with the same unique identifier already exists.";
+        }
+
+        String lowerMessage = rootMessage.toLowerCase();
+
+        // Supplier constraints
+        if (lowerMessage.contains("tax_id") || lowerMessage.contains("taxid")) {
+            return "A supplier with this tax ID already exists.";
+        }
+
+        // Product constraints
+        if (lowerMessage.contains("barcode")) {
+            return "A product with this barcode already exists.";
+        }
+        if (lowerMessage.contains("sku")) {
+            return "A product with this SKU already exists.";
+        }
+
+        // User constraints
+        if (lowerMessage.contains("username")) {
+            return "A user with this username already exists.";
+        }
+        if (lowerMessage.contains("email")) {
+            return "A user with this email already exists.";
+        }
+
+        // Order constraints
+        if (lowerMessage.contains("order_number") || lowerMessage.contains("ordernumber")) {
+            return "An order with this order number already exists.";
+        }
+
+        // Generic fallback
+        return "A resource with the same unique identifier already exists.";
     }
 
     // -------------------------------------------------------------------------
@@ -177,6 +240,24 @@ public class GlobalExceptionHandler {
                 .body(ErrorResponse.of(
                         "VALIDATION_ERROR",
                         details,
+                        request.getRequestURI()));
+    }
+
+    // -------------------------------------------------------------------------
+    // 400 Bad Request — invalid argument
+    // -------------------------------------------------------------------------
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgument(
+            IllegalArgumentException ex, HttpServletRequest request) {
+
+        log.warn("Invalid argument on {}: {}", request.getRequestURI(), ex.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponse.of(
+                        "INVALID_ARGUMENT",
+                        ex.getMessage(),
                         request.getRequestURI()));
     }
 
