@@ -1,4 +1,4 @@
-package com.veltro.inventory.infrastructure.adapters.security;
+package com.veltro.inventory.security;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;

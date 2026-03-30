@@ -1,4 +1,4 @@
-package com.veltro.inventory.infrastructure.adapters.security;
+package com.veltro.inventory.security;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;

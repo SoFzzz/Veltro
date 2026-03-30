@@ -7,7 +7,7 @@ import com.veltro.inventory.application.iam.dto.RefreshRequest;
 import com.veltro.inventory.application.iam.dto.RegisterRequest;
 import com.veltro.inventory.application.iam.service.AuthService;
 import com.veltro.inventory.domain.iam.model.UserEntity;
-import com.veltro.inventory.infrastructure.adapters.security.TenantContext;
+import com.veltro.inventory.security.TenantContext;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

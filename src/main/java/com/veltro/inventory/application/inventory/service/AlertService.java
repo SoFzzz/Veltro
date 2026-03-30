@@ -10,7 +10,7 @@ import com.veltro.inventory.domain.inventory.model.AlertType;
 import com.veltro.inventory.domain.inventory.ports.AlertConfigurationRepository;
 import com.veltro.inventory.domain.inventory.ports.AlertRepository;
 import com.veltro.inventory.domain.inventory.ports.InventoryRepository;
-import com.veltro.inventory.infrastructure.adapters.security.TenantContext;
+import com.veltro.inventory.security.TenantContext;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;

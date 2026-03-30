@@ -1,6 +1,6 @@
 package com.veltro.inventory.config;
 
-import com.veltro.inventory.infrastructure.adapters.security.JwtAuthenticationFilter;
+import com.veltro.inventory.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

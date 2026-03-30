@@ -1,6 +1,7 @@
 package com.veltro.inventory.infrastructure.adapters.security;
 
 import com.veltro.inventory.config.JwtProperties;
+import com.veltro.inventory.security.JwtTokenProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

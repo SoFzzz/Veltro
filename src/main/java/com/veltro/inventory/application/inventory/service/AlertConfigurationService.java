@@ -6,7 +6,7 @@ import com.veltro.inventory.application.inventory.mapper.AlertConfigurationMappe
 import com.veltro.inventory.domain.inventory.model.AlertConfigurationEntity;
 import com.veltro.inventory.domain.inventory.ports.AlertConfigurationRepository;
 import com.veltro.inventory.domain.inventory.ports.InventoryRepository;
-import com.veltro.inventory.infrastructure.adapters.security.TenantContext;
+import com.veltro.inventory.security.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

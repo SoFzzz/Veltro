@@ -11,7 +11,7 @@ import com.veltro.inventory.domain.catalog.ports.CategoryRepository;
 import com.veltro.inventory.domain.catalog.ports.ProductRepository;
 import com.veltro.inventory.exception.InvalidPriceException;
 import com.veltro.inventory.exception.NotFoundException;
-import com.veltro.inventory.infrastructure.adapters.security.TenantContext;
+import com.veltro.inventory.security.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
