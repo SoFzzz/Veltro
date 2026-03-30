@@ -22,11 +22,10 @@ veltro:
   ai:
     openai:
       enabled: true                               # AI vision enabled
-      api-key: ${OPENAI_API_KEY:}
-      api-endpoint: ${OPENAI_API_ENDPOINT:https://models.inference.ai.azure.com/chat/completions}
-      model: ${OPENAI_MODEL:gpt-4o-mini}          # GitHub AI API - GPT-4o-mini
-      max-tokens: 1000                            # Response token limit
-      timeout-seconds: 60                         # GitHub AI is fast
-      max-image-size-mb: 20                       # Max image size
-      max-retries: 3                              # Transient error retries
+      api-key: "AIzaSyBxQuA-J_H_3bqd_8lGPB1WctyhBx-0Dg0"
+      model: "gemini-2.5-flash-lite"
+      max-tokens: 1000
+      timeout-seconds: 60
+      max-image-size-mb: 200
+      max-retries: 3
 
