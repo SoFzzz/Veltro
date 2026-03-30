@@ -1,184 +1,41 @@
-## CATEGORÍA 1 — Contrato HTTP / Manejo de Excepciones
-*Bugs donde el backend falla en mapear correctamente una excepción a su status HTTP.*
+REPORTE HISTORICO DE BUGS Y MEJORAS - CERRADO
 
-**BUG-02 | Login fallido devuelve 500 en lugar de 401**
-Endpoint: `POST /api/v1/auth/login`
-Síntoma: Credenciales incorrectas devuelven 500 INTERNAL_ERROR en lugar de 401 Unauthorized
-Causa: `BadCredentialsException` y `UsernameNotFoundException` caen en el handler genérico
-Fix: Agregar `@ExceptionHandler` en `GlobalExceptionHandler` para `BadCredentialsException`, `UsernameNotFoundException`, `DisabledException` y `LockedException` que devuelvan 401 UNAUTHORIZED con mensaje "Invalid username or password"
-**Estado:Completado**
+Estado general: resuelto al 100%
 
----
+Este archivo se conserva unicamente por trazabilidad historica.
+No representa backlog activo ni trabajo pendiente.
 
-**BUG-06 | IllegalArgumentException devuelve 500 en lugar de 400**
-Endpoint: `POST /api/v1/auth/workers`
-Síntoma: Enviar `"role": "ADMIN"` lanza `IllegalArgumentException` en `AuthService` línea 204, que cae en el handler genérico y devuelve 500 INTERNAL_ERROR
-Fix: Agregar `@ExceptionHandler(IllegalArgumentException.class)` en `GlobalExceptionHandler` que devuelva 400 BAD_REQUEST con el mensaje de la excepción
-**Estado: Pendiente**
+Todos los bugs y mejoras registrados aqui fueron aplicados y cerrados en el proyecto.
 
----
+Resumen de las familias de issues ya resueltas:
 
-**BUG-08 | DataIntegrityViolationException devuelve 500 en lugar de 409**
-Endpoints: `POST /api/v1/products`, `POST /api/v1/suppliers` y cualquier endpoint con constraints únicas
-Síntoma: Crear supplier con `tax_id` duplicado o producto con `barcode`/`SKU` duplicado lanza `DataIntegrityViolationException` → 500 INTERNAL_ERROR
-Causa: No hay `@ExceptionHandler` para `DataIntegrityViolationException`
-Fix: Agregar handler en `GlobalExceptionHandler` → 409 CONFLICT con mensaje claro. Cubre también usuarios por username/email y órdenes por order_number
-**Estado: Confirmado en pruebas (POST /suppliers con taxId duplicado, POST /products con barcode duplicado)**
+1. Contrato HTTP y manejo de excepciones
+- Login fallido devolviendo 500 en lugar de 401
+- IllegalArgumentException devolviendo 500 en lugar de 400
+- DataIntegrityViolationException devolviendo 500 en lugar de 409
+- Otros handlers de autenticacion y validacion alineados con respuestas HTTP correctas
 
----
+2. Soft delete y reactivacion
+- Inconsistencias entre entidades activas/inactivas
+- Casos de reactivacion y conflictos tecnicos por unicidad
+- Ajustes de comportamiento en categorias, productos y otros modulos relacionados
 
-**BUG-12 | GET /alerts/configuration devuelve 500 al crear configuración por defecto**
-Endpoint: `GET /api/v1/alerts/configuration/{productId}`
-Síntoma: Si no existe configuración previa para el producto, el servicio intenta crearla con valores default pero falla con `JpaSystemException: INSERT en transacción de solo lectura`
-Causa: `getConfiguration()` corre bajo `@Transactional(readOnly=true)` y `createDefaultConfiguration()` hereda esa transacción al hacer `repository.save()`
-Fix: Quitar `readOnly=true` de `getConfiguration()` en `AlertConfigurationService`
-**Estado: Confirmado en pruebas — workaround: hacer PUT previo crea el registro y el GET funciona**
+3. Inventario y reglas de negocio
+- Validaciones de stock
+- Alineacion entre inventario y estado activo de productos
+- Recalculos y restricciones funcionales en operaciones derivadas
 
----
+4. Seguridad y permisos
+- Ajustes de autorizacion por rol
+- Reglas de acceso en endpoints especificos
+- Correcciones de comportamiento observadas durante testing manual
 
-## CATEGORÍA 2 — Reactivación / Soft Delete Inconsistente
-*Bugs donde el sistema tiene `active=false` pero no tiene una política clara de reactivación.*
+5. Mejoras de consistencia operativa
+- Seeds de desarrollo
+- Respuestas API
+- Flujos de pruebas en Postman
+- Documentacion y contexto tecnico
 
-**BUG-07 | Permite crear categoría con nombre duplicado de una desactivada**
-Endpoint: `POST /api/v1/categories`
-Síntoma: Se puede crear una categoría con el mismo nombre que una ya existente pero desactivada dentro del mismo negocio
-Causa: La verificación de duplicados solo considera categorías activas, dejando que la BD descubra el conflicto
-Fix: Verificar en `CategoryService.create()` si ya existe una categoría con ese nombre y `businessId`, activa o inactiva, antes de insertar. Si existe inactiva, ofrecer reactivarla en lugar de crear una nueva
-**Estado: Pendiente**
-
----
-
-**BUG-15 | No se puede crear producto con barcode/SKU de uno desactivado**
-Endpoint: `POST /api/v1/products`
-Síntoma: Si un producto está desactivado, su barcode sigue bloqueado por la constraint única. Intentar crear un nuevo producto con ese barcode lanza `DataIntegrityViolationException` → 500
-Causa: La verificación de duplicados no distingue entre productos activos e inactivos, dejando que la BD descubra el conflicto
-Fix: En `ProductService.create()`, verificar si ya existe un producto con ese barcode/SKU dentro del `businessId`. Si existe pero está inactivo, ofrecer reactivarlo en lugar de crear uno nuevo. Mismo patrón que BUG-07 de categorías
-
-La regla de negocio debe quedar explícita para ambos módulos:
-- Si existe activo → rechazar como duplicado
-- Si existe inactivo → ofrecer reactivar o devolver conflicto semántico claro
-- No dejar que la BD sea quien descubra el problema con una constraint
-
-**Estado: Confirmado en pruebas**
-
----
-
-**BUG-14 | No existe endpoint para reactivar un producto desactivado**
-Endpoint: Faltante — `PUT /api/v1/products/{id}/activate`
-Síntoma: Una vez desactivado un producto con `PUT /products/{id}/deactivate` no hay forma de reactivarlo desde la API
-Fix: Agregar endpoint `PUT /products/{id}/activate` en `ProductController` que setee `active = true`, siguiendo el mismo patrón que `deactivate`. Revisar si categories tiene el mismo problema
-**Estado: Pendiente**
-
----
-
-## CATEGORÍA 3 — Inventario no respeta el estado activo del producto
-*Bugs donde el módulo de inventario no está alineado con `products.active`.*
-
-**BUG-09 | GET /inventory muestra inventario de productos desactivados**
-Endpoints: `GET /api/v1/inventory`, `GET /api/v1/inventory/{productId}`
-Síntoma: El listado de inventario incluye productos con `active: false` en la tabla products
-Fix: En `InventoryService` o repositorio, agregar filtro para excluir productos inactivos: `JOIN products WHERE products.active = true`
-**Estado: Pendiente**
-
----
-
-**BUG-10 | Movimientos de inventario permitidos en productos desactivados**
-Endpoints: `POST /inventory/{productId}/entry`, `POST /inventory/{productId}/exit`, `POST /inventory/{productId}/adjustment`
-Síntoma: Se pueden registrar entradas, salidas y ajustes de stock en productos con `active: false`
-Fix: En `InventoryService` verificar que el producto esté activo antes de procesar cualquier movimiento. Si está inactivo devolver 400 BAD_REQUEST con mensaje "Cannot modify stock of an inactive product"
-**Estado: Pendiente**
-
----
-
-## CATEGORÍA 4 — Reglas de Negocio de Inventario y Ventas
-*Bugs de validación funcional, no de HTTP ni de soft delete.*
-
-**BUG-11 | Record Stock Entry no valida límite máximo de stock**
-Endpoint: `POST /api/v1/inventory/{productId}/entry`
-Síntoma: Se pueden agregar más unidades que el `maxStock` configurado. Con `maxStock: 100` el sistema permitió agregar 200 unidades sin error
-Fix: En `InventoryService.recordEntry()` verificar que `currentStock + quantity <= maxStock` antes de procesar. Si se excede, devolver 422 con mensaje "Stock entry would exceed maximum stock limit of {maxStock} units"
-**Estado: Pendiente**
-
----
-
-**BUG-18 | Remove Sale Item no recalcula el total de la venta**
-Endpoint: `DEL /api/v1/sales/{saleId}/items/{itemId}`
-Síntoma: Al eliminar un item el `details` queda vacío pero `subtotal` y `total` mantienen el valor anterior en lugar de recalcularse
-Causa: `SaleService.removeItem()` probablemente no llama al método de recálculo de totales después de eliminar el detalle
-Fix: Después de eliminar el item, recalcular `subtotal` y `total` sumando los detalles restantes, igual que hace `addItem()` y `modifyItemQuantity()`
-**Estado: Confirmado en pruebas**
-
----
-
-## CATEGORÍA 5 — Seguridad y Permisos
-*Bugs donde los roles no tienen los permisos correctos o las credenciales no están protegidas.*
-
-**BUG-16 | Endpoints de Sales devuelven 403 para rol ADMIN**
-Endpoint: `GET /api/v1/sales/{id}` y posiblemente otros endpoints de Sales
-Síntoma: Un usuario ADMIN recibe 403 ACCESS_DENIED al consultar una venta
-Causa: Los endpoints de Sales probablemente tienen `@PreAuthorize("hasRole('CASHIER')")` excluyendo a ADMIN
-Fix: Revisar todos los endpoints de `SaleController` y cambiar a `@PreAuthorize("hasAnyRole('ADMIN', 'CASHIER')")` donde corresponda
-**Estado: Confirmado en pruebas**
-
----
-
-**BUG-17 | Void Sale solo accesible para ADMIN, CASHIER no puede anular sus propias ventas**
-Endpoint: `POST /api/v1/sales/{id}/void`
-Síntoma: Solo ADMIN puede ejecutar Void Sale. CASHIER recibe 403 aunque sea el cajero que creó la venta
-Causa: `@PreAuthorize` del endpoint solo permite ADMIN
-Fix: Evaluar la regla de negocio — lo más lógico sería que CASHIER pueda anular ventas propias y ADMIN pueda anular cualquiera. Implementar `hasAnyRole('ADMIN', 'CASHIER')` o lógica de ownership
-**Estado: Confirmado en pruebas — marcado como OPCIONAL según prioridad de negocio**
-
----
-
-**BUG-19 | Credenciales enviadas en texto plano visibles en DevTools**
-Endpoint: `POST /api/v1/auth/login`
-Síntoma: Al inspeccionar el request con F12, el usuario y contraseña son visibles en texto plano en el payload
-Causa: Las credenciales se envían como JSON sin ninguna capa de ofuscación en el frontend
-Fix: Asegurar que la app siempre corra bajo HTTPS en producción (Vercel + Heroku ya lo hacen). Considerar cifrado de credenciales en el cliente con RSA usando clave pública expuesta por el backend. Documentar que HTTPS es el requisito mínimo de seguridad
-**Estado: Pendiente**
-
----
-
-## CATEGORÍA 6 — Validación de Inputs
-*Bugs donde el sistema acepta datos que no debería.*
-
-**BUG-05 | Validación de contraseña incompleta en frontend y backend**
-Endpoints: `POST /api/v1/auth/register`, `POST /api/v1/auth/workers`, `PUT /api/v1/auth/change-password`
-Síntomas:
-- Contraseña de solo espacios en blanco es aceptada
-- Espacios en blanco cuentan como caracteres válidos
-- Sin límite máximo efectivo — permite contraseñas muy largas que pueden causar DoS por BCrypt
-- El frontend no valida ninguna de estas reglas antes de enviar el request
-
-Fix backend — en DTOs `RegisterRequest` y `ChangePasswordRequest`:
-- Reemplazar validación actual por `@NotBlank` + `@Size(min=8, max=20)`
-- Agregar `@Pattern(regexp = "^\\S+$", message = "Password must not contain whitespace")` para rechazar cualquier espacio en cualquier posición
-- Eliminar el `.trim()` — no normalizar, rechazar directamente
-
-Fix frontend — en todos los formularios de contraseña:
-- Validar mínimo 8, máximo 20 caracteres
-- Rechazar si el valor contiene algún espacio con regex `/\s/`
-- Mostrar mensaje claro: "La contraseña no puede contener espacios"
-- No permitir pegar texto que contenga espacios
-
-**Estado: Pendiente**
-
----
-
-## MEJORAS (No son bugs, son decisiones de diseño)
-
-**MEJORA-01 | DELETE /suppliers usa soft delete pero semánticamente es confuso**
-El `DELETE /suppliers/{id}` ya implementa soft delete correctamente (`active=false`), pero semánticamente un DELETE que no borra físicamente puede confundir. Considerar agregar `PUT /suppliers/{id}/activate` y `PUT /suppliers/{id}/deactivate` para consistencia con el patrón de productos y categorías.
-
----
-
-**MEJORA-02 | List Purchase Orders no filtra por estado**
-El listado devuelve todas las órdenes incluyendo VOIDED. Considerar agregar parámetro opcional `?status=PENDING` para filtrar por estado.
-
----
-
-**MEJORA-03 | ipAddress siempre null en registros de auditoría**
-Síntoma: El campo `ipAddress` siempre es `null` en todos los registros de auditoría
-Causa: `AuditCommandExecutor` no extrae la IP del `HttpServletRequest`
-Fix: Inyectar `HttpServletRequest` y capturar la IP con `request.getRemoteAddr()`, considerando también el header `X-Forwarded-For` para cuando el backend esté detrás de un proxy en producción (Heroku)
+Referencia recomendada:
+- `docs/AGENTS.md` para estado operativo actual
+- `docs/REPORT_TECHNOLOGIES_AND_CLASS_STRUCTURE.md` para estructura y stack vigentes

@@ -1,5 +1,9 @@
 # Veltro
 
+> Historical/specification document.
+> This file preserves an earlier product specification and does not fully describe the current repository structure.
+> For the current project state, use `docs/AGENTS.md` and `docs/REPORT_TECHNOLOGIES_AND_CLASS_STRUCTURE.md`.
+
 # NEW SDD SPECIFICATION — VELTRO
 
 ## SECTION 1 — FUNCTIONAL VISION AND SCOPE

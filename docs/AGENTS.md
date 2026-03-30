@@ -367,6 +367,11 @@ Campos planos (sin objetos anidados):
 
 ## Bugs Resueltos (Historial)
 
+### Estado del registro historico
+
+`docs/BUGASOS.txt` se conserva solo por trazabilidad.
+Todos los bugs y mejoras listados en ese archivo ya fueron resueltos al 100% y no representan backlog activo.
+
 ### Backend
 1. `App.tsx` InventoryPage duplicado → corregido con Suspense
 2. Audit `findByFilters` query → fix CAST para enums null
