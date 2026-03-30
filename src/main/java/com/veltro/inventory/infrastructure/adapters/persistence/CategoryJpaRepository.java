@@ -1,6 +1,6 @@
 package com.veltro.inventory.infrastructure.adapters.persistence;
 
-import com.veltro.inventory.domain.catalog.model.CategoryEntity;
+import com.veltro.inventory.model.CategoryEntity;
 import com.veltro.inventory.domain.catalog.ports.CategoryRepository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

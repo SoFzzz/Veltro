@@ -1,6 +1,6 @@
 package com.veltro.inventory.domain.purchasing.ports;
 
-import com.veltro.inventory.domain.purchasing.model.SupplierEntity;
+import com.veltro.inventory.model.SupplierEntity;
 
 import java.util.List;
 import java.util.Optional;

@@ -1,6 +1,6 @@
 package com.veltro.inventory.infrastructure.adapters.persistence;
 
-import com.veltro.inventory.domain.purchasing.model.PurchaseOrderEntity;
+import com.veltro.inventory.model.PurchaseOrderEntity;
 import com.veltro.inventory.domain.purchasing.ports.PurchaseOrderRepository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

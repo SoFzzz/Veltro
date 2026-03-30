@@ -1,8 +1,8 @@
 package com.veltro.inventory.domain.audit.ports;
 
-import com.veltro.inventory.domain.audit.model.AuditAction;
-import com.veltro.inventory.domain.audit.model.AuditEntityType;
-import com.veltro.inventory.domain.audit.model.AuditRecordEntity;
+import com.veltro.inventory.model.AuditAction;
+import com.veltro.inventory.model.AuditEntityType;
+import com.veltro.inventory.model.AuditRecordEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

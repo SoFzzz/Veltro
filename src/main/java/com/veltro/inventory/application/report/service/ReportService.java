@@ -3,7 +3,7 @@ package com.veltro.inventory.application.report.service;
 import com.veltro.inventory.application.report.dto.ProfitabilityReport;
 import com.veltro.inventory.application.report.dto.ReportType;
 import com.veltro.inventory.application.report.exporter.ReportExporter;
-import com.veltro.inventory.domain.pos.model.SaleStatus;
+import com.veltro.inventory.model.SaleStatus;
 import com.veltro.inventory.security.TenantContext;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;

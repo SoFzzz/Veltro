@@ -1,10 +1,12 @@
 package com.veltro.inventory.domain.purchasing.model.state;
 
-import com.veltro.inventory.domain.purchasing.model.PurchaseOrderDetailEntity;
-import com.veltro.inventory.domain.purchasing.model.PurchaseOrderEntity;
-import com.veltro.inventory.domain.purchasing.model.PurchaseOrderStatus;
-import com.veltro.inventory.domain.purchasing.model.SupplierEntity;
+import com.veltro.inventory.model.PurchaseOrderDetailEntity;
+import com.veltro.inventory.model.PurchaseOrderEntity;
+import com.veltro.inventory.model.PurchaseOrderStatus;
+import com.veltro.inventory.model.SupplierEntity;
 import com.veltro.inventory.exception.InvalidStateTransitionException;
+import com.veltro.inventory.state.PartialState;
+import com.veltro.inventory.state.PurchaseOrderState;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

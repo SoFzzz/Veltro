@@ -1,6 +1,6 @@
 package com.veltro.inventory.application.pos.dto;
 
-import com.veltro.inventory.domain.pos.model.PaymentMethod;
+import com.veltro.inventory.model.PaymentMethod;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;

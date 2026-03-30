@@ -1,9 +1,9 @@
 package com.veltro.inventory.application.audit.command;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.veltro.inventory.domain.audit.model.AuditAction;
-import com.veltro.inventory.domain.audit.model.AuditEntityType;
-import com.veltro.inventory.domain.audit.model.AuditRecordEntity;
+import com.veltro.inventory.model.AuditAction;
+import com.veltro.inventory.model.AuditEntityType;
+import com.veltro.inventory.model.AuditRecordEntity;
 import com.veltro.inventory.domain.audit.ports.AuditRecordRepository;
 import com.veltro.inventory.security.VeltroUserDetails;
 import org.junit.jupiter.api.AfterEach;

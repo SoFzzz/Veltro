@@ -1,7 +1,7 @@
 package com.veltro.inventory.application.inventory.mapper;
 
 import com.veltro.inventory.application.inventory.dto.AlertConfigurationResponse;
-import com.veltro.inventory.domain.inventory.model.AlertConfigurationEntity;
+import com.veltro.inventory.model.AlertConfigurationEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

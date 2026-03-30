@@ -3,7 +3,7 @@ package com.veltro.inventory.application.pos.mapper;
 import com.veltro.inventory.application.pos.dto.SaleDetailResponse;
 import com.veltro.inventory.application.pos.dto.SaleResponse;
 import com.veltro.inventory.application.shared.dto.AuditInfo;
-import com.veltro.inventory.domain.pos.model.SaleEntity;
+import com.veltro.inventory.model.SaleEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;

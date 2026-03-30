@@ -2,7 +2,7 @@ package com.veltro.inventory.application.inventory.alert;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.veltro.inventory.domain.inventory.model.AlertEntity;
+import com.veltro.inventory.model.AlertEntity;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

@@ -1,7 +1,7 @@
 package com.veltro.inventory.application.audit.dto;
 
-import com.veltro.inventory.domain.audit.model.AuditAction;
-import com.veltro.inventory.domain.audit.model.AuditEntityType;
+import com.veltro.inventory.model.AuditAction;
+import com.veltro.inventory.model.AuditEntityType;
 
 import java.time.Instant;
 

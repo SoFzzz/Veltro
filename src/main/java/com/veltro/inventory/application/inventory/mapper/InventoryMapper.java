@@ -1,7 +1,7 @@
 package com.veltro.inventory.application.inventory.mapper;
 
 import com.veltro.inventory.application.inventory.dto.InventoryResponse;
-import com.veltro.inventory.domain.inventory.model.InventoryEntity;
+import com.veltro.inventory.model.InventoryEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

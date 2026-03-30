@@ -4,7 +4,7 @@ import com.veltro.inventory.application.catalog.dto.CreateProductRequest;
 import com.veltro.inventory.application.catalog.dto.ProductResponse;
 import com.veltro.inventory.application.catalog.mapper.ProductMapper;
 import com.veltro.inventory.application.inventory.service.InventoryService;
-import com.veltro.inventory.domain.catalog.model.ProductEntity;
+import com.veltro.inventory.model.ProductEntity;
 import com.veltro.inventory.domain.catalog.ports.CategoryRepository;
 import com.veltro.inventory.domain.catalog.ports.ProductRepository;
 import com.veltro.inventory.exception.InvalidPriceException;
@@ -13,7 +13,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 

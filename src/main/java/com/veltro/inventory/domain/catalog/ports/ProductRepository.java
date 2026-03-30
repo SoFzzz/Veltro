@@ -1,6 +1,6 @@
 package com.veltro.inventory.domain.catalog.ports;
 
-import com.veltro.inventory.domain.catalog.model.ProductEntity;
+import com.veltro.inventory.model.ProductEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

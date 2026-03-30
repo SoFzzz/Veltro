@@ -1,7 +1,7 @@
 package com.veltro.inventory.infrastructure.adapters.persistence;
 
-import com.veltro.inventory.domain.inventory.model.AlertEntity;
-import com.veltro.inventory.domain.inventory.model.AlertType;
+import com.veltro.inventory.model.AlertEntity;
+import com.veltro.inventory.model.AlertType;
 import com.veltro.inventory.domain.inventory.ports.AlertRepository;
 import java.util.List;
 import java.util.Optional;

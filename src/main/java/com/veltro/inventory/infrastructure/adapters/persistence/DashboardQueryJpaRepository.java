@@ -2,8 +2,8 @@ package com.veltro.inventory.infrastructure.adapters.persistence;
 
 import com.veltro.inventory.application.dashboard.dto.DashboardResponse;
 import com.veltro.inventory.application.dashboard.service.DashboardQueryRepository;
-import com.veltro.inventory.domain.inventory.model.AlertType;
-import com.veltro.inventory.domain.pos.model.SaleStatus;
+import com.veltro.inventory.model.AlertType;
+import com.veltro.inventory.model.SaleStatus;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.extern.slf4j.Slf4j;

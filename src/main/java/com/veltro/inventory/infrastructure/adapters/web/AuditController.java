@@ -3,7 +3,7 @@ package com.veltro.inventory.infrastructure.adapters.web;
 import com.veltro.inventory.application.audit.dto.AuditFilterRequest;
 import com.veltro.inventory.application.audit.dto.AuditRecordResponse;
 import com.veltro.inventory.application.audit.service.ForensicAuditService;
-import com.veltro.inventory.domain.audit.model.AuditEntityType;
+import com.veltro.inventory.model.AuditEntityType;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -12,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.Instant;
 import java.util.List;
 
 /**

@@ -1,5 +1,8 @@
 package com.veltro.inventory.domain.audit.model;
 
+import com.veltro.inventory.model.AuditAction;
+import com.veltro.inventory.model.AuditEntityType;
+import com.veltro.inventory.model.AuditRecordEntity;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;

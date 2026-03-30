@@ -1,6 +1,6 @@
 package com.veltro.inventory.domain.iam.ports;
 
-import com.veltro.inventory.domain.iam.model.UserEntity;
+import com.veltro.inventory.model.UserEntity;
 
 import java.util.Optional;
 

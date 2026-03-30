@@ -4,7 +4,7 @@ import com.veltro.inventory.application.catalog.dto.CategoryResponse;
 import com.veltro.inventory.application.catalog.dto.CreateCategoryRequest;
 import com.veltro.inventory.application.catalog.dto.UpdateCategoryRequest;
 import com.veltro.inventory.application.catalog.mapper.CategoryMapper;
-import com.veltro.inventory.domain.catalog.model.CategoryEntity;
+import com.veltro.inventory.model.CategoryEntity;
 import com.veltro.inventory.domain.catalog.ports.CategoryRepository;
 import com.veltro.inventory.exception.NotFoundException;
 import com.veltro.inventory.security.TenantContext;
