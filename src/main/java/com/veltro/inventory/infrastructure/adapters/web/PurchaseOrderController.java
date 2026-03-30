@@ -1,8 +1,8 @@
 package com.veltro.inventory.infrastructure.adapters.web;
 
-import com.veltro.inventory.application.purchasing.dto.AddOrderItemRequest;
-import com.veltro.inventory.application.purchasing.dto.CreatePurchaseOrderRequest;
-import com.veltro.inventory.application.purchasing.dto.PurchaseOrderResponse;
+import com.veltro.inventory.dto.AddOrderItemRequest;
+import com.veltro.inventory.dto.CreatePurchaseOrderRequest;
+import com.veltro.inventory.dto.PurchaseOrderResponse;
 import com.veltro.inventory.application.purchasing.service.PurchaseOrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

@@ -1,6 +1,6 @@
 package com.veltro.inventory.infrastructure.adapters.web;
 
-import com.veltro.inventory.application.dashboard.dto.DashboardResponse;
+import com.veltro.inventory.dto.DashboardResponse;
 import com.veltro.inventory.application.dashboard.service.DashboardService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

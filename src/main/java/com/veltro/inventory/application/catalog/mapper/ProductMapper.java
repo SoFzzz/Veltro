@@ -1,8 +1,8 @@
 package com.veltro.inventory.application.catalog.mapper;
 
-import com.veltro.inventory.application.catalog.dto.CreateProductRequest;
-import com.veltro.inventory.application.catalog.dto.ProductResponse;
-import com.veltro.inventory.application.catalog.dto.UpdateProductRequest;
+import com.veltro.inventory.dto.CreateProductRequest;
+import com.veltro.inventory.dto.ProductResponse;
+import com.veltro.inventory.dto.UpdateProductRequest;
 import com.veltro.inventory.model.ProductEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

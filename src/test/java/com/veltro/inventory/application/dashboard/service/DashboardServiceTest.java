@@ -1,6 +1,6 @@
 package com.veltro.inventory.application.dashboard.service;
 
-import com.veltro.inventory.application.dashboard.dto.DashboardResponse;
+import com.veltro.inventory.dto.DashboardResponse;
 import com.veltro.inventory.model.AlertType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

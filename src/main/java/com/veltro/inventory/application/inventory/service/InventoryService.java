@@ -2,12 +2,12 @@ package com.veltro.inventory.application.inventory.service;
 
 import com.veltro.inventory.application.audit.command.AuditCommandExecutor;
 import com.veltro.inventory.application.audit.command.AuditContext;
-import com.veltro.inventory.application.inventory.dto.InventoryMovementResponse;
-import com.veltro.inventory.application.inventory.dto.InventoryResponse;
-import com.veltro.inventory.application.inventory.dto.StockAdjustmentRequest;
-import com.veltro.inventory.application.inventory.dto.StockEntryRequest;
-import com.veltro.inventory.application.inventory.dto.StockExitRequest;
-import com.veltro.inventory.application.inventory.dto.UpdateStockLimitsRequest;
+import com.veltro.inventory.dto.InventoryMovementResponse;
+import com.veltro.inventory.dto.InventoryResponse;
+import com.veltro.inventory.dto.StockAdjustmentRequest;
+import com.veltro.inventory.dto.StockEntryRequest;
+import com.veltro.inventory.dto.StockExitRequest;
+import com.veltro.inventory.dto.UpdateStockLimitsRequest;
 import com.veltro.inventory.application.inventory.event.StockChangedEvent;
 import com.veltro.inventory.application.inventory.mapper.InventoryMapper;
 import com.veltro.inventory.application.inventory.mapper.InventoryMovementMapper;

@@ -1,6 +1,6 @@
 package com.veltro.inventory.application.audit.mapper;
 
-import com.veltro.inventory.application.audit.dto.AuditRecordResponse;
+import com.veltro.inventory.dto.AuditRecordResponse;
 import com.veltro.inventory.model.AuditRecordEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingConstants;

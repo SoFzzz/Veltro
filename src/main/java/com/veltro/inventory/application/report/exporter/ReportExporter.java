@@ -1,7 +1,7 @@
 package com.veltro.inventory.application.report.exporter;
 
-import com.veltro.inventory.application.report.dto.ProfitabilityReport;
-import com.veltro.inventory.application.report.dto.ReportType;
+import com.veltro.inventory.dto.ProfitabilityReport;
+import com.veltro.inventory.dto.ReportType;
 
 /**
  * Interface for report exporters (B3-02 Factory Method Pattern).

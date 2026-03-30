@@ -1,10 +1,10 @@
 package com.veltro.inventory.application.iam.service;
 
-import com.veltro.inventory.application.iam.dto.ChangePasswordRequest;
-import com.veltro.inventory.application.iam.dto.LoginRequest;
-import com.veltro.inventory.application.iam.dto.LoginResponse;
-import com.veltro.inventory.application.iam.dto.RefreshRequest;
-import com.veltro.inventory.application.iam.dto.RegisterRequest;
+import com.veltro.inventory.dto.ChangePasswordRequest;
+import com.veltro.inventory.dto.LoginRequest;
+import com.veltro.inventory.dto.LoginResponse;
+import com.veltro.inventory.dto.RefreshRequest;
+import com.veltro.inventory.dto.RegisterRequest;
 import com.veltro.inventory.model.BusinessEntity;
 import com.veltro.inventory.model.Role;
 import com.veltro.inventory.model.UserEntity;

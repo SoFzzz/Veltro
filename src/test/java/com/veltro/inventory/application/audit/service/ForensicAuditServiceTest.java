@@ -1,7 +1,7 @@
 package com.veltro.inventory.application.audit.service;
 
-import com.veltro.inventory.application.audit.dto.AuditFilterRequest;
-import com.veltro.inventory.application.audit.dto.AuditRecordResponse;
+import com.veltro.inventory.dto.AuditFilterRequest;
+import com.veltro.inventory.dto.AuditRecordResponse;
 import com.veltro.inventory.application.audit.mapper.AuditRecordMapper;
 import com.veltro.inventory.model.AuditAction;
 import com.veltro.inventory.model.AuditEntityType;

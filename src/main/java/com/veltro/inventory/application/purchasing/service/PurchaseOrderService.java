@@ -2,9 +2,9 @@ package com.veltro.inventory.application.purchasing.service;
 
 import com.veltro.inventory.application.audit.command.AuditCommandExecutor;
 import com.veltro.inventory.application.audit.command.AuditContext;
-import com.veltro.inventory.application.purchasing.dto.AddOrderItemRequest;
-import com.veltro.inventory.application.purchasing.dto.CreatePurchaseOrderRequest;
-import com.veltro.inventory.application.purchasing.dto.PurchaseOrderResponse;
+import com.veltro.inventory.dto.AddOrderItemRequest;
+import com.veltro.inventory.dto.CreatePurchaseOrderRequest;
+import com.veltro.inventory.dto.PurchaseOrderResponse;
 import com.veltro.inventory.application.purchasing.event.OrderReceivedEvent;
 import com.veltro.inventory.application.purchasing.event.ReceivedItemInfo;
 import com.veltro.inventory.application.purchasing.mapper.PurchaseOrderMapper;

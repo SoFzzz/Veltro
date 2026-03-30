@@ -1,8 +1,8 @@
 package com.veltro.inventory.application.catalog.mapper;
 
-import com.veltro.inventory.application.catalog.dto.CategoryResponse;
-import com.veltro.inventory.application.catalog.dto.CreateCategoryRequest;
-import com.veltro.inventory.application.catalog.dto.UpdateCategoryRequest;
+import com.veltro.inventory.dto.CategoryResponse;
+import com.veltro.inventory.dto.CreateCategoryRequest;
+import com.veltro.inventory.dto.UpdateCategoryRequest;
 import com.veltro.inventory.model.CategoryEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

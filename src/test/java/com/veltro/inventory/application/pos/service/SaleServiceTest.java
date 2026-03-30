@@ -1,10 +1,10 @@
 package com.veltro.inventory.application.pos.service;
 
 import com.veltro.inventory.application.audit.command.AuditCommandExecutor;
-import com.veltro.inventory.application.pos.dto.AddItemRequest;
-import com.veltro.inventory.application.pos.dto.ConfirmSaleRequest;
-import com.veltro.inventory.application.pos.dto.ModifyItemRequest;
-import com.veltro.inventory.application.pos.dto.SaleResponse;
+import com.veltro.inventory.dto.AddItemRequest;
+import com.veltro.inventory.dto.ConfirmSaleRequest;
+import com.veltro.inventory.dto.ModifyItemRequest;
+import com.veltro.inventory.dto.SaleResponse;
 import com.veltro.inventory.application.pos.event.SaleCompletedEvent;
 import com.veltro.inventory.application.pos.event.SaleVoidedEvent;
 import com.veltro.inventory.application.pos.mapper.SaleMapper;

@@ -11,13 +11,12 @@ import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
-import com.veltro.inventory.application.report.dto.ProfitabilityReport;
-import com.veltro.inventory.application.report.dto.ReportType;
+import com.veltro.inventory.dto.ProfitabilityReport;
+import com.veltro.inventory.dto.ReportType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 
 /**

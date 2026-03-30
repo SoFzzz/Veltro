@@ -1,8 +1,8 @@
 package com.veltro.inventory.infrastructure.adapters.web;
 
-import com.veltro.inventory.application.catalog.dto.CategoryResponse;
-import com.veltro.inventory.application.catalog.dto.CreateCategoryRequest;
-import com.veltro.inventory.application.catalog.dto.UpdateCategoryRequest;
+import com.veltro.inventory.dto.CategoryResponse;
+import com.veltro.inventory.dto.CreateCategoryRequest;
+import com.veltro.inventory.dto.UpdateCategoryRequest;
 import com.veltro.inventory.application.catalog.service.CategoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
