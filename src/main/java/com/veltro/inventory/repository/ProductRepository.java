@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -34,4 +35,10 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Long> {
      * Used for reactivation (BUG-14).
      */
     Optional<ProductEntity> findByIdAndBusinessId(Long id, Long businessId);
+
+    /**
+     * Finds a small set of active products in the tenant whose names contain the given keyword.
+     * Used by AI product matching to enrich visual suggestions with existing catalog data.
+     */
+    List<ProductEntity> findTop10ByActiveTrueAndBusinessIdAndNameContainingIgnoreCase(Long businessId, String keyword);
 }
