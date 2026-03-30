@@ -1,8 +1,8 @@
-package com.veltro.inventory.infrastructure.adapters.persistence;
+package com.veltro.inventory.repository;
 
 import com.veltro.inventory.model.AlertEntity;
 import com.veltro.inventory.model.AlertType;
-import com.veltro.inventory.domain.inventory.ports.AlertRepository;
+
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
@@ -11,7 +11,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface AlertJpaRepository extends JpaRepository<AlertEntity, Long>, AlertRepository {
+public interface AlertRepository extends JpaRepository<AlertEntity, Long>, com.veltro.inventory.domain.inventory.ports.AlertRepository {
 
     @Override
     Optional<AlertEntity> findByIdAndActiveTrue(Long id);

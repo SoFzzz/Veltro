@@ -1,9 +1,8 @@
-package com.veltro.inventory.infrastructure.adapters.persistence;
+package com.veltro.inventory.repository;
 
 import com.veltro.inventory.model.AuditAction;
 import com.veltro.inventory.model.AuditEntityType;
 import com.veltro.inventory.model.AuditRecordEntity;
-import com.veltro.inventory.domain.audit.ports.AuditRecordRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,11 +16,11 @@ import java.util.List;
 /**
  * JPA repository adapter for audit records (B3-03).
  * 
- * <p>Implements the {@link AuditRecordRepository} port defined in the domain layer.
+ * <p>Implements the {@link com.veltro.inventory.domain.audit.ports.AuditRecordRepository} port defined in the domain layer.
  * Provides custom queries for filtering by entity type, action, username, and date range.
  */
 @Repository
-public interface AuditRecordJpaRepository extends JpaRepository<AuditRecordEntity, Long>, AuditRecordRepository {
+public interface AuditRecordRepository extends JpaRepository<AuditRecordEntity, Long>, com.veltro.inventory.domain.audit.ports.AuditRecordRepository {
 
     /**
      * {@inheritDoc}

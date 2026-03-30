@@ -1,7 +1,6 @@
-package com.veltro.inventory.infrastructure.adapters.persistence;
+package com.veltro.inventory.repository;
 
 import com.veltro.inventory.model.PurchaseOrderEntity;
-import com.veltro.inventory.domain.purchasing.ports.PurchaseOrderRepository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -9,11 +8,11 @@ import org.springframework.stereotype.Repository;
 /**
  * JPA repository for {@link PurchaseOrderEntity} (B2-04).
  *
- * <p>Extends the domain {@link PurchaseOrderRepository} port and provides
+ * <p>Extends the domain {@link com.veltro.inventory.domain.purchasing.ports.PurchaseOrderRepository} port and provides
  * a native query to fetch the next value from the PostgreSQL sequence.
  */
 @Repository
-public interface PurchaseOrderJpaRepository extends JpaRepository<PurchaseOrderEntity, Long>, PurchaseOrderRepository {
+public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrderEntity, Long>, com.veltro.inventory.domain.purchasing.ports.PurchaseOrderRepository {
 
     /**
      * Fetches the next value from the purchase_order_number_seq PostgreSQL sequence.
