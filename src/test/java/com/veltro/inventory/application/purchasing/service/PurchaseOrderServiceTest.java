@@ -18,6 +18,7 @@ import com.veltro.inventory.model.SupplierEntity;
 import com.veltro.inventory.domain.purchasing.ports.PurchaseOrderRepository;
 import com.veltro.inventory.domain.purchasing.ports.SupplierRepository;
 import com.veltro.inventory.exception.NotFoundException;
+import com.veltro.inventory.service.PurchaseOrderService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

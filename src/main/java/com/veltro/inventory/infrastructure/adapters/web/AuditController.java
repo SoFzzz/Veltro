@@ -2,7 +2,7 @@ package com.veltro.inventory.infrastructure.adapters.web;
 
 import com.veltro.inventory.dto.AuditFilterRequest;
 import com.veltro.inventory.dto.AuditRecordResponse;
-import com.veltro.inventory.application.audit.service.ForensicAuditService;
+import com.veltro.inventory.service.ForensicAuditService;
 import com.veltro.inventory.model.AuditEntityType;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;

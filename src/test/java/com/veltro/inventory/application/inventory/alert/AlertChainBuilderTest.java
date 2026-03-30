@@ -2,6 +2,10 @@ package com.veltro.inventory.application.inventory.alert;
 
 import com.veltro.inventory.model.AlertEntity;
 import com.veltro.inventory.model.AlertType;
+import com.veltro.inventory.service.AlertChainBuilder;
+import com.veltro.inventory.service.AlertHandler;
+import com.veltro.inventory.service.OutOfStockHandler;
+import com.veltro.inventory.service.StockEvaluationContext;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

@@ -3,7 +3,7 @@ package com.veltro.inventory.infrastructure.adapters.web;
 import com.veltro.inventory.dto.AddOrderItemRequest;
 import com.veltro.inventory.dto.CreatePurchaseOrderRequest;
 import com.veltro.inventory.dto.PurchaseOrderResponse;
-import com.veltro.inventory.application.purchasing.service.PurchaseOrderService;
+import com.veltro.inventory.service.PurchaseOrderService;
 import com.veltro.inventory.dto.AuditInfo;
 import com.veltro.inventory.model.PurchaseOrderStatus;
 import com.veltro.inventory.exception.NotFoundException;

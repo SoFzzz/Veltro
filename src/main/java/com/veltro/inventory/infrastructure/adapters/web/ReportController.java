@@ -2,7 +2,7 @@ package com.veltro.inventory.infrastructure.adapters.web;
 
 import com.veltro.inventory.dto.ProfitabilityReport;
 import com.veltro.inventory.dto.ReportType;
-import com.veltro.inventory.application.report.service.ReportService;
+import com.veltro.inventory.service.ReportService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;

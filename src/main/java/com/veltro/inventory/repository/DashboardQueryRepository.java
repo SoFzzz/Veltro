@@ -20,7 +20,7 @@ import java.util.List;
  */
 @Slf4j
 @Repository
-public class DashboardQueryRepository implements com.veltro.inventory.application.dashboard.service.DashboardQueryRepository {
+public class DashboardQueryRepository implements com.veltro.inventory.service.DashboardQueryRepository {
 
     @PersistenceContext
     private EntityManager entityManager;

@@ -6,7 +6,7 @@ import com.veltro.inventory.dto.StockAdjustmentRequest;
 import com.veltro.inventory.dto.StockEntryRequest;
 import com.veltro.inventory.dto.StockExitRequest;
 import com.veltro.inventory.dto.UpdateStockLimitsRequest;
-import com.veltro.inventory.application.inventory.service.InventoryService;
+import com.veltro.inventory.service.InventoryService;
 import com.veltro.inventory.exception.InsufficientStockException;
 import com.veltro.inventory.exception.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;

@@ -8,6 +8,7 @@ import com.veltro.inventory.model.AuditEntityType;
 import com.veltro.inventory.model.AuditRecordEntity;
 import com.veltro.inventory.domain.audit.ports.AuditRecordRepository;
 import com.veltro.inventory.exception.NotFoundException;
+import com.veltro.inventory.service.ForensicAuditService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

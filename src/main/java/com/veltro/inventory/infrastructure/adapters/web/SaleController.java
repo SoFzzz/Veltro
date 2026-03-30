@@ -5,7 +5,7 @@ import com.veltro.inventory.dto.ConfirmSaleRequest;
 import com.veltro.inventory.dto.ModifyItemRequest;
 import com.veltro.inventory.dto.QuickSaleRequest;
 import com.veltro.inventory.dto.SaleResponse;
-import com.veltro.inventory.application.pos.service.SaleService;
+import com.veltro.inventory.service.SaleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

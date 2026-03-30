@@ -8,6 +8,7 @@ import com.veltro.inventory.model.SupplierEntity;
 import com.veltro.inventory.domain.purchasing.ports.SupplierRepository;
 import com.veltro.inventory.exception.DuplicateResourceException;
 import com.veltro.inventory.exception.NotFoundException;
+import com.veltro.inventory.service.SupplierService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
