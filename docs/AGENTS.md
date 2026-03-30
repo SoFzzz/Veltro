@@ -557,6 +557,36 @@ Para un crop real del área de análisis, se necesita capturar un sub-rectángul
 
 ---
 
+## Seguridad de Credenciales
+
+### Protección en Tránsito
+
+El sistema envía credenciales de login (username/password) como JSON en texto plano al endpoint `POST /api/v1/auth/login`. Para proteger estas credenciales:
+
+**HTTPS es OBLIGATORIO en producción:**
+- Vercel enforza HTTPS automáticamente en todos los deploys de producción
+- Heroku enforza HTTPS automáticamente en todas las apps (certificados SSL incluidos)
+- Los navegadores modernos requieren HTTPS para APIs sensibles
+
+**Verificaciones de Seguridad:**
+- Las credenciales están protegidas por la capa de transporte TLS/SSL
+- No se requiere encriptación adicional a nivel de aplicación cuando HTTPS está activo
+- El frontend debe verificar que todas las requests se hacen sobre HTTPS en producción
+
+### Consideraciones de Desarrollo
+
+**Entorno Local (HTTP):**
+- Las credenciales son visibles en DevTools Network tab
+- Esto es aceptable solo en desarrollo local
+- NUNCA usar HTTP en producción
+
+**Entorno Producción (HTTPS):**
+- Las credenciales están encriptadas end-to-end por TLS
+- DevTools muestra el JSON pero el tráfico de red está protegido
+- Los certificados SSL son manejados automáticamente por Vercel + Heroku
+
+---
+
 ## Despliegue en Producción (Heroku + Vercel)
 
 ### Arquitectura de Despliegue
@@ -686,6 +716,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 - [ ] `VITE_API_BASE_URL` en Vercel apunta al backend Heroku (con `/api/v1`)
 - [ ] PostgreSQL addon activo en Heroku
 - [ ] `SPRING_PROFILES_ACTIVE=prod` en Heroku
+- [ ] Verificar HTTPS is enforced (Vercel + Heroku handle this automatically)
 - [ ] Verificar que Flyway migraciones corren sin errores en producción
 - [ ] Probar login, registro, y operaciones CRUD post-deploy
 - [ ] Verificar que CORS funciona (browser console sin errores de preflight)
