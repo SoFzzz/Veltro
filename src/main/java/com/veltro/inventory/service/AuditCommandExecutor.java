@@ -7,6 +7,7 @@ import com.veltro.inventory.model.AuditAction;
 import com.veltro.inventory.model.AuditEntityType;
 import com.veltro.inventory.model.AuditRecordEntity;
 import com.veltro.inventory.repository.AuditRecordRepository;
+import com.veltro.inventory.security.RequestContextHolder;
 import com.veltro.inventory.security.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -137,7 +138,14 @@ public class AuditCommandExecutor {
         record.setNewData(afterJson);
         record.setBusinessId(TenantContext.getBusinessId());
         record.setUsername(getCurrentUsername());  // From SecurityContextHolder
-        record.setIpAddress(context.ipAddress());  // From controller
+        
+        // Get IP from context, or fall back to RequestContextHolder (captured by filter)
+        String ipAddress = context.ipAddress();
+        if (ipAddress == null) {
+            ipAddress = RequestContextHolder.getClientIp();
+        }
+        record.setIpAddress(ipAddress);
+        
         // createdAt is auto-populated by @CreatedDate
 
         auditRepository.save(record);
