@@ -1,4 +1,4 @@
-package com.veltro.inventory.application.inventory.mapper;
+package com.veltro.inventory.mapper;
 
 import com.veltro.inventory.dto.InventoryMovementResponse;
 import com.veltro.inventory.model.InventoryMovementEntity;

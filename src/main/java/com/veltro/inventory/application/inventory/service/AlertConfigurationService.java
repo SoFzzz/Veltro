@@ -2,7 +2,7 @@ package com.veltro.inventory.application.inventory.service;
 
 import com.veltro.inventory.dto.AlertConfigurationResponse;
 import com.veltro.inventory.dto.UpdateAlertConfigurationRequest;
-import com.veltro.inventory.application.inventory.mapper.AlertConfigurationMapper;
+import com.veltro.inventory.mapper.AlertConfigurationMapper;
 import com.veltro.inventory.model.AlertConfigurationEntity;
 import com.veltro.inventory.domain.inventory.ports.AlertConfigurationRepository;
 import com.veltro.inventory.domain.inventory.ports.InventoryRepository;

@@ -1,4 +1,4 @@
-package com.veltro.inventory.application.audit.mapper;
+package com.veltro.inventory.mapper;
 
 import com.veltro.inventory.dto.AuditRecordResponse;
 import com.veltro.inventory.model.AuditRecordEntity;

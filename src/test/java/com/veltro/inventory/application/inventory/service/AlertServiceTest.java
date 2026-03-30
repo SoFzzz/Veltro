@@ -3,7 +3,7 @@ package com.veltro.inventory.application.inventory.service;
 import com.veltro.inventory.application.inventory.alert.AlertHandler;
 import com.veltro.inventory.application.inventory.alert.StockEvaluationContext;
 import com.veltro.inventory.dto.AlertResponse;
-import com.veltro.inventory.application.inventory.mapper.AlertMapper;
+import com.veltro.inventory.mapper.AlertMapper;
 import com.veltro.inventory.model.ProductEntity;
 import com.veltro.inventory.model.AlertConfigurationEntity;
 import com.veltro.inventory.model.AlertEntity;

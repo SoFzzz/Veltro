@@ -7,7 +7,7 @@ import com.veltro.inventory.dto.ModifyItemRequest;
 import com.veltro.inventory.dto.SaleResponse;
 import com.veltro.inventory.application.pos.event.SaleCompletedEvent;
 import com.veltro.inventory.application.pos.event.SaleVoidedEvent;
-import com.veltro.inventory.application.pos.mapper.SaleMapper;
+import com.veltro.inventory.mapper.SaleMapper;
 import com.veltro.inventory.model.ProductEntity;
 import com.veltro.inventory.domain.catalog.ports.ProductRepository;
 import com.veltro.inventory.model.PaymentMethod;

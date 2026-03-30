@@ -1,4 +1,4 @@
-package com.veltro.inventory.application.purchasing.mapper;
+package com.veltro.inventory.mapper;
 
 import com.veltro.inventory.dto.PurchaseOrderDetailResponse;
 import com.veltro.inventory.model.PurchaseOrderDetailEntity;
