@@ -1,5 +1,7 @@
 package com.veltro.inventory.application.inventory.dto;
 
+import com.veltro.inventory.config.VeltroAuditorAware;
+
 import java.time.Instant;
 
 /**
@@ -7,7 +9,7 @@ import java.time.Instant;
  *
  * Append-only: no update fields. {@code createdAt} and {@code createdBy}
  * are populated automatically by Spring Data JPA auditing via
- * {@link com.veltro.inventory.infrastructure.adapters.config.VeltroAuditorAware}.
+ * {@link VeltroAuditorAware}.
  */
 public record InventoryMovementResponse(
         Long id,

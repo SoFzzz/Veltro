@@ -11,7 +11,7 @@ import com.veltro.inventory.domain.iam.model.UserEntity;
 import com.veltro.inventory.domain.iam.ports.BusinessRepository;
 import com.veltro.inventory.domain.iam.ports.UserRepository;
 import com.veltro.inventory.exception.NotFoundException;
-import com.veltro.inventory.infrastructure.adapters.config.JwtProperties;
+import com.veltro.inventory.config.JwtProperties;
 import com.veltro.inventory.infrastructure.adapters.security.CustomUserDetailsService;
 import com.veltro.inventory.infrastructure.adapters.security.JwtTokenProvider;
 import com.veltro.inventory.infrastructure.adapters.security.VeltroUserDetails;

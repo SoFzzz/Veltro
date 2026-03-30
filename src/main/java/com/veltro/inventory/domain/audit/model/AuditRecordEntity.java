@@ -1,5 +1,6 @@
 package com.veltro.inventory.domain.audit.model;
 
+import com.veltro.inventory.config.VeltroAuditorAware;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -29,7 +30,7 @@ import java.time.Instant;
  * {@code AuditContext}.
  *
  * @see com.veltro.inventory.application.audit.command.AuditCommandExecutor
- * @see com.veltro.inventory.infrastructure.adapters.config.VeltroAuditorAware
+ * @see VeltroAuditorAware
  */
 @Getter
 @Setter

@@ -1,5 +1,6 @@
 package com.veltro.inventory.domain.inventory.model;
 
+import com.veltro.inventory.config.VeltroAuditorAware;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -71,7 +72,7 @@ public class InventoryMovementEntity {
 
     /**
      * Populated automatically by {@link AuditingEntityListener} via
-     * {@link com.veltro.inventory.infrastructure.adapters.config.VeltroAuditorAware}.
+     * {@link VeltroAuditorAware}.
      * Not manually assigned.
      */
     @CreatedDate
@@ -80,7 +81,7 @@ public class InventoryMovementEntity {
 
     /**
      * Populated automatically by {@link AuditingEntityListener} via
-     * {@link com.veltro.inventory.infrastructure.adapters.config.VeltroAuditorAware}.
+     * {@link VeltroAuditorAware}.
      * Not manually assigned.
      */
     @CreatedBy

@@ -2,6 +2,7 @@ package com.veltro.inventory.application.audit.command;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.veltro.inventory.config.VeltroAuditorAware;
 import com.veltro.inventory.domain.audit.model.AuditAction;
 import com.veltro.inventory.domain.audit.model.AuditEntityType;
 import com.veltro.inventory.domain.audit.model.AuditRecordEntity;
@@ -35,7 +36,7 @@ import java.util.function.Supplier;
  * 
  * @see AuditableAction
  * @see AuditContext
- * @see com.veltro.inventory.infrastructure.adapters.config.VeltroAuditorAware
+ * @see VeltroAuditorAware
  */
 @Slf4j
 @Service
