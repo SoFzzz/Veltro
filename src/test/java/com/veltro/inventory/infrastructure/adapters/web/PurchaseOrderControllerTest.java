@@ -1,5 +1,6 @@
 package com.veltro.inventory.infrastructure.adapters.web;
 
+import com.veltro.inventory.controller.PurchaseOrderController;
 import com.veltro.inventory.dto.AddOrderItemRequest;
 import com.veltro.inventory.dto.CreatePurchaseOrderRequest;
 import com.veltro.inventory.dto.PurchaseOrderResponse;

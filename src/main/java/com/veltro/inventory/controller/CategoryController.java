@@ -1,4 +1,4 @@
-package com.veltro.inventory.infrastructure.adapters.web;
+package com.veltro.inventory.controller;
 
 import com.veltro.inventory.dto.CategoryResponse;
 import com.veltro.inventory.dto.CreateCategoryRequest;

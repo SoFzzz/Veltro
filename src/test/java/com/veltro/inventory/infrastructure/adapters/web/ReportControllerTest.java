@@ -1,5 +1,6 @@
 package com.veltro.inventory.infrastructure.adapters.web;
 
+import com.veltro.inventory.controller.ReportController;
 import com.veltro.inventory.dto.ProfitabilityReport;
 import com.veltro.inventory.dto.ReportType;
 import com.veltro.inventory.service.ReportService;

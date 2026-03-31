@@ -1,5 +1,6 @@
 package com.veltro.inventory.infrastructure.adapters.web;
 
+import com.veltro.inventory.controller.AlertController;
 import com.veltro.inventory.dto.AlertConfigurationResponse;
 import com.veltro.inventory.dto.AlertResponse;
 import com.veltro.inventory.dto.UpdateAlertConfigurationRequest;
