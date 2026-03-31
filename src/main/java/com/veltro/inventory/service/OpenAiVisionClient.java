@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.veltro.inventory.config.OpenAiConfig;
 import com.veltro.inventory.dto.ProductSuggestionResponse;
+import com.veltro.inventory.model.ProductEntity;
+import com.veltro.inventory.security.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
@@ -19,6 +21,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Optional;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -84,6 +87,7 @@ public class OpenAiVisionClient {
     private final OpenAiConfig config;
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+    private final ProductMatchingService productMatchingService;
 
     /**
      * Analyzes a product image using OpenAI Vision API.
@@ -514,16 +518,20 @@ public class OpenAiVisionClient {
                 fullName.append(" ").append(volume);
             }
 
+            Optional<ProductEntity> matchedProduct =
+                    productMatchingService.findMatch(fullName.toString(), TenantContext.getBusinessId());
+
             // Map agent inventory to suggestion format
             // Confidence based on clear visibility in image
             double confidence = estimatedQuantity > 0 ? 0.85 : 0.5;
-            BigDecimal estimatedPrice = null; // Not provided by agent
-            String barcode = null; // Not provided by agent
+            BigDecimal estimatedPrice = matchedProduct.map(ProductEntity::getSalePrice).orElse(null);
+            String barcode = matchedProduct.map(ProductEntity::getBarcode).orElse(null);
+            Long productId = matchedProduct.map(ProductEntity::getId).orElse(null);
 
             log.info("Parsed product: {}", fullName);
             
             return new ProductSuggestionResponse.SuggestedProduct(
-                    null,
+                    productId,
                     fullName.toString(),
                     confidence,
                     estimatedPrice,
