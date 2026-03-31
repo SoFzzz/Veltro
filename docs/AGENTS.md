@@ -725,3 +725,69 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 - [ ] Verificar que Flyway migraciones corren sin errores en producción
 - [ ] Probar login, registro, y operaciones CRUD post-deploy
 - [ ] Verificar que CORS funciona (browser console sin errores de preflight)
+
+---
+
+## Update 2026-04-08 - AI Catalog Matching
+
+### Estado actual del scanner IA
+
+- `POST /api/v1/scanner/ai` ya no devuelve solo sugerencias textuales.
+- Despues de parsear la respuesta del modelo, el backend intenta enriquecer cada sugerencia con datos del catalogo existente del negocio actual.
+- Los campos que ahora pueden completarse automaticamente son:
+  - `productId`
+  - `barcode`
+  - `suggestedPrice`
+
+### Flujo backend real
+
+1. `ScannerController` recibe la imagen multipart.
+2. `ProductRecognitionService` delega en `AiVisionStrategy`.
+3. `AiVisionStrategy` delega en `OpenAiVisionClient`.
+4. `OpenAiVisionClient` llama al proveedor multimodal (GitHub Models, OpenRouter o Gemini segun configuracion).
+5. `OpenAiVisionClient` parsea el JSON de respuesta a `ProductSuggestionResponse`.
+6. Por cada sugerencia, `OpenAiVisionClient` invoca `ProductMatchingService`.
+7. `ProductMatchingService` busca candidatos activos del mismo `businessId` usando `ProductRepository`.
+8. Si hay un match claro, la sugerencia vuelve enriquecida con `productId`, `barcode` y `suggestedPrice`.
+9. Si no hay match o el resultado es ambiguo, la sugerencia sigue siendo valida pero conserva esos campos en `null`.
+
+### Reglas de matching
+
+- El matching es conservador: prioriza no generar falsos positivos.
+- Solo participan productos activos del tenant actual.
+- La busqueda es por nombre, case-insensitive, usando una keyword significativa extraida del nombre sugerido por la IA.
+- Si hay variantes ambiguas como `Sprite 500 ml` y `Sprite 1.5 L`, no se asigna `productId` automaticamente salvo que la sugerencia incluya volumen suficiente para desempatar.
+
+### Archivos backend relevantes
+
+- `src/main/java/com/veltro/inventory/service/OpenAiVisionClient.java`
+  - parsea la respuesta IA y enriquece sugerencias con matching de catalogo
+- `src/main/java/com/veltro/inventory/service/ProductMatchingService.java`
+  - servicio dedicado para matching conservador contra el catalogo activo del tenant
+- `src/main/java/com/veltro/inventory/repository/ProductRepository.java`
+  - incluye `findTop10ByActiveTrueAndBusinessIdAndNameContainingIgnoreCase(...)`
+
+### Contrato efectivo de `ProductSuggestionResponse`
+
+`SuggestedProduct` mantiene el mismo shape:
+
+```typescript
+interface SuggestedProduct {
+  productId: number | null;
+  productName: string;
+  confidence: number;
+  suggestedPrice: string | null;
+  barcode: string | null;
+}
+```
+
+Pero ahora:
+- `productId`, `barcode` y `suggestedPrice` pueden venir poblados si existe un match claro
+- si no existe match, siguen viniendo en `null` sin romper compatibilidad con frontend
+
+### Testing agregado
+
+- `OpenAiVisionClientTest`
+  - cubre enriquecimiento con match y fallback sin match
+- `ProductMatchingServiceTest`
+  - cubre match unico, ambiguedad entre variantes y ausencia de candidatos
