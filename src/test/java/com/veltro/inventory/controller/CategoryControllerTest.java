@@ -206,4 +206,20 @@ class CategoryControllerTest {
 
         verify(categoryService).deactivate(5L);
     }
+
+    // -------------------------------------------------------------------------
+    // DELETE /categories/{id}
+    // -------------------------------------------------------------------------
+
+    @Test
+    @DisplayName("DELETE /categories/{id} returns 204")
+    void hardDelete_validId_returns204() {
+        doNothing().when(categoryService).hardDelete(1L);
+
+        ResponseEntity<Void> response = controller.hardDelete(1L);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        assertThat(response.getBody()).isNull();
+        verify(categoryService).hardDelete(1L);
+    }
 }

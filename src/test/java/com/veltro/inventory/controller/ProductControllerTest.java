@@ -308,4 +308,20 @@ class ProductControllerTest {
 
         verify(productService).deactivate(999L);
     }
+
+    // -------------------------------------------------------------------------
+    // DELETE /products/{id}
+    // -------------------------------------------------------------------------
+
+    @Test
+    @DisplayName("DELETE /products/{id} returns 204")
+    void hardDelete_validId_returns204() {
+        doNothing().when(productService).hardDelete(1L);
+
+        ResponseEntity<Void> response = controller.hardDelete(1L);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        assertThat(response.getBody()).isNull();
+        verify(productService).hardDelete(1L);
+    }
 }

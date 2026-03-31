@@ -25,4 +25,6 @@ public interface CategoryRepository extends JpaRepository<CategoryEntity, Long> 
      * Used for reactivation (BUG-14).
      */
     Optional<CategoryEntity> findByIdAndBusinessId(Long id, Long businessId);
+
+    boolean existsByIdAndBusinessId(Long id, Long businessId);
 }

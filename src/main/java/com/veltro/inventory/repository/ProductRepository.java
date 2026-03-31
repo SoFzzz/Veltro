@@ -36,6 +36,8 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Long> {
      */
     Optional<ProductEntity> findByIdAndBusinessId(Long id, Long businessId);
 
+    boolean existsByIdAndBusinessId(Long id, Long businessId);
+
     /**
      * Finds a small set of active products in the tenant whose names contain the given keyword.
      * Used by AI product matching to enrich visual suggestions with existing catalog data.

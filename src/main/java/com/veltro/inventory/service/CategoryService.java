@@ -131,6 +131,19 @@ public class CategoryService {
         return categoryMapper.toResponse(saved);
     }
 
+    /**
+     * Hard-deletes a category. Allowed only if the category belongs to the current tenant.
+     */
+    @Transactional
+    public void hardDelete(Long id) {
+        Long businessId = TenantContext.getBusinessId();
+        if (!categoryRepository.existsByIdAndBusinessId(id, businessId)) {
+            throw new NotFoundException("Category not found with id: " + id);
+        }
+        categoryRepository.deleteById(id);
+        log.info("Category hard deleted: id={}", id);
+    }
+
     // -------------------------------------------------------------------------
     // Internal helpers
     // -------------------------------------------------------------------------

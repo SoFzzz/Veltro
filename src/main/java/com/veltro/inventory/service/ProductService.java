@@ -141,6 +141,19 @@ public class ProductService {
         return productMapper.toResponse(saved);
     }
 
+    /**
+     * Hard-deletes a product. Allowed only if the product belongs to the current tenant.
+     */
+    @Transactional
+    public void hardDelete(Long id) {
+        Long businessId = TenantContext.getBusinessId();
+        if (!productRepository.existsByIdAndBusinessId(id, businessId)) {
+            throw new NotFoundException("Product not found with id: " + id);
+        }
+        productRepository.deleteById(id);
+        log.info("Product hard deleted: id={}", id);
+    }
+
     // -------------------------------------------------------------------------
     // Internal helpers
     // -------------------------------------------------------------------------
