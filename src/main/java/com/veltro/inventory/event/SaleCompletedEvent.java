@@ -1,4 +1,4 @@
-package com.veltro.inventory.application.pos.event;
+package com.veltro.inventory.event;
 
 import com.veltro.inventory.model.PaymentMethod;
 import com.veltro.inventory.service.SaleService;

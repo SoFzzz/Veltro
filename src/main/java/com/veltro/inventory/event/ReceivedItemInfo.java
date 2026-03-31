@@ -1,4 +1,4 @@
-package com.veltro.inventory.application.purchasing.event;
+package com.veltro.inventory.event;
 
 import java.math.BigDecimal;
 

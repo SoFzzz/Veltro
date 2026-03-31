@@ -4,7 +4,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 
-import com.veltro.inventory.application.inventory.event.StockChangedEvent;
+import com.veltro.inventory.event.StockChangedEvent;
+import com.veltro.inventory.listener.EvaluateStockAlertsListener;
 import com.veltro.inventory.service.AlertService;
 import java.time.OffsetDateTime;
 import org.junit.jupiter.api.BeforeEach;

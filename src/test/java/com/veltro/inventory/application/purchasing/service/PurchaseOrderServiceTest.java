@@ -4,7 +4,7 @@ import com.veltro.inventory.application.audit.command.AuditCommandExecutor;
 import com.veltro.inventory.dto.AddOrderItemRequest;
 import com.veltro.inventory.dto.CreatePurchaseOrderRequest;
 import com.veltro.inventory.dto.PurchaseOrderResponse;
-import com.veltro.inventory.application.purchasing.event.OrderReceivedEvent;
+import com.veltro.inventory.event.OrderReceivedEvent;
 import com.veltro.inventory.mapper.PurchaseOrderMapper;
 import com.veltro.inventory.dto.AuditInfo;
 import com.veltro.inventory.model.ProductEntity;

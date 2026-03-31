@@ -1,4 +1,4 @@
-package com.veltro.inventory.application.inventory.event;
+package com.veltro.inventory.event;
 
 import java.time.OffsetDateTime;
 

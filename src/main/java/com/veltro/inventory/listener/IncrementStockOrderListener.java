@@ -1,9 +1,9 @@
-package com.veltro.inventory.application.purchasing.listener;
+package com.veltro.inventory.listener;
 
 import com.veltro.inventory.dto.StockEntryRequest;
 import com.veltro.inventory.service.InventoryService;
-import com.veltro.inventory.application.purchasing.event.OrderReceivedEvent;
-import com.veltro.inventory.application.purchasing.event.ReceivedItemInfo;
+import com.veltro.inventory.event.OrderReceivedEvent;
+import com.veltro.inventory.event.ReceivedItemInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;

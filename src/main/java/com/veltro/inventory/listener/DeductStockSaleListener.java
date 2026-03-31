@@ -1,9 +1,9 @@
-package com.veltro.inventory.application.pos.listener;
+package com.veltro.inventory.listener;
 
 import com.veltro.inventory.dto.StockExitRequest;
 import com.veltro.inventory.service.InventoryService;
-import com.veltro.inventory.application.pos.event.SaleCompletedEvent;
-import com.veltro.inventory.application.pos.event.SaleItemInfo;
+import com.veltro.inventory.event.SaleCompletedEvent;
+import com.veltro.inventory.event.SaleItemInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;

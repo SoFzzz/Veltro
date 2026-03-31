@@ -5,6 +5,8 @@ import com.veltro.inventory.dto.ConfirmSaleRequest;
 import com.veltro.inventory.dto.ModifyItemRequest;
 import com.veltro.inventory.dto.QuickSaleRequest;
 import com.veltro.inventory.dto.SaleResponse;
+import com.veltro.inventory.event.SaleCompletedEvent;
+import com.veltro.inventory.event.SaleVoidedEvent;
 import com.veltro.inventory.service.SaleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -150,7 +152,7 @@ public class SaleController {
      * Confirms the sale (transitions to COMPLETED).
      *
      * <p>For CASH payments, {@code amountReceived} must be provided and >= total.
-     * Publishes {@link com.veltro.inventory.application.pos.event.SaleCompletedEvent}
+     * Publishes {@link SaleCompletedEvent}
      * for downstream listeners (B2-02) to handle inventory deduction.
      *
      * @param id      the sale ID
@@ -173,7 +175,7 @@ public class SaleController {
      * Voids a completed sale (transitions to VOIDED).
      *
      * <p>Only COMPLETED sales can be voided (enforced by State Pattern).
-     * Publishes {@link com.veltro.inventory.application.pos.event.SaleVoidedEvent}
+     * Publishes {@link SaleVoidedEvent}
      * for downstream listeners (B2-02) to handle stock reversal.
      *
      * @param id the sale ID
