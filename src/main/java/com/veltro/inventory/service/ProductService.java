@@ -80,9 +80,9 @@ public class ProductService {
         validatePrice(request.costPrice(), request.salePrice());
 
         // BUG-15: Check for existing product with same barcode or SKU (active or inactive)
-        checkForDuplicateBarcode(request.barcode(), businessId);
+        checkForDuplicateBarcode(request.barcode(), businessId, null);
         if (request.sku() != null && !request.sku().isBlank()) {
-            checkForDuplicateSku(request.sku(), businessId);
+            checkForDuplicateSku(request.sku(), businessId, null);
         }
 
         ProductEntity entity = productMapper.toEntity(request);
@@ -99,6 +99,11 @@ public class ProductService {
     public ProductResponse update(Long id, UpdateProductRequest request) {
         Long businessId = TenantContext.getBusinessId();
         validatePrice(request.costPrice(), request.salePrice());
+
+        checkForDuplicateBarcode(request.barcode(), businessId, id);
+        if (request.sku() != null && !request.sku().isBlank()) {
+            checkForDuplicateSku(request.sku(), businessId, id);
+        }
 
         ProductEntity entity = requireActive(id);
         productMapper.updateEntity(request, entity);
@@ -191,7 +196,7 @@ public class ProductService {
      * Distinguishes between active duplicates (error) and inactive ones (suggest reactivation).
      * BUG-15 fix.
      */
-    private void checkForDuplicateBarcode(String barcode, Long businessId) {
+    private void checkForDuplicateBarcode(String barcode, Long businessId, Long currentProductId) {
         if (barcode == null || barcode.isBlank()) {
             return;
         }
@@ -200,6 +205,9 @@ public class ProductService {
         
         if (existing.isPresent()) {
             ProductEntity product = existing.get();
+            if (currentProductId != null && currentProductId.equals(product.getId())) {
+                return;
+            }
             if (product.isActive()) {
                 throw new DuplicateResourceException("Product", "barcode", barcode);
             } else {
@@ -213,11 +221,14 @@ public class ProductService {
      * Distinguishes between active duplicates (error) and inactive ones (suggest reactivation).
      * BUG-15 fix.
      */
-    private void checkForDuplicateSku(String sku, Long businessId) {
+    private void checkForDuplicateSku(String sku, Long businessId, Long currentProductId) {
         Optional<ProductEntity> existing = productRepository.findBySkuAndBusinessId(sku, businessId);
         
         if (existing.isPresent()) {
             ProductEntity product = existing.get();
+            if (currentProductId != null && currentProductId.equals(product.getId())) {
+                return;
+            }
             if (product.isActive()) {
                 throw new DuplicateResourceException("Product", "SKU", sku);
             } else {
