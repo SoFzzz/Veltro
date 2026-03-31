@@ -1,7 +1,5 @@
 package com.veltro.inventory.service;
 
-import com.veltro.inventory.application.audit.command.AuditCommandExecutor;
-import com.veltro.inventory.application.audit.command.AuditContext;
 import com.veltro.inventory.dto.InventoryMovementResponse;
 import com.veltro.inventory.dto.InventoryResponse;
 import com.veltro.inventory.dto.StockAdjustmentRequest;
@@ -17,8 +15,8 @@ import com.veltro.inventory.model.ProductEntity;
 import com.veltro.inventory.model.InventoryEntity;
 import com.veltro.inventory.model.InventoryMovementEntity;
 import com.veltro.inventory.model.MovementType;
-import com.veltro.inventory.domain.inventory.ports.InventoryMovementRepository;
-import com.veltro.inventory.domain.inventory.ports.InventoryRepository;
+import com.veltro.inventory.repository.InventoryMovementRepository;
+import com.veltro.inventory.repository.InventoryRepository;
 import com.veltro.inventory.exception.InsufficientStockException;
 import com.veltro.inventory.exception.NotFoundException;
 import com.veltro.inventory.security.TenantContext;

@@ -5,7 +5,7 @@ import com.veltro.inventory.dto.CreateCategoryRequest;
 import com.veltro.inventory.dto.UpdateCategoryRequest;
 import com.veltro.inventory.mapper.CategoryMapper;
 import com.veltro.inventory.model.CategoryEntity;
-import com.veltro.inventory.domain.catalog.ports.CategoryRepository;
+import com.veltro.inventory.repository.CategoryRepository;
 import com.veltro.inventory.exception.NotFoundException;
 import com.veltro.inventory.security.TenantContext;
 import lombok.RequiredArgsConstructor;

@@ -2,32 +2,26 @@ package com.veltro.inventory.repository;
 
 import com.veltro.inventory.model.AlertEntity;
 import com.veltro.inventory.model.AlertType;
-
-import java.util.List;
-import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+import java.util.Optional;
+
 @Repository
-public interface AlertRepository extends JpaRepository<AlertEntity, Long>, com.veltro.inventory.domain.inventory.ports.AlertRepository {
+public interface AlertRepository extends JpaRepository<AlertEntity, Long> {
 
-    @Override
-    Optional<AlertEntity> findByIdAndActiveTrue(Long id);
+    Optional<AlertEntity> findByIdAndActiveTrueAndBusinessId(Long id, Long businessId);
 
-    @Override
-    List<AlertEntity> findByProductIdAndResolvedFalse(Long productId);
+    List<AlertEntity> findByProductIdAndResolvedFalseAndBusinessId(Long productId, Long businessId);
 
-    @Override
     boolean existsByProductIdAndResolvedFalseAndType(Long productId, AlertType type);
 
-    @Override
-    Page<AlertEntity> findByResolvedFalseOrderBySeverityDescCreatedAtAsc(Pageable pageable);
+    Page<AlertEntity> findByResolvedFalseAndBusinessIdOrderBySeverityDescCreatedAtAsc(Long businessId, Pageable pageable);
 
-    @Override
     Page<AlertEntity> findByReadFalseAndResolvedFalseOrderBySeverityDescCreatedAtAsc(Pageable pageable);
 
-    @Override
-    long countByReadFalseAndResolvedFalse();
+    long countByReadFalseAndResolvedFalseAndBusinessId(Long businessId);
 }

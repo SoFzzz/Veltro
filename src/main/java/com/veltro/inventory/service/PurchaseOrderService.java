@@ -1,7 +1,5 @@
 package com.veltro.inventory.service;
 
-import com.veltro.inventory.application.audit.command.AuditCommandExecutor;
-import com.veltro.inventory.application.audit.command.AuditContext;
 import com.veltro.inventory.dto.AddOrderItemRequest;
 import com.veltro.inventory.dto.CreatePurchaseOrderRequest;
 import com.veltro.inventory.dto.PurchaseOrderResponse;
@@ -11,15 +9,15 @@ import com.veltro.inventory.mapper.PurchaseOrderMapper;
 import com.veltro.inventory.model.AuditAction;
 import com.veltro.inventory.model.AuditEntityType;
 import com.veltro.inventory.model.ProductEntity;
-import com.veltro.inventory.domain.catalog.ports.ProductRepository;
+import com.veltro.inventory.repository.ProductRepository;
 import com.veltro.inventory.model.UserEntity;
-import com.veltro.inventory.domain.iam.ports.UserRepository;
+import com.veltro.inventory.repository.UserRepository;
 import com.veltro.inventory.model.PurchaseOrderDetailEntity;
 import com.veltro.inventory.model.PurchaseOrderEntity;
 import com.veltro.inventory.model.PurchaseOrderStatus;
 import com.veltro.inventory.model.SupplierEntity;
-import com.veltro.inventory.domain.purchasing.ports.PurchaseOrderRepository;
-import com.veltro.inventory.domain.purchasing.ports.SupplierRepository;
+import com.veltro.inventory.repository.PurchaseOrderRepository;
+import com.veltro.inventory.repository.SupplierRepository;
 import com.veltro.inventory.exception.NotFoundException;
 import com.veltro.inventory.security.TenantContext;
 import lombok.RequiredArgsConstructor;

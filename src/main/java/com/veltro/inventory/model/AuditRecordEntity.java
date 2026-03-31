@@ -1,6 +1,7 @@
 package com.veltro.inventory.model;
 
 import com.veltro.inventory.config.VeltroAuditorAware;
+import com.veltro.inventory.service.AuditCommandExecutor;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -29,7 +30,7 @@ import java.time.Instant;
  * <p>IP address is captured from {@code HttpServletRequest} in controllers and passed via
  * {@code AuditContext}.
  *
- * @see com.veltro.inventory.application.audit.command.AuditCommandExecutor
+ * @see AuditCommandExecutor
  * @see VeltroAuditorAware
  */
 @Getter

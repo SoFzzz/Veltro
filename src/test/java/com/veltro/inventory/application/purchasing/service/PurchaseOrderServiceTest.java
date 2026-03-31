@@ -1,6 +1,7 @@
 package com.veltro.inventory.application.purchasing.service;
 
-import com.veltro.inventory.application.audit.command.AuditCommandExecutor;
+import static org.mockito.ArgumentMatchers.anyLong;
+import com.veltro.inventory.service.AuditCommandExecutor;
 import com.veltro.inventory.dto.AddOrderItemRequest;
 import com.veltro.inventory.dto.CreatePurchaseOrderRequest;
 import com.veltro.inventory.dto.PurchaseOrderResponse;
@@ -8,15 +9,15 @@ import com.veltro.inventory.event.OrderReceivedEvent;
 import com.veltro.inventory.mapper.PurchaseOrderMapper;
 import com.veltro.inventory.dto.AuditInfo;
 import com.veltro.inventory.model.ProductEntity;
-import com.veltro.inventory.domain.catalog.ports.ProductRepository;
+import com.veltro.inventory.repository.ProductRepository;
 import com.veltro.inventory.model.UserEntity;
-import com.veltro.inventory.domain.iam.ports.UserRepository;
+import com.veltro.inventory.repository.UserRepository;
 import com.veltro.inventory.model.PurchaseOrderDetailEntity;
 import com.veltro.inventory.model.PurchaseOrderEntity;
 import com.veltro.inventory.model.PurchaseOrderStatus;
 import com.veltro.inventory.model.SupplierEntity;
-import com.veltro.inventory.domain.purchasing.ports.PurchaseOrderRepository;
-import com.veltro.inventory.domain.purchasing.ports.SupplierRepository;
+import com.veltro.inventory.repository.PurchaseOrderRepository;
+import com.veltro.inventory.repository.SupplierRepository;
 import com.veltro.inventory.exception.NotFoundException;
 import com.veltro.inventory.service.PurchaseOrderService;
 import org.junit.jupiter.api.AfterEach;
@@ -158,7 +159,7 @@ class PurchaseOrderServiceTest {
     @DisplayName("Should find all active purchase orders")
     void shouldFindAllActivePurchaseOrders() {
         // Given
-        when(orderRepository.findAllByActiveTrue()).thenReturn(List.of(orderEntity));
+        when(orderRepository.findAllByActiveTrueAndBusinessId(anyLong())).thenReturn(List.of(orderEntity));
         when(orderMapper.toResponse(orderEntity)).thenReturn(orderResponse);
 
         // When
@@ -167,7 +168,7 @@ class PurchaseOrderServiceTest {
         // Then
         assertThat(result).hasSize(1);
         assertThat(result.get(0)).isEqualTo(orderResponse);
-        verify(orderRepository, times(1)).findAllByActiveTrue();
+        verify(orderRepository, times(1)).findAllByActiveTrueAndBusinessId(anyLong());
         verify(orderMapper, times(1)).toResponse(orderEntity);
     }
 
@@ -176,7 +177,7 @@ class PurchaseOrderServiceTest {
     void shouldFindPurchaseOrdersBySupplier() {
         // Given
         Long supplierId = 1L;
-        when(orderRepository.findBySupplierIdAndActiveTrue(supplierId)).thenReturn(List.of(orderEntity));
+        when(orderRepository.findBySupplierIdAndActiveTrueAndBusinessId(eq(supplierId), anyLong())).thenReturn(List.of(orderEntity));
         when(orderMapper.toResponse(orderEntity)).thenReturn(orderResponse);
 
         // When
@@ -185,7 +186,7 @@ class PurchaseOrderServiceTest {
         // Then
         assertThat(result).hasSize(1);
         assertThat(result.get(0)).isEqualTo(orderResponse);
-        verify(orderRepository, times(1)).findBySupplierIdAndActiveTrue(supplierId);
+        verify(orderRepository, times(1)).findBySupplierIdAndActiveTrueAndBusinessId(eq(supplierId), anyLong());
         verify(orderMapper, times(1)).toResponse(orderEntity);
     }
 
@@ -193,7 +194,7 @@ class PurchaseOrderServiceTest {
     @DisplayName("Should find purchase order by ID")
     void shouldFindPurchaseOrderById() {
         // Given
-        when(orderRepository.findByIdAndActiveTrue(1L)).thenReturn(Optional.of(orderEntity));
+        when(orderRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong())).thenReturn(Optional.of(orderEntity));
         when(orderMapper.toResponse(orderEntity)).thenReturn(orderResponse);
 
         // When
@@ -201,7 +202,7 @@ class PurchaseOrderServiceTest {
 
         // Then
         assertThat(result).isEqualTo(orderResponse);
-        verify(orderRepository, times(1)).findByIdAndActiveTrue(1L);
+        verify(orderRepository, times(1)).findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong());
         verify(orderMapper, times(1)).toResponse(orderEntity);
     }
 
@@ -209,7 +210,7 @@ class PurchaseOrderServiceTest {
     @DisplayName("Should throw NotFoundException when order ID not found")
     void shouldThrowNotFoundExceptionWhenOrderIdNotFound() {
         // Given
-        when(orderRepository.findByIdAndActiveTrue(99L)).thenReturn(Optional.empty());
+        when(orderRepository.findByIdAndActiveTrueAndBusinessId(eq(99L), anyLong())).thenReturn(Optional.empty());
 
         // When/Then
         assertThatThrownBy(() -> orderService.findById(99L))
@@ -222,7 +223,7 @@ class PurchaseOrderServiceTest {
     void shouldFindPurchaseOrderByOrderNumber() {
         // Given
         String orderNumber = "PO-2026-000001";
-        when(orderRepository.findByOrderNumberAndActiveTrue(orderNumber)).thenReturn(Optional.of(orderEntity));
+        when(orderRepository.findByOrderNumberAndActiveTrueAndBusinessId(eq(orderNumber), anyLong())).thenReturn(Optional.of(orderEntity));
         when(orderMapper.toResponse(orderEntity)).thenReturn(orderResponse);
 
         // When
@@ -230,7 +231,7 @@ class PurchaseOrderServiceTest {
 
         // Then
         assertThat(result).isEqualTo(orderResponse);
-        verify(orderRepository, times(1)).findByOrderNumberAndActiveTrue(orderNumber);
+        verify(orderRepository, times(1)).findByOrderNumberAndActiveTrueAndBusinessId(eq(orderNumber), anyLong());
         verify(orderMapper, times(1)).toResponse(orderEntity);
     }
 
@@ -239,7 +240,7 @@ class PurchaseOrderServiceTest {
     void shouldCreateNewPurchaseOrderSuccessfully() {
         // Given
         PurchaseOrderEntity newEntity = new PurchaseOrderEntity();
-        when(supplierRepository.findByIdAndActiveTrue(1L)).thenReturn(Optional.of(supplierEntity));
+        when(supplierRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong())).thenReturn(Optional.of(supplierEntity));
         when(userRepository.findByUsernameAndActiveTrue("testuser")).thenReturn(Optional.of(testUser));
         when(orderRepository.getNextOrderSequenceValue()).thenReturn(1L);
         when(orderMapper.toEntity(createRequest)).thenReturn(newEntity);
@@ -253,7 +254,7 @@ class PurchaseOrderServiceTest {
         assertThat(result).isEqualTo(orderResponse);
         
         // Verify repository calls
-        verify(supplierRepository, times(1)).findByIdAndActiveTrue(1L);
+        verify(supplierRepository, times(1)).findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong());
         verify(orderRepository, times(1)).getNextOrderSequenceValue();
         verify(orderRepository, times(1)).save(any(PurchaseOrderEntity.class));
         
@@ -271,7 +272,7 @@ class PurchaseOrderServiceTest {
     @DisplayName("Should throw NotFoundException when supplier not found for create")
     void shouldThrowNotFoundExceptionWhenSupplierNotFoundForCreate() {
         // Given
-        when(supplierRepository.findByIdAndActiveTrue(99L)).thenReturn(Optional.empty());
+        when(supplierRepository.findByIdAndActiveTrueAndBusinessId(eq(99L), anyLong())).thenReturn(Optional.empty());
         CreatePurchaseOrderRequest invalidRequest = new CreatePurchaseOrderRequest(99L, "Test notes", OffsetDateTime.now().plusDays(7), "");
 
         // When/Then
@@ -284,8 +285,8 @@ class PurchaseOrderServiceTest {
     @DisplayName("Should add item to purchase order successfully")
     void shouldAddItemToPurchaseOrderSuccessfully() {
         // Given
-        when(orderRepository.findByIdAndActiveTrue(1L)).thenReturn(Optional.of(orderEntity));
-        when(productRepository.findByIdAndActiveTrue(100L)).thenReturn(Optional.of(productEntity));
+        when(orderRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong())).thenReturn(Optional.of(orderEntity));
+        when(productRepository.findByIdAndActiveTrueAndBusinessId(eq(100L), anyLong())).thenReturn(Optional.of(productEntity));
         when(orderRepository.save(orderEntity)).thenReturn(orderEntity);
         when(orderMapper.toResponse(orderEntity)).thenReturn(orderResponse);
 
@@ -294,8 +295,8 @@ class PurchaseOrderServiceTest {
 
         // Then
         assertThat(result).isEqualTo(orderResponse);
-        verify(orderRepository, times(1)).findByIdAndActiveTrue(1L);
-        verify(productRepository, times(1)).findByIdAndActiveTrue(100L);
+        verify(orderRepository, times(1)).findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong());
+        verify(productRepository, times(1)).findByIdAndActiveTrueAndBusinessId(eq(100L), anyLong());
         verify(orderRepository, times(1)).save(orderEntity);
     }
 
@@ -303,7 +304,7 @@ class PurchaseOrderServiceTest {
     @DisplayName("Should throw NotFoundException when order not found for add item")
     void shouldThrowNotFoundExceptionWhenOrderNotFoundForAddItem() {
         // Given
-        when(orderRepository.findByIdAndActiveTrue(99L)).thenReturn(Optional.empty());
+        when(orderRepository.findByIdAndActiveTrueAndBusinessId(eq(99L), anyLong())).thenReturn(Optional.empty());
 
         // When/Then
         assertThatThrownBy(() -> orderService.addItem(99L, addItemRequest))
@@ -315,8 +316,8 @@ class PurchaseOrderServiceTest {
     @DisplayName("Should throw NotFoundException when product not found for add item")
     void shouldThrowNotFoundExceptionWhenProductNotFoundForAddItem() {
         // Given
-        when(orderRepository.findByIdAndActiveTrue(1L)).thenReturn(Optional.of(orderEntity));
-        when(productRepository.findByIdAndActiveTrue(99L)).thenReturn(Optional.empty());
+        when(orderRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong())).thenReturn(Optional.of(orderEntity));
+        when(productRepository.findByIdAndActiveTrueAndBusinessId(eq(99L), anyLong())).thenReturn(Optional.empty());
         AddOrderItemRequest invalidRequest = new AddOrderItemRequest(99L, 3, new BigDecimal("15.75"));
 
         // When/Then
@@ -329,7 +330,7 @@ class PurchaseOrderServiceTest {
     @DisplayName("Should remove item from purchase order successfully")
     void shouldRemoveItemFromPurchaseOrderSuccessfully() {
         // Given
-        when(orderRepository.findByIdAndActiveTrue(1L)).thenReturn(Optional.of(orderEntity));
+        when(orderRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong())).thenReturn(Optional.of(orderEntity));
         when(orderRepository.save(orderEntity)).thenReturn(orderEntity);
         when(orderMapper.toResponse(orderEntity)).thenReturn(orderResponse);
 
@@ -338,7 +339,7 @@ class PurchaseOrderServiceTest {
 
         // Then
         assertThat(result).isEqualTo(orderResponse);
-        verify(orderRepository, times(1)).findByIdAndActiveTrue(1L);
+        verify(orderRepository, times(1)).findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong());
         verify(orderRepository, times(1)).save(orderEntity);
     }
 
@@ -346,7 +347,7 @@ class PurchaseOrderServiceTest {
     @DisplayName("Should void purchase order successfully")
     void shouldVoidPurchaseOrderSuccessfully() {
         // Given
-        when(orderRepository.findByIdAndActiveTrue(1L)).thenReturn(Optional.of(orderEntity));
+        when(orderRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong())).thenReturn(Optional.of(orderEntity));
         when(orderRepository.save(orderEntity)).thenReturn(orderEntity);
         when(orderMapper.toResponse(orderEntity)).thenReturn(orderResponse);
 
@@ -355,7 +356,7 @@ class PurchaseOrderServiceTest {
 
         // Then
         assertThat(result).isEqualTo(orderResponse);
-        verify(orderRepository, times(1)).findByIdAndActiveTrue(1L);
+        verify(orderRepository, times(1)).findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong());
         verify(orderRepository, times(1)).save(orderEntity);
     }
 
@@ -363,7 +364,7 @@ class PurchaseOrderServiceTest {
     @DisplayName("Should mark order as received and publish event")
     void shouldMarkOrderAsReceivedAndPublishEvent() {
         // Given
-        when(orderRepository.findByIdAndActiveTrue(1L)).thenReturn(Optional.of(orderEntity));
+        when(orderRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong())).thenReturn(Optional.of(orderEntity));
         when(orderRepository.save(any(PurchaseOrderEntity.class))).thenReturn(orderEntity);
         when(orderMapper.toResponse(orderEntity)).thenReturn(orderResponse);
 
@@ -372,7 +373,7 @@ class PurchaseOrderServiceTest {
 
         // Then
         assertThat(result).isEqualTo(orderResponse);
-        verify(orderRepository, times(1)).findByIdAndActiveTrue(1L);
+        verify(orderRepository, times(1)).findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong());
         verify(orderRepository, times(1)).save(any(PurchaseOrderEntity.class));
         verify(applicationEventPublisher, times(1)).publishEvent(any(OrderReceivedEvent.class));
         
@@ -397,7 +398,7 @@ class PurchaseOrderServiceTest {
         clonedEntity.setSupplier(supplierEntity);
         clonedEntity.setActive(true);
         
-        when(orderRepository.findByIdAndActiveTrue(1L)).thenReturn(Optional.of(orderEntity));
+        when(orderRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong())).thenReturn(Optional.of(orderEntity));
         when(userRepository.findByUsernameAndActiveTrue("testuser")).thenReturn(Optional.of(testUser));
         when(orderRepository.getNextOrderSequenceValue()).thenReturn(2L);
         when(orderRepository.save(any(PurchaseOrderEntity.class))).thenReturn(clonedEntity);
@@ -408,7 +409,7 @@ class PurchaseOrderServiceTest {
 
         // Then
         assertThat(result).isEqualTo(orderResponse);
-        verify(orderRepository, times(1)).findByIdAndActiveTrue(1L);
+        verify(orderRepository, times(1)).findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong());
         verify(orderRepository, times(1)).getNextOrderSequenceValue();
         verify(orderRepository, times(1)).save(any(PurchaseOrderEntity.class));
         

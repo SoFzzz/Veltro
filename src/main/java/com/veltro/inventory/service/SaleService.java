@@ -1,7 +1,5 @@
 package com.veltro.inventory.service;
 
-import com.veltro.inventory.application.audit.command.AuditCommandExecutor;
-import com.veltro.inventory.application.audit.command.AuditContext;
 import com.veltro.inventory.dto.AddItemRequest;
 import com.veltro.inventory.dto.ConfirmSaleRequest;
 import com.veltro.inventory.dto.ModifyItemRequest;
@@ -14,12 +12,12 @@ import com.veltro.inventory.mapper.SaleMapper;
 import com.veltro.inventory.model.AuditAction;
 import com.veltro.inventory.model.AuditEntityType;
 import com.veltro.inventory.model.ProductEntity;
-import com.veltro.inventory.domain.catalog.ports.ProductRepository;
+import com.veltro.inventory.repository.ProductRepository;
 import com.veltro.inventory.model.PaymentMethod;
 import com.veltro.inventory.model.SaleDetailEntity;
 import com.veltro.inventory.model.SaleEntity;
 import com.veltro.inventory.model.SaleStatus;
-import com.veltro.inventory.domain.pos.ports.SaleRepository;
+import com.veltro.inventory.repository.SaleRepository;
 import com.veltro.inventory.exception.InvalidPaymentException;
 import com.veltro.inventory.exception.NotFoundException;
 import com.veltro.inventory.security.TenantContext;

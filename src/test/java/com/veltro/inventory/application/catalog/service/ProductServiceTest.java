@@ -1,12 +1,14 @@
 package com.veltro.inventory.application.catalog.service;
 
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import com.veltro.inventory.dto.CreateProductRequest;
 import com.veltro.inventory.dto.ProductResponse;
 import com.veltro.inventory.mapper.ProductMapper;
 import com.veltro.inventory.service.InventoryService;
 import com.veltro.inventory.model.ProductEntity;
-import com.veltro.inventory.domain.catalog.ports.CategoryRepository;
-import com.veltro.inventory.domain.catalog.ports.ProductRepository;
+import com.veltro.inventory.repository.CategoryRepository;
+import com.veltro.inventory.repository.ProductRepository;
 import com.veltro.inventory.exception.InvalidPriceException;
 import com.veltro.inventory.exception.NotFoundException;
 import com.veltro.inventory.service.ProductService;
@@ -150,7 +152,7 @@ class ProductServiceTest {
     @Test
     @DisplayName("findByBarcode throws NotFoundException when barcode does not exist")
     void findByBarcode_unknownBarcode_throwsNotFoundException() {
-        when(productRepository.findByBarcodeAndActiveTrue("UNKNOWN-BARCODE"))
+        when(productRepository.findByBarcodeAndActiveTrueAndBusinessId(eq("UNKNOWN-BARCODE"), anyLong()))
                 .thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> productService.findByBarcode("UNKNOWN-BARCODE"))
@@ -167,7 +169,7 @@ class ProductServiceTest {
                 "1.0000", "2.0000", 1L, "Test Category", true,
                 5, 10, 2);
 
-        when(productRepository.findByBarcodeAndActiveTrue("BARCODE-001"))
+        when(productRepository.findByBarcodeAndActiveTrueAndBusinessId(eq("BARCODE-001"), anyLong()))
                 .thenReturn(Optional.of(entity));
         when(productMapper.toResponse(entity)).thenReturn(stubResponse);
 
@@ -184,7 +186,7 @@ class ProductServiceTest {
     @Test
     @DisplayName("findById throws NotFoundException when product does not exist or is inactive")
     void findById_unknownId_throwsNotFoundException() {
-        when(productRepository.findByIdAndActiveTrue(999L)).thenReturn(Optional.empty());
+        when(productRepository.findByIdAndActiveTrueAndBusinessId(eq(999L), anyLong())).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> productService.findById(999L))
                 .isInstanceOf(NotFoundException.class)

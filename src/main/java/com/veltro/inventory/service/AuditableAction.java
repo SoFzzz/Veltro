@@ -1,4 +1,4 @@
-package com.veltro.inventory.application.audit.command;
+package com.veltro.inventory.service;
 
 /**
  * Functional interface for auditable operations (B3-03).
