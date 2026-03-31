@@ -65,7 +65,7 @@ public class CategoryService {
         Long businessId = TenantContext.getBusinessId();
 
         // BUG-07: Check for existing category with same name (active or inactive)
-        checkForDuplicateName(request.name(), businessId);
+        checkForDuplicateName(request.name(), businessId, null);
 
         CategoryEntity entity = categoryMapper.toEntity(request);
         entity.setBusinessId(businessId);
@@ -83,6 +83,7 @@ public class CategoryService {
     @Transactional
     public CategoryResponse update(Long id, UpdateCategoryRequest request) {
         Long businessId = TenantContext.getBusinessId();
+        checkForDuplicateName(request.name(), businessId, id);
         CategoryEntity entity = requireActive(id, businessId);
         categoryMapper.updateEntity(request, entity);
 
@@ -153,11 +154,14 @@ public class CategoryService {
      * Distinguishes between active duplicates (error) and inactive ones (suggest reactivation).
      * BUG-07 fix.
      */
-    private void checkForDuplicateName(String name, Long businessId) {
+    private void checkForDuplicateName(String name, Long businessId, Long currentCategoryId) {
         Optional<CategoryEntity> existing = categoryRepository.findByNameAndBusinessId(name, businessId);
         
         if (existing.isPresent()) {
             CategoryEntity category = existing.get();
+            if (currentCategoryId != null && currentCategoryId.equals(category.getId())) {
+                return;
+            }
             if (category.isActive()) {
                 throw new DuplicateResourceException("Category", "name", name);
             } else {
