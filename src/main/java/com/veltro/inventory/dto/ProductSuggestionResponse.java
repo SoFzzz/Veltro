@@ -23,18 +23,28 @@ public record ProductSuggestionResponse(
      *
      * <p>Semantics:
      *
-     * @param productId existing product ID (null if new product suggested)
-     * @param productName product name
+     *   <li>If {@code productId != null}, the suggestion matched an existing catalog product and all
+     *       {@code suggested*} fields are {@code null}.</li>
+     *   <li>If {@code productId == null}, the suggestion represents a potential new product and the
+     *       {@code suggested*} fields carry the AI-derived values for form prefill.</li>
+     * </ul>
+     *
+     * @param productId existing product ID (null if no match was found)
+     * @param productName display name for the suggestion
      * @param confidence confidence score (0.0 to 1.0)
-     * @param suggestedPrice AI-suggested price (for new products)
-     * @param barcode barcode if detected
+     * @param barcode barcode from the matched catalog product (null when there is no match)
+     * @param suggestedName AI-suggested name for creating a new product
+     * @param suggestedBarcode AI-suggested barcode for creating a new product
+     * @param suggestedPrice AI-suggested sale price for creating a new product
      */
     public record SuggestedProduct(
             Long productId,
             String productName,
             double confidence,
-            BigDecimal suggestedPrice,
-            String barcode
+            String barcode,
+            String suggestedName,
+            String suggestedBarcode,
+            BigDecimal suggestedPrice
     ) {}
 
     /**
