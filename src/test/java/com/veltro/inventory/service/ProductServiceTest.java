@@ -3,6 +3,9 @@ package com.veltro.inventory.service;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import com.veltro.inventory.dto.CreateProductRequest;
+import com.veltro.inventory.dto.UpdateProductRequest;
+import com.veltro.inventory.exception.DuplicateResourceException;
+import com.veltro.inventory.exception.InactiveResourceExistsException;
 import com.veltro.inventory.dto.ProductResponse;
 import com.veltro.inventory.mapper.ProductMapper;
 import com.veltro.inventory.service.InventoryService;
@@ -206,6 +209,171 @@ class ProductServiceTest {
         assertThatThrownBy(() -> productService.findById(999L))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessageContaining("999");
+    }
+
+    @Test
+    @DisplayName("update allows keeping the same barcode and SKU on the current product")
+    void update_sameBarcodeAndSkuOnCurrentProduct_succeeds() {
+        UpdateProductRequest request = new UpdateProductRequest(
+                "Widget Updated",
+                "BARCODE-001",
+                "SKU-001",
+                "Updated description",
+                new BigDecimal("5.0000"),
+                new BigDecimal("9.0000"),
+                null,
+                5,
+                10,
+                2
+        );
+
+        ProductEntity existing = new ProductEntity();
+        existing.setId(1L);
+        existing.setActive(true);
+        existing.setBarcode("BARCODE-001");
+        existing.setSku("SKU-001");
+
+        ProductResponse response = new ProductResponse(
+                1L, "Widget Updated", "BARCODE-001", "SKU-001", "Updated description",
+                "5.0000", "9.0000", 1L, "Test Category", true,
+                5, 10, 2);
+
+        when(productRepository.findByBarcodeAndBusinessId("BARCODE-001", BUSINESS_ID))
+                .thenReturn(Optional.of(existing));
+        when(productRepository.findBySkuAndBusinessId("SKU-001", BUSINESS_ID))
+                .thenReturn(Optional.of(existing));
+        when(productRepository.findByIdAndActiveTrueAndBusinessId(1L, BUSINESS_ID))
+                .thenReturn(Optional.of(existing));
+        when(productRepository.save(existing)).thenReturn(existing);
+        when(productMapper.toResponse(existing)).thenReturn(response);
+
+        ProductResponse result = productService.update(1L, request);
+
+        assertThat(result).isEqualTo(response);
+    }
+
+    @Test
+    @DisplayName("update throws DuplicateResourceException when barcode belongs to another active product")
+    void update_barcodeCollisionWithActiveProduct_throwsDuplicateResourceException() {
+        UpdateProductRequest request = new UpdateProductRequest(
+                "Widget Updated",
+                "BARCODE-001",
+                "SKU-NEW",
+                "Updated description",
+                new BigDecimal("5.0000"),
+                new BigDecimal("9.0000"),
+                null,
+                5,
+                10,
+                2
+        );
+
+        ProductEntity otherActive = new ProductEntity();
+        otherActive.setId(2L);
+        otherActive.setActive(true);
+        otherActive.setBarcode("BARCODE-001");
+
+        when(productRepository.findByBarcodeAndBusinessId("BARCODE-001", BUSINESS_ID))
+                .thenReturn(Optional.of(otherActive));
+
+        assertThatThrownBy(() -> productService.update(1L, request))
+                .isInstanceOf(DuplicateResourceException.class)
+                .hasMessageContaining("barcode")
+                .hasMessageContaining("BARCODE-001");
+    }
+
+    @Test
+    @DisplayName("update throws InactiveResourceExistsException when barcode belongs to another inactive product")
+    void update_barcodeCollisionWithInactiveProduct_throwsInactiveResourceExistsException() {
+        UpdateProductRequest request = new UpdateProductRequest(
+                "Widget Updated",
+                "BARCODE-001",
+                "SKU-NEW",
+                "Updated description",
+                new BigDecimal("5.0000"),
+                new BigDecimal("9.0000"),
+                null,
+                5,
+                10,
+                2
+        );
+
+        ProductEntity otherInactive = new ProductEntity();
+        otherInactive.setId(2L);
+        otherInactive.setActive(false);
+        otherInactive.setBarcode("BARCODE-001");
+
+        when(productRepository.findByBarcodeAndBusinessId("BARCODE-001", BUSINESS_ID))
+                .thenReturn(Optional.of(otherInactive));
+
+        assertThatThrownBy(() -> productService.update(1L, request))
+                .isInstanceOf(InactiveResourceExistsException.class)
+                .hasMessageContaining("Consider reactivating it")
+                .hasMessageContaining("id=2");
+    }
+
+    @Test
+    @DisplayName("update throws DuplicateResourceException when SKU belongs to another active product")
+    void update_skuCollisionWithActiveProduct_throwsDuplicateResourceException() {
+        UpdateProductRequest request = new UpdateProductRequest(
+                "Widget Updated",
+                "BARCODE-NEW",
+                "SKU-001",
+                "Updated description",
+                new BigDecimal("5.0000"),
+                new BigDecimal("9.0000"),
+                null,
+                5,
+                10,
+                2
+        );
+
+        ProductEntity otherActive = new ProductEntity();
+        otherActive.setId(2L);
+        otherActive.setActive(true);
+        otherActive.setSku("SKU-001");
+
+        when(productRepository.findByBarcodeAndBusinessId("BARCODE-NEW", BUSINESS_ID))
+                .thenReturn(Optional.empty());
+        when(productRepository.findBySkuAndBusinessId("SKU-001", BUSINESS_ID))
+                .thenReturn(Optional.of(otherActive));
+
+        assertThatThrownBy(() -> productService.update(1L, request))
+                .isInstanceOf(DuplicateResourceException.class)
+                .hasMessageContaining("SKU")
+                .hasMessageContaining("SKU-001");
+    }
+
+    @Test
+    @DisplayName("update throws InactiveResourceExistsException when SKU belongs to another inactive product")
+    void update_skuCollisionWithInactiveProduct_throwsInactiveResourceExistsException() {
+        UpdateProductRequest request = new UpdateProductRequest(
+                "Widget Updated",
+                "BARCODE-NEW",
+                "SKU-001",
+                "Updated description",
+                new BigDecimal("5.0000"),
+                new BigDecimal("9.0000"),
+                null,
+                5,
+                10,
+                2
+        );
+
+        ProductEntity otherInactive = new ProductEntity();
+        otherInactive.setId(2L);
+        otherInactive.setActive(false);
+        otherInactive.setSku("SKU-001");
+
+        when(productRepository.findByBarcodeAndBusinessId("BARCODE-NEW", BUSINESS_ID))
+                .thenReturn(Optional.empty());
+        when(productRepository.findBySkuAndBusinessId("SKU-001", BUSINESS_ID))
+                .thenReturn(Optional.of(otherInactive));
+
+        assertThatThrownBy(() -> productService.update(1L, request))
+                .isInstanceOf(InactiveResourceExistsException.class)
+                .hasMessageContaining("Consider reactivating it")
+                .hasMessageContaining("id=2");
     }
 
     private void authenticateAsTenantUser() {
