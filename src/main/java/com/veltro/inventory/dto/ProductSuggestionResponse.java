@@ -21,6 +21,8 @@ public record ProductSuggestionResponse(
     /**
      * A suggested product match from AI analysis.
      *
+     * <p>Semantics:
+     *
      * @param productId existing product ID (null if new product suggested)
      * @param productName product name
      * @param confidence confidence score (0.0 to 1.0)
