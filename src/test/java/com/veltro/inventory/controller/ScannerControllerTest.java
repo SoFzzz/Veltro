@@ -50,7 +50,15 @@ class ScannerControllerTest {
                 "image", "product.jpg", "image/jpeg", new byte[]{1, 2, 3, 4, 5}
         );
         ProductSuggestionResponse.SuggestedProduct product =
-                new ProductSuggestionResponse.SuggestedProduct(1L, "Test Product", 0.95, BigDecimal.valueOf(19.99), "1234567890123");
+                new ProductSuggestionResponse.SuggestedProduct(
+                        1L,
+                        "Test Product",
+                        0.95,
+                        "1234567890123",
+                        null,
+                        null,
+                        null
+                );
         ProductSuggestionResponse mockResponse =
                 new ProductSuggestionResponse(List.of(product), 150L, "AI_VISION");
 
