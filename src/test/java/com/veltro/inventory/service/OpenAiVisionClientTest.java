@@ -244,9 +244,11 @@ class OpenAiVisionClientTest {
 
             assertThat(response.suggestions()).hasSize(1);
             assertThat(response.suggestions().get(0).productId()).isEqualTo(10L);
+            assertThat(response.suggestions().get(0).productName()).isEqualTo("Sprite Sabor Lima Limon");
             assertThat(response.suggestions().get(0).barcode()).isEqualTo("750123");
-            assertThat(response.suggestions().get(0).suggestedPrice())
-                    .isEqualByComparingTo("4500.0000");
+            assertThat(response.suggestions().get(0).suggestedName()).isNull();
+            assertThat(response.suggestions().get(0).suggestedBarcode()).isNull();
+            assertThat(response.suggestions().get(0).suggestedPrice()).isNull();
         }
     }
 
