@@ -503,6 +503,14 @@ public class OpenAiVisionClient {
             String flavor = getStringValue(inventoryItem, "flavor");
             String volume = getStringValue(inventoryItem, "volume");
             int estimatedQuantity = getIntValue(inventoryItem, "estimated_quantity", 1);
+            String suggestedBarcode = getStringValue(inventoryItem, "barcode");
+            BigDecimal suggestedPrice = getBigDecimalValue(inventoryItem, "suggested_price");
+            if (suggestedPrice == null) {
+                suggestedPrice = getBigDecimalValue(inventoryItem, "price");
+            }
+            if (suggestedPrice == null) {
+                suggestedPrice = getBigDecimalValue(inventoryItem, "estimated_price");
+            }
             
             if (productName == null || productName.isBlank()) {
                 log.warn("No product name found in inventory item");
