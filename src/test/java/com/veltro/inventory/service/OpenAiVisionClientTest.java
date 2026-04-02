@@ -298,4 +298,49 @@ class OpenAiVisionClientTest {
             assertThat(response.suggestions().get(0).suggestedPrice()).isEqualByComparingTo("4.5");
         }
     }
+
+    @Test
+    @DisplayName("analyzeProductImage remains backward compatible when AI returns only product name")
+    void analyzeProductImage_backwardCompatibleWithMinimalPayload() {
+        when(openAiConfig.isConfigured()).thenReturn(true);
+        when(openAiConfig.getApiKey()).thenReturn("AIza-test-key");
+        when(openAiConfig.getModel()).thenReturn("gemini-2.5-flash");
+        when(openAiConfig.getMaxTokens()).thenReturn(200);
+        when(openAiConfig.getMaxRetries()).thenReturn(1);
+
+        String geminiResponse = """
+                {
+                  "candidates": [
+                    {
+                      "content": {
+                        "parts": [
+                          {
+                            "text": "{\\"inventory\\":[{\\"product_name\\":\\"Galletas Chocolate\\",\\"estimated_quantity\\":1}],\\"status\\":\\"success\\",\\"total_items_detected\\":1}"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+                """;
+        when(restTemplate.postForObject(any(String.class), any(), eq(String.class))).thenReturn(geminiResponse);
+        when(productMatchingService.findMatch("Galletas Chocolate", 3L))
+                .thenReturn(Optional.empty());
+
+        MultipartFile image = new MockMultipartFile(
+                "image", "cookies.jpg", "image/jpeg", new byte[]{1, 2, 3}
+        );
+
+        try (MockedStatic<TenantContext> tenantContext = org.mockito.Mockito.mockStatic(TenantContext.class)) {
+            tenantContext.when(TenantContext::getBusinessId).thenReturn(3L);
+
+            ProductSuggestionResponse response = client.analyzeProductImage(image);
+
+            assertThat(response.suggestions()).hasSize(1);
+            assertThat(response.suggestions().get(0).productId()).isNull();
+            assertThat(response.suggestions().get(0).suggestedName()).isEqualTo("Galletas Chocolate");
+            assertThat(response.suggestions().get(0).suggestedBarcode()).isNull();
+            assertThat(response.suggestions().get(0).suggestedPrice()).isNull();
+        }
+    }
 }
