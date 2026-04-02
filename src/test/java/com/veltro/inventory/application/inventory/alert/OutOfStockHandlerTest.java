@@ -6,7 +6,7 @@ import com.veltro.inventory.model.AlertEntity;
 import java.util.List;
 
 import com.veltro.inventory.service.OutOfStockHandler;
-import com.veltro.inventory.service.StockEvaluationContext;
+import com.veltro.inventory.service.StockAlertEvaluationContext;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -16,7 +16,7 @@ class OutOfStockHandlerTest {
     @DisplayName("creates alert when stock <= critical")
     void createsAlert() {
         OutOfStockHandler handler = new OutOfStockHandler();
-        StockEvaluationContext context = new StockEvaluationContext(1L, "Product", 0, 0, 5, 10);
+        StockAlertEvaluationContext context = new StockAlertEvaluationContext(1L, "Product", 0, 0, 5, 10);
 
         handler.handle(context);
 
@@ -25,3 +25,4 @@ class OutOfStockHandlerTest {
         assertThat(alerts.get(0).getType()).hasToString("OUT_OF_STOCK");
     }
 }
+

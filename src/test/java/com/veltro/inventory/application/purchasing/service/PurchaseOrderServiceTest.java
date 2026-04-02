@@ -19,6 +19,7 @@ import com.veltro.inventory.model.SupplierEntity;
 import com.veltro.inventory.repository.PurchaseOrderRepository;
 import com.veltro.inventory.repository.SupplierRepository;
 import com.veltro.inventory.exception.NotFoundException;
+import com.veltro.inventory.security.VeltroUserDetails;
 import com.veltro.inventory.service.PurchaseOrderService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,6 +31,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.math.BigDecimal;
@@ -54,6 +56,9 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("PurchaseOrderService")
 class PurchaseOrderServiceTest {
+
+    private static final Long USER_ID = 10L;
+    private static final Long BUSINESS_ID = 100L;
 
     @Mock
     private PurchaseOrderRepository orderRepository;
@@ -92,9 +97,7 @@ class PurchaseOrderServiceTest {
         // Manual service instantiation
         orderService = new PurchaseOrderService(orderRepository, supplierRepository, productRepository, userRepository, orderMapper, applicationEventPublisher, auditCommandExecutor);
 
-        // Setup SecurityContext for getCurrentUser()
-        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken("testuser", null, List.of());
-        SecurityContextHolder.getContext().setAuthentication(auth);
+        authenticateAsTenantUser();
 
         // Setup test user
         testUser = new UserEntity();
@@ -418,5 +421,18 @@ class PurchaseOrderServiceTest {
         verify(orderRepository).save(entityCaptor.capture());
         PurchaseOrderEntity savedClone = entityCaptor.getValue();
         assertThat(savedClone.getOrderNumber()).isEqualTo("PO-2026-000002");
+    }
+
+    private void authenticateAsTenantUser() {
+        VeltroUserDetails principal = new VeltroUserDetails(
+                "testuser",
+                "password",
+                List.of(new SimpleGrantedAuthority("ROLE_ADMIN")),
+                USER_ID,
+                BUSINESS_ID
+        );
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(principal, principal.getPassword(), principal.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 }

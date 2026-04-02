@@ -14,7 +14,7 @@ public class OutOfStockHandler implements AlertHandler {
     }
 
     @Override
-    public void handle(StockEvaluationContext context) {
+    public void handle(StockAlertEvaluationContext context) {
         if (context.getCurrentStock() <= context.getCriticalStock()) {
             AlertEntity alert = new AlertEntity();
             alert.setType(AlertType.OUT_OF_STOCK);
@@ -27,3 +27,4 @@ public class OutOfStockHandler implements AlertHandler {
         }
     }
 }
+

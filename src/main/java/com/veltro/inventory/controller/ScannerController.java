@@ -1,7 +1,7 @@
 package com.veltro.inventory.controller;
 
 import com.veltro.inventory.dto.ProductSuggestionResponse;
-import com.veltro.inventory.service.ScannerService;
+import com.veltro.inventory.service.ProductRecognitionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -34,7 +34,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ScannerController {
 
-    private final ScannerService scannerService;
+    private final ProductRecognitionService scannerService;
 
     /**
      * Analyzes a product image using AI vision.
@@ -96,3 +96,4 @@ public class ScannerController {
         return ResponseEntity.ok(Map.of("available", available));
     }
 }
+

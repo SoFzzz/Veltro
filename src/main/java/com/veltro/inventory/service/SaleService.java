@@ -222,7 +222,7 @@ public class SaleService {
                 () -> beforeSnapshot,
                 () -> saved,
                 (result) -> buildSaleSnapshot(saved),
-                AuditContext.empty()
+                RequestAuditContext.empty()
         );
 
         log.info("Sale {} confirmed with payment method {}", sale.getSaleNumber(), request.paymentMethod());
@@ -253,7 +253,7 @@ public class SaleService {
 
         SaleEntity saved = saleRepository.save(sale);
 
-        // Publish event — listener in B2-02 will handle stock reversal
+        // Publish event 窶・listener in B2-02 will handle stock reversal
         applicationEventPublisher.publishEvent(buildSaleVoidedEvent(saved));
 
         // Create forensic audit record (B3-03)
@@ -264,7 +264,7 @@ public class SaleService {
                 () -> beforeSnapshot,
                 () -> saved,
                 (result) -> buildSaleSnapshot(saved),
-                AuditContext.empty()
+                RequestAuditContext.empty()
         );
 
         log.info("Sale {} voided successfully", sale.getSaleNumber());
@@ -345,7 +345,7 @@ public class SaleService {
                 () -> beforeSnapshot,
                 () -> confirmedSale,
                 (result) -> buildSaleSnapshot(confirmedSale),
-                AuditContext.empty()
+                RequestAuditContext.empty()
         );
 
         log.info("Quick sale {} confirmed with {} payment", confirmedSale.getSaleNumber(), request.paymentMethod());
@@ -450,3 +450,4 @@ public class SaleService {
         return snapshot;
     }
 }
+

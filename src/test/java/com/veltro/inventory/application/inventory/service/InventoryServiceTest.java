@@ -17,7 +17,9 @@ import com.veltro.inventory.repository.InventoryMovementRepository;
 import com.veltro.inventory.repository.InventoryRepository;
 import com.veltro.inventory.exception.InsufficientStockException;
 import com.veltro.inventory.exception.NotFoundException;
+import com.veltro.inventory.security.VeltroUserDetails;
 import com.veltro.inventory.service.InventoryService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,7 +28,11 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -44,6 +50,9 @@ import static org.mockito.Mockito.when;
  */
 @ExtendWith(MockitoExtension.class)
 class InventoryServiceTest {
+
+    private static final Long USER_ID = 10L;
+    private static final Long BUSINESS_ID = 100L;
 
     @Mock
     private InventoryRepository inventoryRepository;
@@ -67,7 +76,13 @@ class InventoryServiceTest {
 
     @BeforeEach
     void setUp() {
+        authenticateAsTenantUser();
         inventoryService = new InventoryService(inventoryRepository, movementRepository, inventoryMapper, movementMapper, eventPublisher, auditCommandExecutor);
+    }
+
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
     }
 
     // -------------------------------------------------------------------------
@@ -364,5 +379,18 @@ class InventoryServiceTest {
         assertThat(persisted.getMaxStock()).isEqualTo(0);
         assertThat(persisted.getProduct()).isEqualTo(product);
         assertThat(result.getId()).isEqualTo(99L);
+    }
+
+    private void authenticateAsTenantUser() {
+        VeltroUserDetails principal = new VeltroUserDetails(
+                "inventory-tester",
+                "password",
+                List.of(new SimpleGrantedAuthority("ROLE_ADMIN")),
+                USER_ID,
+                BUSINESS_ID
+        );
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(principal, principal.getPassword(), principal.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 }

@@ -1,9 +1,9 @@
 package com.veltro.inventory.model;
 
-import com.veltro.inventory.state.CompletedState;
-import com.veltro.inventory.state.InProgressState;
+import com.veltro.inventory.state.SaleCompletedState;
+import com.veltro.inventory.state.SaleInProgressState;
 import com.veltro.inventory.state.SaleState;
-import com.veltro.inventory.state.VoidedStatePos;
+import com.veltro.inventory.state.SaleVoidedState;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -79,9 +79,9 @@ public class SaleEntity extends AbstractAuditableEntity {
     @PostUpdate
     private void initializeState() {
         this.state = switch (this.status) {
-            case IN_PROGRESS -> new InProgressState();
-            case COMPLETED -> new CompletedState();
-            case VOIDED -> new VoidedStatePos();
+            case IN_PROGRESS -> new SaleInProgressState();
+            case COMPLETED -> new SaleCompletedState();
+            case VOIDED -> new SaleVoidedState();
         };
     }
 
@@ -112,3 +112,4 @@ public class SaleEntity extends AbstractAuditableEntity {
         this.total = this.subtotal;
     }
 }
+

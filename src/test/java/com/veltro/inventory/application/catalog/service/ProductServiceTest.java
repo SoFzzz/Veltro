@@ -11,15 +11,21 @@ import com.veltro.inventory.repository.CategoryRepository;
 import com.veltro.inventory.repository.ProductRepository;
 import com.veltro.inventory.exception.InvalidPriceException;
 import com.veltro.inventory.exception.NotFoundException;
+import com.veltro.inventory.security.VeltroUserDetails;
 import com.veltro.inventory.service.ProductService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,6 +41,9 @@ import static org.mockito.Mockito.when;
  */
 @ExtendWith(MockitoExtension.class)
 class ProductServiceTest {
+
+    private static final Long USER_ID = 10L;
+    private static final Long BUSINESS_ID = 100L;
 
     @Mock
     private ProductRepository productRepository;
@@ -52,7 +61,13 @@ class ProductServiceTest {
 
     @BeforeEach
     void setUp() {
+        authenticateAsTenantUser();
         productService = new ProductService(productRepository, categoryRepository, productMapper, inventoryService);
+    }
+
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
     }
 
     // -------------------------------------------------------------------------
@@ -191,5 +206,18 @@ class ProductServiceTest {
         assertThatThrownBy(() -> productService.findById(999L))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessageContaining("999");
+    }
+
+    private void authenticateAsTenantUser() {
+        VeltroUserDetails principal = new VeltroUserDetails(
+                "product-tester",
+                "password",
+                List.of(new SimpleGrantedAuthority("ROLE_ADMIN")),
+                USER_ID,
+                BUSINESS_ID
+        );
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(principal, principal.getPassword(), principal.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 }

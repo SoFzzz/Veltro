@@ -9,13 +9,18 @@ import com.veltro.inventory.model.SupplierEntity;
 import com.veltro.inventory.repository.SupplierRepository;
 import com.veltro.inventory.exception.DuplicateResourceException;
 import com.veltro.inventory.exception.NotFoundException;
+import com.veltro.inventory.security.VeltroUserDetails;
 import com.veltro.inventory.service.SupplierService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
 import java.util.Optional;
@@ -37,6 +42,9 @@ import static org.mockito.Mockito.when;
 @DisplayName("SupplierService")
 class SupplierServiceTest {
 
+    private static final Long USER_ID = 10L;
+    private static final Long BUSINESS_ID = 100L;
+
     @Mock
     private SupplierRepository supplierRepository;
     
@@ -54,6 +62,7 @@ class SupplierServiceTest {
     void setUp() {
         // Manual service instantiation
         supplierService = new SupplierService(supplierRepository, supplierMapper);
+        authenticateAsTenantUser();
         
         supplierEntity = new SupplierEntity();
         supplierEntity.setId(1L);
@@ -78,6 +87,11 @@ class SupplierServiceTest {
                 "Updated Supplier Corp", "updated@supplier.com", 
                 "555-9999", "789 Trade Blvd", "Updated notes"
         );
+    }
+
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -130,7 +144,7 @@ class SupplierServiceTest {
     void shouldFindSupplierByTaxId() {
         // Given
         String taxId = "12345678901";
-        when(supplierRepository.findByTaxIdAndActiveTrueAndBusinessId(eq(taxId), anyLong()));
+        when(supplierRepository.findByTaxIdAndActiveTrueAndBusinessId(eq(taxId), anyLong())).thenReturn(Optional.of(supplierEntity));
         when(supplierMapper.toResponse(supplierEntity)).thenReturn(supplierResponse);
 
         // When
@@ -138,7 +152,7 @@ class SupplierServiceTest {
 
         // Then
         assertThat(result).isEqualTo(supplierResponse);
-        verify(supplierRepository.findByTaxIdAndActiveTrueAndBusinessId(eq(taxId), anyLong()));
+        verify(supplierRepository, times(1)).findByTaxIdAndActiveTrueAndBusinessId(eq(taxId), anyLong());
         verify(supplierMapper, times(1)).toResponse(supplierEntity);
     }
 
@@ -147,7 +161,7 @@ class SupplierServiceTest {
     void shouldCreateNewSupplierSuccessfully() {
         // Given
         SupplierEntity newEntity = new SupplierEntity();
-        when(supplierRepository.existsByTaxIdAndActiveTrueAndIdNotAndBusinessId(eq(createRequest.taxId()), eq(null), anyLong()));
+        when(supplierRepository.existsByTaxIdAndActiveTrueAndIdNotAndBusinessId(eq(createRequest.taxId()), eq(null), anyLong())).thenReturn(false);
         when(supplierMapper.toEntity(createRequest)).thenReturn(newEntity);
         when(supplierRepository.save(newEntity)).thenReturn(supplierEntity);
         when(supplierMapper.toResponse(supplierEntity)).thenReturn(supplierResponse);
@@ -157,7 +171,7 @@ class SupplierServiceTest {
 
         // Then
         assertThat(result).isEqualTo(supplierResponse);
-        verify(supplierRepository.existsByTaxIdAndActiveTrueAndIdNotAndBusinessId(eq(createRequest.taxId()), eq(null), anyLong()));
+        verify(supplierRepository, times(1)).existsByTaxIdAndActiveTrueAndIdNotAndBusinessId(eq(createRequest.taxId()), eq(null), anyLong());
         verify(supplierMapper, times(1)).toEntity(createRequest);
         verify(supplierRepository, times(1)).save(newEntity);
         verify(supplierMapper, times(1)).toResponse(supplierEntity);
@@ -167,7 +181,7 @@ class SupplierServiceTest {
     @DisplayName("Should throw DuplicateResourceException when tax ID exists")
     void shouldThrowDuplicateResourceExceptionWhenTaxIdExists() {
         // Given
-        when(supplierRepository.existsByTaxIdAndActiveTrueAndIdNotAndBusinessId(eq(createRequest.taxId()), eq(null), anyLong()));
+        when(supplierRepository.existsByTaxIdAndActiveTrueAndIdNotAndBusinessId(eq(createRequest.taxId()), eq(null), anyLong())).thenReturn(true);
 
         // When/Then
         assertThatThrownBy(() -> supplierService.create(createRequest))
@@ -208,5 +222,18 @@ class SupplierServiceTest {
         verify(supplierRepository, times(1)).findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong());
         verify(supplierRepository, times(1)).save(supplierEntity);
         // Note: setActive(false) call is tested through integration or by verifying the entity state
+    }
+
+    private void authenticateAsTenantUser() {
+        VeltroUserDetails principal = new VeltroUserDetails(
+                "supplier-tester",
+                "password",
+                List.of(new SimpleGrantedAuthority("ROLE_ADMIN")),
+                USER_ID,
+                BUSINESS_ID
+        );
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(principal, principal.getPassword(), principal.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 }

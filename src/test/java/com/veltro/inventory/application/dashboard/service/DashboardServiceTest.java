@@ -2,14 +2,19 @@ package com.veltro.inventory.application.dashboard.service;
 
 import com.veltro.inventory.dto.DashboardResponse;
 import com.veltro.inventory.model.AlertType;
+import com.veltro.inventory.security.VeltroUserDetails;
 import com.veltro.inventory.service.DashboardQueryRepository;
 import com.veltro.inventory.service.DashboardService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -30,6 +35,9 @@ import static org.mockito.Mockito.when;
 @DisplayName("DashboardService")
 class DashboardServiceTest {
 
+    private static final Long USER_ID = 10L;
+    private static final Long BUSINESS_ID = 100L;
+
     @Mock
     private DashboardQueryRepository dashboardQueryRepository;
 
@@ -37,27 +45,33 @@ class DashboardServiceTest {
 
     @BeforeEach
     void setUp() {
+        authenticateAsTenantUser();
         dashboardService = new DashboardService(dashboardQueryRepository);
+    }
+
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
     }
 
     @Test
     @DisplayName("getDashboard aggregates all KPIs correctly")
     void getDashboard_aggregatesAllKpis() {
         // Arrange
-        when(dashboardQueryRepository.sumTodaySales(any(LocalDateTime.class), any(LocalDateTime.class)))
+        when(dashboardQueryRepository.sumTodaySales(any(LocalDateTime.class), any(LocalDateTime.class), eq(BUSINESS_ID)))
                 .thenReturn(BigDecimal.valueOf(1000.00));
-        when(dashboardQueryRepository.countTodaySales(any(LocalDateTime.class), any(LocalDateTime.class)))
+        when(dashboardQueryRepository.countTodaySales(any(LocalDateTime.class), any(LocalDateTime.class), eq(BUSINESS_ID)))
                 .thenReturn(5L);
-        when(dashboardQueryRepository.findOutOfStockProducts())
+        when(dashboardQueryRepository.findOutOfStockProducts(eq(BUSINESS_ID)))
                 .thenReturn(List.of(
                         new DashboardResponse.OutOfStockProduct(1L, "Product A", "SKU001"),
                         new DashboardResponse.OutOfStockProduct(2L, "Product B", "SKU002")
                 ));
-        when(dashboardQueryRepository.countActiveAlertsByType(AlertType.LOW_STOCK))
+        when(dashboardQueryRepository.countActiveAlertsByType(AlertType.LOW_STOCK, BUSINESS_ID))
                 .thenReturn(3L);
-        when(dashboardQueryRepository.sumSalesBetween(any(LocalDateTime.class), any(LocalDateTime.class)))
+        when(dashboardQueryRepository.sumSalesBetween(any(LocalDateTime.class), any(LocalDateTime.class), eq(BUSINESS_ID)))
                 .thenReturn(BigDecimal.valueOf(5000.00));
-        when(dashboardQueryRepository.findRecentSales(anyInt()))
+        when(dashboardQueryRepository.findRecentSales(anyInt(), eq(BUSINESS_ID)))
                 .thenReturn(List.of(
                         new DashboardResponse.RecentSale(1L, "SALE-001", BigDecimal.valueOf(200.00), 3, 100L, OffsetDateTime.now())
                 ));
@@ -80,17 +94,17 @@ class DashboardServiceTest {
     @DisplayName("getDashboard handles zero sales correctly")
     void getDashboard_zeroSales_returnsZeroAverageTicket() {
         // Arrange
-        when(dashboardQueryRepository.sumTodaySales(any(LocalDateTime.class), any(LocalDateTime.class)))
+        when(dashboardQueryRepository.sumTodaySales(any(LocalDateTime.class), any(LocalDateTime.class), eq(BUSINESS_ID)))
                 .thenReturn(BigDecimal.ZERO);
-        when(dashboardQueryRepository.countTodaySales(any(LocalDateTime.class), any(LocalDateTime.class)))
+        when(dashboardQueryRepository.countTodaySales(any(LocalDateTime.class), any(LocalDateTime.class), eq(BUSINESS_ID)))
                 .thenReturn(0L);
-        when(dashboardQueryRepository.findOutOfStockProducts())
+        when(dashboardQueryRepository.findOutOfStockProducts(eq(BUSINESS_ID)))
                 .thenReturn(List.of());
-        when(dashboardQueryRepository.countActiveAlertsByType(AlertType.LOW_STOCK))
+        when(dashboardQueryRepository.countActiveAlertsByType(AlertType.LOW_STOCK, BUSINESS_ID))
                 .thenReturn(0L);
-        when(dashboardQueryRepository.sumSalesBetween(any(LocalDateTime.class), any(LocalDateTime.class)))
+        when(dashboardQueryRepository.sumSalesBetween(any(LocalDateTime.class), any(LocalDateTime.class), eq(BUSINESS_ID)))
                 .thenReturn(BigDecimal.ZERO);
-        when(dashboardQueryRepository.findRecentSales(anyInt()))
+        when(dashboardQueryRepository.findRecentSales(anyInt(), eq(BUSINESS_ID)))
                 .thenReturn(List.of());
 
         // Act
@@ -108,17 +122,17 @@ class DashboardServiceTest {
     @DisplayName("getDashboard handles null sales sum")
     void getDashboard_nullSalesSum_treatedAsZero() {
         // Arrange
-        when(dashboardQueryRepository.sumTodaySales(any(LocalDateTime.class), any(LocalDateTime.class)))
+        when(dashboardQueryRepository.sumTodaySales(any(LocalDateTime.class), any(LocalDateTime.class), eq(BUSINESS_ID)))
                 .thenReturn(null);
-        when(dashboardQueryRepository.countTodaySales(any(LocalDateTime.class), any(LocalDateTime.class)))
+        when(dashboardQueryRepository.countTodaySales(any(LocalDateTime.class), any(LocalDateTime.class), eq(BUSINESS_ID)))
                 .thenReturn(0L);
-        when(dashboardQueryRepository.findOutOfStockProducts())
+        when(dashboardQueryRepository.findOutOfStockProducts(eq(BUSINESS_ID)))
                 .thenReturn(List.of());
-        when(dashboardQueryRepository.countActiveAlertsByType(AlertType.LOW_STOCK))
+        when(dashboardQueryRepository.countActiveAlertsByType(AlertType.LOW_STOCK, BUSINESS_ID))
                 .thenReturn(0L);
-        when(dashboardQueryRepository.sumSalesBetween(any(LocalDateTime.class), any(LocalDateTime.class)))
+        when(dashboardQueryRepository.sumSalesBetween(any(LocalDateTime.class), any(LocalDateTime.class), eq(BUSINESS_ID)))
                 .thenReturn(null);
-        when(dashboardQueryRepository.findRecentSales(anyInt()))
+        when(dashboardQueryRepository.findRecentSales(anyInt(), eq(BUSINESS_ID)))
                 .thenReturn(List.of());
 
         // Act
@@ -133,23 +147,36 @@ class DashboardServiceTest {
     @DisplayName("getDashboard queries recent sales with limit 10")
     void getDashboard_queriesRecentSalesWithLimit() {
         // Arrange
-        when(dashboardQueryRepository.sumTodaySales(any(LocalDateTime.class), any(LocalDateTime.class)))
+        when(dashboardQueryRepository.sumTodaySales(any(LocalDateTime.class), any(LocalDateTime.class), eq(BUSINESS_ID)))
                 .thenReturn(BigDecimal.ZERO);
-        when(dashboardQueryRepository.countTodaySales(any(LocalDateTime.class), any(LocalDateTime.class)))
+        when(dashboardQueryRepository.countTodaySales(any(LocalDateTime.class), any(LocalDateTime.class), eq(BUSINESS_ID)))
                 .thenReturn(0L);
-        when(dashboardQueryRepository.findOutOfStockProducts())
+        when(dashboardQueryRepository.findOutOfStockProducts(eq(BUSINESS_ID)))
                 .thenReturn(List.of());
-        when(dashboardQueryRepository.countActiveAlertsByType(AlertType.LOW_STOCK))
+        when(dashboardQueryRepository.countActiveAlertsByType(AlertType.LOW_STOCK, BUSINESS_ID))
                 .thenReturn(0L);
-        when(dashboardQueryRepository.sumSalesBetween(any(LocalDateTime.class), any(LocalDateTime.class)))
+        when(dashboardQueryRepository.sumSalesBetween(any(LocalDateTime.class), any(LocalDateTime.class), eq(BUSINESS_ID)))
                 .thenReturn(BigDecimal.ZERO);
-        when(dashboardQueryRepository.findRecentSales(10))
+        when(dashboardQueryRepository.findRecentSales(10, BUSINESS_ID))
                 .thenReturn(List.of());
 
         // Act
         dashboardService.getDashboard();
 
         // Assert
-        verify(dashboardQueryRepository).findRecentSales(10);
+        verify(dashboardQueryRepository).findRecentSales(10, BUSINESS_ID);
+    }
+
+    private void authenticateAsTenantUser() {
+        VeltroUserDetails principal = new VeltroUserDetails(
+                "dashboard-tester",
+                "password",
+                List.of(new SimpleGrantedAuthority("ROLE_ADMIN")),
+                USER_ID,
+                BUSINESS_ID
+        );
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(principal, principal.getPassword(), principal.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 }
