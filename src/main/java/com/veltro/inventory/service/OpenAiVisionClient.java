@@ -544,8 +544,10 @@ public class OpenAiVisionClient {
                     productId,
                     fullName.toString(),
                     confidence,
-                    estimatedPrice,
-                    barcode
+                    barcode,
+                    finalSuggestedName,
+                    finalSuggestedBarcode,
+                    finalSuggestedPrice
             );
 
         } catch (Exception e) {
