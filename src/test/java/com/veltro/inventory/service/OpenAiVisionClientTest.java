@@ -253,8 +253,8 @@ class OpenAiVisionClientTest {
     }
 
     @Test
-    @DisplayName("analyzeProductImage keeps null catalog fields when there is no match")
-    void analyzeProductImage_keepsNullCatalogFieldsWhenNoMatch() {
+    @DisplayName("analyzeProductImage exposes suggested fields when there is no match")
+    void analyzeProductImage_exposesSuggestedFieldsWhenNoMatch() {
         when(openAiConfig.isConfigured()).thenReturn(true);
         when(openAiConfig.getApiKey()).thenReturn("AIza-test-key");
         when(openAiConfig.getModel()).thenReturn("gemini-2.5-flash");
@@ -268,7 +268,7 @@ class OpenAiVisionClientTest {
                       "content": {
                         "parts": [
                           {
-                            "text": "{\\"inventory\\":[{\\"product_name\\":\\"Sprite\\",\\"flavor\\":\\"Sabor Lima Limon\\",\\"estimated_quantity\\":1}],\\"status\\":\\"success\\",\\"total_items_detected\\":1}"
+                            "text": "{\\"inventory\\":[{\\"product_name\\":\\"Sprite\\",\\"flavor\\":\\"Sabor Lima Limon\\",\\"barcode\\":\\"750123999\\",\\"suggested_price\\":4.5,\\"estimated_quantity\\":1}],\\"status\\":\\"success\\",\\"total_items_detected\\":1}"
                           }
                         ]
                       }
