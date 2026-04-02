@@ -532,9 +532,11 @@ public class OpenAiVisionClient {
             // Map agent inventory to suggestion format
             // Confidence based on clear visibility in image
             double confidence = estimatedQuantity > 0 ? 0.85 : 0.5;
-            BigDecimal estimatedPrice = matchedProduct.map(ProductEntity::getSalePrice).orElse(null);
-            String barcode = matchedProduct.map(ProductEntity::getBarcode).orElse(null);
             Long productId = matchedProduct.map(ProductEntity::getId).orElse(null);
+            String barcode = matchedProduct.map(ProductEntity::getBarcode).orElse(null);
+            String finalSuggestedName = matchedProduct.isEmpty() ? fullName.toString() : null;
+            String finalSuggestedBarcode = matchedProduct.isEmpty() ? suggestedBarcode : null;
+            BigDecimal finalSuggestedPrice = matchedProduct.isEmpty() ? suggestedPrice : null;
 
             log.info("Parsed product: {}", fullName);
             
