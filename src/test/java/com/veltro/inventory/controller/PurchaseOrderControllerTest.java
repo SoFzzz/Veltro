@@ -71,29 +71,29 @@ class PurchaseOrderControllerTest {
     @Test
     @DisplayName("GET /purchase-orders returns 200 with order list")
     void findAll_returns200WithList() {
-        when(purchaseOrderService.findAll()).thenReturn(List.of(stubPurchaseOrder()));
+        when(purchaseOrderService.findAll(null)).thenReturn(List.of(stubPurchaseOrder()));
 
-        ResponseEntity<List<PurchaseOrderResponse>> response = controller.findAll();
+        ResponseEntity<List<PurchaseOrderResponse>> response = controller.findAll(null);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody()).hasSize(1);
         assertThat(response.getBody().get(0).id()).isEqualTo(1L);
         assertThat(response.getBody().get(0).orderNumber()).isEqualTo("PO-2026-000001");
-        verify(purchaseOrderService).findAll();
+        verify(purchaseOrderService).findAll(null);
     }
 
     @Test
     @DisplayName("GET /purchase-orders returns empty list when no orders exist")
     void findAll_noOrders_returnsEmptyList() {
-        when(purchaseOrderService.findAll()).thenReturn(List.of());
+        when(purchaseOrderService.findAll(null)).thenReturn(List.of());
 
-        ResponseEntity<List<PurchaseOrderResponse>> response = controller.findAll();
+        ResponseEntity<List<PurchaseOrderResponse>> response = controller.findAll(null);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody()).isEmpty();
-        verify(purchaseOrderService).findAll();
+        verify(purchaseOrderService).findAll(null);
     }
 
     // -------------------------------------------------------------------------

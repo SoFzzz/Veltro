@@ -1,7 +1,6 @@
 package com.veltro.inventory.service;
 
 import static org.mockito.ArgumentMatchers.anyLong;
-import com.veltro.inventory.service.AuditCommandExecutor;
 import com.veltro.inventory.dto.AddOrderItemRequest;
 import com.veltro.inventory.dto.CreatePurchaseOrderRequest;
 import com.veltro.inventory.dto.PurchaseOrderResponse;
@@ -20,7 +19,6 @@ import com.veltro.inventory.repository.PurchaseOrderRepository;
 import com.veltro.inventory.repository.SupplierRepository;
 import com.veltro.inventory.exception.NotFoundException;
 import com.veltro.inventory.security.VeltroUserDetails;
-import com.veltro.inventory.service.PurchaseOrderService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -87,7 +85,6 @@ class PurchaseOrderServiceTest {
     private ProductEntity productEntity;
     private UserEntity testUser;
     private PurchaseOrderEntity orderEntity;
-    private PurchaseOrderDetailEntity detailEntity;
     private PurchaseOrderResponse orderResponse;
     private CreatePurchaseOrderRequest createRequest;
     private AddOrderItemRequest addItemRequest;
@@ -118,8 +115,8 @@ class PurchaseOrderServiceTest {
         productEntity.setBarcode("1234567890123");
         productEntity.setActive(true);
 
-        // Setup order detail
-        detailEntity = new PurchaseOrderDetailEntity();
+        // Setup order detail (local variable - only used in this method)
+        PurchaseOrderDetailEntity detailEntity = new PurchaseOrderDetailEntity();
         detailEntity.setId(10L);
         detailEntity.setProduct(productEntity);
         detailEntity.setRequestedQuantity(5);
@@ -166,11 +163,11 @@ class PurchaseOrderServiceTest {
         when(orderMapper.toResponse(orderEntity)).thenReturn(orderResponse);
 
         // When
-        List<PurchaseOrderResponse> result = orderService.findAll();
+        List<PurchaseOrderResponse> result = orderService.findAll(null);
 
         // Then
         assertThat(result).hasSize(1);
-        assertThat(result.get(0)).isEqualTo(orderResponse);
+        assertThat(result.getFirst()).isEqualTo(orderResponse);
         verify(orderRepository, times(1)).findAllByActiveTrueAndBusinessId(anyLong());
         verify(orderMapper, times(1)).toResponse(orderEntity);
     }
@@ -188,7 +185,7 @@ class PurchaseOrderServiceTest {
 
         // Then
         assertThat(result).hasSize(1);
-        assertThat(result.get(0)).isEqualTo(orderResponse);
+        assertThat(result.getFirst()).isEqualTo(orderResponse);
         verify(orderRepository, times(1)).findBySupplierIdAndActiveTrueAndBusinessId(eq(supplierId), anyLong());
         verify(orderMapper, times(1)).toResponse(orderEntity);
     }

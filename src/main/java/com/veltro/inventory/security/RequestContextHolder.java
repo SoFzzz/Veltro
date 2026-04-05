@@ -6,10 +6,10 @@ package com.veltro.inventory.security;
  * <p>Stores request-scoped data (like client IP) that needs to be accessible
  * from service layer without passing HttpServletRequest through all layers.
  * 
- * <p>The filter {@code RequestContextFilter} populates this at the start of
+ * <p>The filter {@code ClientIpContextFilter} populates this at the start of
  * each request and clears it at the end.
  * 
- * @see com.veltro.inventory.config.RequestContextFilter
+ * @see com.veltro.inventory.config.ClientIpContextFilter
  */
 public final class RequestContextHolder {
 

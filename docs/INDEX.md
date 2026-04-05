@@ -1,74 +1,30 @@
 # Veltro Documentation Index
 
-Complete documentation for the Veltro POS/Inventory System.
+## Documentos actuales recomendados
 
-## 📖 Documentation Guide
+- **[README.md](README.md)** - guia rapida de navegacion
+- **[AGENTS.md](AGENTS.md)** - documentacion tecnica principal y operativa
+- **[REPORT_TECHNOLOGIES_AND_CLASS_STRUCTURE.md](REPORT_TECHNOLOGIES_AND_CLASS_STRUCTURE.md)** - stack y estructura actual del repo
+- **[Veltro.postman_collection.json](Veltro.postman_collection.json)** - coleccion Postman con guardado automatico de tokens
+- **[PROJECT_COMPLETION_REPORT.md](PROJECT_COMPLETION_REPORT.md)** - reporte ejecutivo-tecnico actualizado
+- **[EXECUTIVE_SUMMARY.md](EXECUTIVE_SUMMARY.md)** - resumen corto del estado actual
 
-### 🚀 Getting Started
-- **[CREAR_BASE_DE_DATOS.md](CREAR_BASE_DE_DATOS.md)** - Database setup guide
-- **[create_database.sql](create_database.sql)** - SQL script to create PostgreSQL database
+## Documentos de contexto o historicos
 
-### 🏗️ Architecture & Design
-- **[VeltroBase.md](VeltroBase.md)** - Complete system architecture (60KB, comprehensive)
-- **[B3-01_IMPLEMENTATION_COMPLETE.md](B3-01_IMPLEMENTATION_COMPLETE.md)** - Implementation details
-- **[EXECUTIVE_SUMMARY.md](EXECUTIVE_SUMMARY.md)** - High-level overview
-- **[REPORT_TECHNOLOGIES_AND_CLASS_STRUCTURE.md](REPORT_TECHNOLOGIES_AND_CLASS_STRUCTURE.md)** - Technical report of technologies, architecture, and current class/module structure
+- **[SESSION_SUMMARY.md](SESSION_SUMMARY.md)** - resumen historico de auditoria
+- **[BUGASOS.txt](BUGASOS.txt)** - registro historico de bugs y mejoras ya resueltos al 100%
+- **[VeltroBase.md](VeltroBase.md)** - especificacion historica
+- **[B3-01_IMPLEMENTATION_COMPLETE.md](B3-01_IMPLEMENTATION_COMPLETE.md)** - reporte historico de la integracion AI Vision
 
-### 📋 Requirements & Specifications
-- **[BASEDATOS.txt](BASEDATOS.txt)** - Database requirements and specifications
-- **[OPENAI_VISION_API_SPECIFICATION.md](OPENAI_VISION_API_SPECIFICATION.md)** - AI vision API integration spec
+## Soporte y especificaciones
 
-### 🛠️ Development & Troubleshooting
-- **[PROBLEMAS_SOLUCIONAR.txt](PROBLEMAS_SOLUCIONAR.txt)** - Known issues and solutions
-- **[DOCUMENTATION.md](DOCUMENTATION.md)** - General documentation
-- **[AGENT_PROMPT_SPECIFICATION.md](AGENT_PROMPT_SPECIFICATION.md)** - Development prompts
-- **[Veltro.postman_collection.json](Veltro.postman_collection.json)** - Postman collection ready to import with token auto-save
+- **[CREAR_BASE_DE_DATOS.md](CREAR_BASE_DE_DATOS.md)** - setup de base de datos
+- **[create_database.sql](create_database.sql)** - script de base
+- **[BASEDATOS.txt](BASEDATOS.txt)** - contexto de esquema y datos
+- **[OPENAI_VISION_API_SPECIFICATION.md](OPENAI_VISION_API_SPECIFICATION.md)** - especificacion de AI Vision
+- **[DOCUMENTATION.md](DOCUMENTATION.md)** - documento general de contexto
+- **[AGENT_PROMPT_SPECIFICATION.md](AGENT_PROMPT_SPECIFICATION.md)** - prompts y contexto auxiliar
 
-### 📊 Project Reports
-- **[PROJECT_COMPLETION_REPORT.md](PROJECT_COMPLETION_REPORT.md)** - Development completion report
-- **[SESSION_SUMMARY.md](SESSION_SUMMARY.md)** - Session summary and progress
-- **[AGENTS.md](AGENTS.md)** - Agent configuration and setup
-- **[README.md](README.md)** - Original README
-- **[REPORT_TECHNOLOGIES_AND_CLASS_STRUCTURE.md](REPORT_TECHNOLOGIES_AND_CLASS_STRUCTURE.md)** - Current stack and class/module structure report
+## Nota editorial
 
----
-
-## 🎯 Quick Navigation by Use Case
-
-### I want to...
-
-**...set up the database**
-→ See [CREAR_BASE_DE_DATOS.md](CREAR_BASE_DE_DATOS.md) and [create_database.sql](create_database.sql)
-
-**...understand the system architecture**
-→ Read [VeltroBase.md](VeltroBase.md) (recommended) or [B3-01_IMPLEMENTATION_COMPLETE.md](B3-01_IMPLEMENTATION_COMPLETE.md)
-
-**...integrate AI vision features**
-→ Check [OPENAI_VISION_API_SPECIFICATION.md](OPENAI_VISION_API_SPECIFICATION.md)
-
-**...troubleshoot issues**
-→ See [PROBLEMAS_SOLUCIONAR.txt](PROBLEMAS_SOLUCIONAR.txt)
-
-**...understand database schema**
-→ Check [BASEDATOS.txt](BASEDATOS.txt)
-
-**...get a project overview**
-→ Read [PROJECT_COMPLETION_REPORT.md](PROJECT_COMPLETION_REPORT.md) or [EXECUTIVE_SUMMARY.md](EXECUTIVE_SUMMARY.md)
-
----
-
-## 📁 File Organization
-
-All documentation files in this directory (`docs/`) contain relevant project information:
-- Architecture and design decisions
-- Database specifications and setup
-- API documentation
-- Configuration guides
-- Troubleshooting resources
-- Development reports
-
-See `README_PROJECT.md` in the project root for the main project overview.
-
----
-
-**Last Updated**: March 24, 2026
+Si un documento historico contradice el codigo fuente actual, prevalece el estado real del repositorio.

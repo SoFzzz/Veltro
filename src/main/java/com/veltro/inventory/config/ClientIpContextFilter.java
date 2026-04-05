@@ -22,10 +22,13 @@ import java.io.IOException;
  * 
  * <p>Handles proxy scenarios by checking {@code X-Forwarded-For} header first
  * (used by Heroku, nginx, and other reverse proxies).
+ * 
+ * <p>Note: This class was renamed from RequestContextFilter to avoid bean name
+ * conflict with Spring Boot's internal requestContextFilter bean.
  */
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 10)
-public class RequestContextFilter extends OncePerRequestFilter {
+public class ClientIpContextFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(
