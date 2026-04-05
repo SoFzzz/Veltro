@@ -114,6 +114,32 @@ public class SupplierController {
         return ResponseEntity.ok(supplier);
     }
 
+    /**
+     * Activates a previously deactivated supplier.
+     *
+     * @param id supplier ID
+     * @return activated supplier response
+     */
+    @PutMapping("/{id}/activate")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<SupplierResponse> activate(@PathVariable Long id) {
+        SupplierResponse supplier = supplierService.activate(id);
+        return ResponseEntity.ok(supplier);
+    }
+
+    /**
+     * Deactivates a supplier (soft delete alternative with explicit semantics).
+     *
+     * @param id supplier ID
+     * @return deactivated supplier response
+     */
+    @PutMapping("/{id}/deactivate")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<SupplierResponse> deactivate(@PathVariable Long id) {
+        SupplierResponse supplier = supplierService.deactivate(id);
+        return ResponseEntity.ok(supplier);
+    }
+
     // -------------------------------------------------------------------------
     // DELETE endpoints
     // -------------------------------------------------------------------------

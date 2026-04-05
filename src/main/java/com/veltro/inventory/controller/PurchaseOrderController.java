@@ -3,6 +3,7 @@ package com.veltro.inventory.controller;
 import com.veltro.inventory.dto.AddOrderItemRequest;
 import com.veltro.inventory.dto.CreatePurchaseOrderRequest;
 import com.veltro.inventory.dto.PurchaseOrderResponse;
+import com.veltro.inventory.model.PurchaseOrderStatus;
 import com.veltro.inventory.service.PurchaseOrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -44,14 +45,16 @@ public class PurchaseOrderController {
     // -------------------------------------------------------------------------
 
     /**
-     * Returns all active purchase orders.
+     * Returns all active purchase orders, optionally filtered by status.
      *
+     * @param status optional status filter (PENDING, RECEIVED, VOIDED)
      * @return list of purchase orders
      */
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'WAREHOUSE')")
-    public ResponseEntity<List<PurchaseOrderResponse>> findAll() {
-        List<PurchaseOrderResponse> orders = purchaseOrderService.findAll();
+    public ResponseEntity<List<PurchaseOrderResponse>> findAll(
+            @RequestParam(required = false) PurchaseOrderStatus status) {
+        List<PurchaseOrderResponse> orders = purchaseOrderService.findAll(status);
         return ResponseEntity.ok(orders);
     }
 

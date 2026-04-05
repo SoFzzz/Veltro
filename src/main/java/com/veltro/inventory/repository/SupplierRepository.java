@@ -14,6 +14,10 @@ public interface SupplierRepository extends JpaRepository<SupplierEntity, Long> 
 
     Optional<SupplierEntity> findByIdAndActiveTrueAndBusinessId(Long id, Long businessId);
 
+    Optional<SupplierEntity> findByIdAndActiveFalseAndBusinessId(Long id, Long businessId);
+
+    Optional<SupplierEntity> findByIdAndBusinessId(Long id, Long businessId);
+
     List<SupplierEntity> findAllByActiveTrueAndBusinessId(Long businessId);
 
     Optional<SupplierEntity> findByTaxIdAndActiveTrueAndBusinessId(String taxId, Long businessId);

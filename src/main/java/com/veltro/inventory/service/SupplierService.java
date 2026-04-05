@@ -146,4 +146,49 @@ public class SupplierService {
 
         log.info("Soft deleted supplier: {} (tax ID: {})", supplier.getCompanyName(), supplier.getTaxId());
     }
+
+    /**
+     * Activates a previously deactivated supplier.
+     *
+     * @param id supplier ID
+     * @return activated supplier response
+     * @throws NotFoundException if supplier not found or already active
+     */
+    @Transactional
+    public SupplierResponse activate(Long id) {
+        Long businessId = TenantContext.getBusinessId();
+        SupplierEntity supplier = supplierRepository.findByIdAndActiveFalseAndBusinessId(id, businessId)
+                .orElseThrow(() -> new NotFoundException("Inactive supplier not found with id: " + id));
+
+        // Check for tax ID conflict with an active supplier
+        if (supplierRepository.existsByTaxIdAndActiveTrueAndIdNotAndBusinessId(supplier.getTaxId(), id, businessId)) {
+            throw new DuplicateResourceException("Cannot activate: another active supplier already has tax ID '" + supplier.getTaxId() + "'");
+        }
+
+        supplier.setActive(true);
+        SupplierEntity activated = supplierRepository.save(supplier);
+
+        log.info("Activated supplier: {} (tax ID: {})", activated.getCompanyName(), activated.getTaxId());
+        return supplierMapper.toResponse(activated);
+    }
+
+    /**
+     * Deactivates a supplier (soft delete with explicit semantics).
+     *
+     * @param id supplier ID
+     * @return deactivated supplier response
+     * @throws NotFoundException if supplier not found or already inactive
+     */
+    @Transactional
+    public SupplierResponse deactivate(Long id) {
+        Long businessId = TenantContext.getBusinessId();
+        SupplierEntity supplier = supplierRepository.findByIdAndActiveTrueAndBusinessId(id, businessId)
+                .orElseThrow(() -> new NotFoundException("Active supplier not found with id: " + id));
+
+        supplier.setActive(false);
+        SupplierEntity deactivated = supplierRepository.save(supplier);
+
+        log.info("Deactivated supplier: {} (tax ID: {})", deactivated.getCompanyName(), deactivated.getTaxId());
+        return supplierMapper.toResponse(deactivated);
+    }
 }

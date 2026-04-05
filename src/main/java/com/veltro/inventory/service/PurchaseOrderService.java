@@ -58,14 +58,23 @@ public class PurchaseOrderService {
     // -------------------------------------------------------------------------
 
     /**
-     * Finds all active purchase orders.
+     * Finds all active purchase orders, optionally filtered by status.
      *
+     * @param status optional status filter (null returns all)
      * @return list of purchase order responses
      */
     @Transactional(readOnly = true)
-    public List<PurchaseOrderResponse> findAll() {
+    public List<PurchaseOrderResponse> findAll(PurchaseOrderStatus status) {
         Long businessId = TenantContext.getBusinessId();
-        return orderRepository.findAllByActiveTrueAndBusinessId(businessId).stream()
+        List<PurchaseOrderEntity> orders;
+        
+        if (status != null) {
+            orders = orderRepository.findAllByActiveTrueAndStatusAndBusinessId(status, businessId);
+        } else {
+            orders = orderRepository.findAllByActiveTrueAndBusinessId(businessId);
+        }
+        
+        return orders.stream()
                 .map(orderMapper::toResponse)
                 .collect(Collectors.toList());
     }

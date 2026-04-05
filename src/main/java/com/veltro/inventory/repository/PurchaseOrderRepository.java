@@ -1,6 +1,7 @@
 package com.veltro.inventory.repository;
 
 import com.veltro.inventory.model.PurchaseOrderEntity;
+import com.veltro.inventory.model.PurchaseOrderStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -12,6 +13,8 @@ import java.util.Optional;
 public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrderEntity, Long> {
 
     List<PurchaseOrderEntity> findAllByActiveTrueAndBusinessId(Long businessId);
+
+    List<PurchaseOrderEntity> findAllByActiveTrueAndStatusAndBusinessId(PurchaseOrderStatus status, Long businessId);
 
     List<PurchaseOrderEntity> findBySupplierIdAndActiveTrueAndBusinessId(Long supplierId, Long businessId);
 
