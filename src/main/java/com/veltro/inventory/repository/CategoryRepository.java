@@ -13,4 +13,10 @@ public interface CategoryRepository extends JpaRepository<CategoryEntity, Long> 
     List<CategoryEntity> findAllByParentCategoryIsNullAndActiveTrueAndBusinessId(Long businessId);
 
     Optional<CategoryEntity> findByIdAndActiveTrueAndBusinessId(Long id, Long businessId);
+
+    /**
+     * Finds a category by name and business, regardless of active status.
+     * Used to detect duplicates including soft-deleted categories (BUG-07).
+     */
+    Optional<CategoryEntity> findByNameAndBusinessId(String name, Long businessId);
 }

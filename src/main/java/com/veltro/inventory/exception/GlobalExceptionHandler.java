@@ -74,6 +74,42 @@ public class GlobalExceptionHandler {
                         request.getRequestURI()));
     }
 
+    // -------------------------------------------------------------------------
+    // 409 Conflict — domain-level duplicate resource (BUG-07)
+    // -------------------------------------------------------------------------
+
+    @ExceptionHandler(DuplicateResourceException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateResource(
+            DuplicateResourceException ex, HttpServletRequest request) {
+
+        log.warn("Duplicate resource on {}: {}", request.getRequestURI(), ex.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ErrorResponse.of(
+                        "DUPLICATE_RESOURCE",
+                        ex.getMessage(),
+                        request.getRequestURI()));
+    }
+
+    // -------------------------------------------------------------------------
+    // 409 Conflict — inactive resource exists, suggest reactivation (BUG-07)
+    // -------------------------------------------------------------------------
+
+    @ExceptionHandler(InactiveResourceExistsException.class)
+    public ResponseEntity<ErrorResponse> handleInactiveResourceExists(
+            InactiveResourceExistsException ex, HttpServletRequest request) {
+
+        log.info("Inactive resource conflict on {}: {}", request.getRequestURI(), ex.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ErrorResponse.of(
+                        "INACTIVE_RESOURCE_EXISTS",
+                        ex.getMessage(),
+                        request.getRequestURI()));
+    }
+
     /**
      * Extracts a user-friendly message from a DataIntegrityViolationException.
      * Attempts to identify the violated constraint and provide a clear message.
