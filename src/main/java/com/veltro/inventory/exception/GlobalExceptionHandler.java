@@ -186,6 +186,24 @@ public class GlobalExceptionHandler {
     }
 
     // -------------------------------------------------------------------------
+    // 422 Unprocessable Content — max stock exceeded (BUG-11)
+    // -------------------------------------------------------------------------
+
+    @ExceptionHandler(MaxStockExceededException.class)
+    public ResponseEntity<ErrorResponse> handleMaxStockExceeded(
+            MaxStockExceededException ex, HttpServletRequest request) {
+
+        log.warn("Max stock exceeded on {}: {}", request.getRequestURI(), ex.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(ErrorResponse.of(
+                        "MAX_STOCK_EXCEEDED",
+                        ex.getMessage(),
+                        request.getRequestURI()));
+    }
+
+    // -------------------------------------------------------------------------
     // 422 Unprocessable Content — invalid price constraint (B1-03)
     // -------------------------------------------------------------------------
 

@@ -106,7 +106,9 @@ public class SaleEntity extends AbstractAuditableEntity {
     }
 
     public void recalculateTotals() {
+        // BUG-18 fix: Only sum active items (exclude soft-deleted items)
         this.subtotal = details.stream()
+                .filter(d -> d.isActive())
                 .map(d -> d.getSubtotal())
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         this.total = this.subtotal;
