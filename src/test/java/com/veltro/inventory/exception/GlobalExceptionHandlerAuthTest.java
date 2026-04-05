@@ -111,4 +111,23 @@ class GlobalExceptionHandlerAuthTest {
         assertThat(response.getBody().path()).isEqualTo("/api/v1/auth/login");
         assertThat(response.getBody().timestamp()).isNotNull();
     }
+
+    @Test
+    @DisplayName("IllegalArgumentException returns 400 with INVALID_ARGUMENT code")
+    void handleIllegalArgument_returns400WithInvalidArgumentCode() {
+        // Given
+        IllegalArgumentException ex = new IllegalArgumentException("Role ADMIN is not allowed for worker registration");
+
+        // When
+        ResponseEntity<ErrorResponse> response = handler.handleIllegalArgument(ex, request);
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().success()).isFalse();
+        assertThat(response.getBody().error()).isEqualTo("INVALID_ARGUMENT");
+        assertThat(response.getBody().message()).isEqualTo("Role ADMIN is not allowed for worker registration");
+        assertThat(response.getBody().path()).isEqualTo("/api/v1/auth/login");
+        assertThat(response.getBody().timestamp()).isNotNull();
+    }
 }
