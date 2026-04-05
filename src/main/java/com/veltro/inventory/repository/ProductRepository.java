@@ -16,4 +16,22 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Long> {
     Optional<ProductEntity> findByBarcodeAndActiveTrueAndBusinessId(String barcode, Long businessId);
 
     Optional<ProductEntity> findByIdAndActiveTrueAndBusinessId(Long id, Long businessId);
+
+    /**
+     * Finds a product by barcode and business, regardless of active status.
+     * Used to detect duplicates including soft-deleted products (BUG-15).
+     */
+    Optional<ProductEntity> findByBarcodeAndBusinessId(String barcode, Long businessId);
+
+    /**
+     * Finds a product by SKU and business, regardless of active status.
+     * Used to detect duplicates including soft-deleted products (BUG-15).
+     */
+    Optional<ProductEntity> findBySkuAndBusinessId(String sku, Long businessId);
+
+    /**
+     * Finds a product by ID and business, regardless of active status.
+     * Used for reactivation (BUG-14).
+     */
+    Optional<ProductEntity> findByIdAndBusinessId(Long id, Long businessId);
 }

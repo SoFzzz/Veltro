@@ -8,6 +8,8 @@ import com.veltro.inventory.model.CategoryEntity;
 import com.veltro.inventory.model.ProductEntity;
 import com.veltro.inventory.repository.CategoryRepository;
 import com.veltro.inventory.repository.ProductRepository;
+import com.veltro.inventory.exception.DuplicateResourceException;
+import com.veltro.inventory.exception.InactiveResourceExistsException;
 import com.veltro.inventory.exception.InvalidPriceException;
 import com.veltro.inventory.exception.NotFoundException;
 import com.veltro.inventory.security.TenantContext;
@@ -17,6 +19,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 /**
  * Application service for product management (B1-03).
@@ -75,6 +79,12 @@ public class ProductService {
         Long businessId = TenantContext.getBusinessId();
         validatePrice(request.costPrice(), request.salePrice());
 
+        // BUG-15: Check for existing product with same barcode or SKU (active or inactive)
+        checkForDuplicateBarcode(request.barcode(), businessId);
+        if (request.sku() != null && !request.sku().isBlank()) {
+            checkForDuplicateSku(request.sku(), businessId);
+        }
+
         ProductEntity entity = productMapper.toEntity(request);
         entity.setBusinessId(businessId);
         resolveCategory(entity, request.categoryId());
@@ -111,6 +121,26 @@ public class ProductService {
         log.info("Product deactivated: id={}", id);
     }
 
+    /**
+     * Reactivates a soft-deleted product (BUG-14 fix).
+     * Sets {@code active=true} so the product appears in listings again.
+     */
+    @Transactional
+    public ProductResponse reactivate(Long id) {
+        Long businessId = TenantContext.getBusinessId();
+        ProductEntity entity = productRepository.findByIdAndBusinessId(id, businessId)
+                .orElseThrow(() -> new NotFoundException("Product not found with id: " + id));
+
+        if (entity.isActive()) {
+            throw new IllegalArgumentException("Product with id " + id + " is already active.");
+        }
+
+        entity.setActive(true);
+        ProductEntity saved = productRepository.save(entity);
+        log.info("Product reactivated: id={}", id);
+        return productMapper.toResponse(saved);
+    }
+
     // -------------------------------------------------------------------------
     // Internal helpers
     // -------------------------------------------------------------------------
@@ -140,6 +170,46 @@ public class ProductService {
             entity.setCategory(category);
         } else {
             entity.setCategory(null);
+        }
+    }
+
+    /**
+     * Checks if a product with the given barcode already exists for the business.
+     * Distinguishes between active duplicates (error) and inactive ones (suggest reactivation).
+     * BUG-15 fix.
+     */
+    private void checkForDuplicateBarcode(String barcode, Long businessId) {
+        if (barcode == null || barcode.isBlank()) {
+            return;
+        }
+        
+        Optional<ProductEntity> existing = productRepository.findByBarcodeAndBusinessId(barcode, businessId);
+        
+        if (existing.isPresent()) {
+            ProductEntity product = existing.get();
+            if (product.isActive()) {
+                throw new DuplicateResourceException("Product", "barcode", barcode);
+            } else {
+                throw new InactiveResourceExistsException("product", "barcode", barcode, product.getId());
+            }
+        }
+    }
+
+    /**
+     * Checks if a product with the given SKU already exists for the business.
+     * Distinguishes between active duplicates (error) and inactive ones (suggest reactivation).
+     * BUG-15 fix.
+     */
+    private void checkForDuplicateSku(String sku, Long businessId) {
+        Optional<ProductEntity> existing = productRepository.findBySkuAndBusinessId(sku, businessId);
+        
+        if (existing.isPresent()) {
+            ProductEntity product = existing.get();
+            if (product.isActive()) {
+                throw new DuplicateResourceException("Product", "SKU", sku);
+            } else {
+                throw new InactiveResourceExistsException("product", "SKU", sku, product.getId());
+            }
         }
     }
 }

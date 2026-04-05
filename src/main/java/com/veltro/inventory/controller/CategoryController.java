@@ -79,4 +79,14 @@ public class CategoryController {
         categoryService.deactivate(id);
         return ResponseEntity.noContent().build();
     }
+
+    /**
+     * Reactivates a soft-deleted category (BUG-14 fix).
+     * Sets {@code active=true} so the category appears in listings again.
+     */
+    @PutMapping("/{id}/activate")
+    @PreAuthorize("hasAnyRole('ADMIN', 'WAREHOUSE')")
+    public ResponseEntity<CategoryResponse> activate(@PathVariable Long id) {
+        return ResponseEntity.ok(categoryService.reactivate(id));
+    }
 }
