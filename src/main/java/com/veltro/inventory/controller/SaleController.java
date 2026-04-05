@@ -18,10 +18,10 @@ import org.springframework.web.bind.annotation.*;
 /**
  * REST controller for sale (POS) management (B2-01).
  *
- * <p>Role rules:
+ * <p>Role rules (BUG-16 fix: ADMIN has access to all endpoints):
  * <ul>
- *   <li>Most endpoints: CASHIER role required</li>
- *   <li>POST /api/v1/sales/{id}/void: ADMIN role only</li>
+ *   <li>All sale operations: ADMIN or CASHIER</li>
+ *   <li>POST /api/v1/sales/{id}/void: ADMIN only (privileged operation)</li>
  * </ul>
  *
  * <p>All mutations publish domain events for downstream listeners (B2-02).
@@ -34,7 +34,7 @@ public class SaleController {
     private final SaleService saleService;
 
     // -------------------------------------------------------------------------
-    // POST /api/v1/sales/start — Start new sale (CASHIER)
+    // POST /api/v1/sales/start — Start new sale (ADMIN, CASHIER)
     // -------------------------------------------------------------------------
 
     /**
@@ -43,7 +43,7 @@ public class SaleController {
      * @return 201 CREATED with the new sale
      */
     @PostMapping("/start")
-    @PreAuthorize("hasRole('CASHIER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CASHIER')")
     public ResponseEntity<SaleResponse> startSale() {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(saleService.startSale());
@@ -62,7 +62,7 @@ public class SaleController {
      * @return 201 CREATED with the confirmed sale
      */
     @PostMapping("/quick")
-    @PreAuthorize("hasAnyRole('CASHIER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CASHIER')")
     public ResponseEntity<SaleResponse> quickSale(
             @Valid @RequestBody QuickSaleRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -70,7 +70,7 @@ public class SaleController {
     }
 
     // -------------------------------------------------------------------------
-    // GET /api/v1/sales/{id} — Get sale by ID (CASHIER)
+    // GET /api/v1/sales/{id} — Get sale by ID (ADMIN, CASHIER)
     // -------------------------------------------------------------------------
 
     /**
@@ -80,13 +80,13 @@ public class SaleController {
      * @return 200 OK with the sale
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('CASHIER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CASHIER')")
     public ResponseEntity<SaleResponse> findById(@PathVariable Long id) {
         return ResponseEntity.ok(saleService.findById(id));
     }
 
     // -------------------------------------------------------------------------
-    // POST /api/v1/sales/{id}/items — Add item to sale (CASHIER)
+    // POST /api/v1/sales/{id}/items — Add item to sale (ADMIN, CASHIER)
     // -------------------------------------------------------------------------
 
     /**
@@ -97,7 +97,7 @@ public class SaleController {
      * @return 200 OK with the updated sale
      */
     @PostMapping("/{id}/items")
-    @PreAuthorize("hasRole('CASHIER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CASHIER')")
     public ResponseEntity<SaleResponse> addItem(
             @PathVariable Long id,
             @Valid @RequestBody AddItemRequest request) {
@@ -105,7 +105,7 @@ public class SaleController {
     }
 
     // -------------------------------------------------------------------------
-    // PUT /api/v1/sales/{id}/items/{itemId} — Modify item quantity (CASHIER)
+    // PUT /api/v1/sales/{id}/items/{itemId} — Modify item quantity (ADMIN, CASHIER)
     // -------------------------------------------------------------------------
 
     /**
@@ -117,7 +117,7 @@ public class SaleController {
      * @return 200 OK with the updated sale
      */
     @PutMapping("/{id}/items/{itemId}")
-    @PreAuthorize("hasRole('CASHIER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CASHIER')")
     public ResponseEntity<SaleResponse> modifyItem(
             @PathVariable Long id,
             @PathVariable Long itemId,
@@ -126,7 +126,7 @@ public class SaleController {
     }
 
     // -------------------------------------------------------------------------
-    // DELETE /api/v1/sales/{id}/items/{itemId} — Remove item (CASHIER)
+    // DELETE /api/v1/sales/{id}/items/{itemId} — Remove item (ADMIN, CASHIER)
     // -------------------------------------------------------------------------
 
     /**
@@ -137,7 +137,7 @@ public class SaleController {
      * @return 200 OK with the updated sale
      */
     @DeleteMapping("/{id}/items/{itemId}")
-    @PreAuthorize("hasRole('CASHIER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CASHIER')")
     public ResponseEntity<SaleResponse> removeItem(
             @PathVariable Long id,
             @PathVariable Long itemId) {
@@ -145,7 +145,7 @@ public class SaleController {
     }
 
     // -------------------------------------------------------------------------
-    // POST /api/v1/sales/{id}/confirm — Confirm sale (CASHIER)
+    // POST /api/v1/sales/{id}/confirm — Confirm sale (ADMIN, CASHIER)
     // -------------------------------------------------------------------------
 
     /**
@@ -160,7 +160,7 @@ public class SaleController {
      * @return 200 OK with the confirmed sale
      */
     @PostMapping("/{id}/confirm")
-    @PreAuthorize("hasRole('CASHIER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CASHIER')")
     public ResponseEntity<SaleResponse> confirm(
             @PathVariable Long id,
             @Valid @RequestBody ConfirmSaleRequest request) {
