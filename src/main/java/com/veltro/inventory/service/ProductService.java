@@ -8,6 +8,7 @@ import com.veltro.inventory.model.CategoryEntity;
 import com.veltro.inventory.model.ProductEntity;
 import com.veltro.inventory.repository.CategoryRepository;
 import com.veltro.inventory.repository.ProductRepository;
+import com.veltro.inventory.repository.SaleDetailRepository;
 import com.veltro.inventory.exception.DuplicateResourceException;
 import com.veltro.inventory.exception.InactiveResourceExistsException;
 import com.veltro.inventory.exception.InvalidPriceException;
@@ -35,6 +36,7 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
+    private final SaleDetailRepository saleDetailRepository;
     private final ProductMapper productMapper;
     private final InventoryService inventoryService;
 
@@ -147,7 +149,12 @@ public class ProductService {
     }
 
     /**
-     * Hard-deletes a product. Allowed only if the product belongs to the current tenant.
+     * Hard-deletes a product. Allowed only if the product belongs to the current tenant
+     * AND has no associated sale details.
+     * 
+     * @param id the product ID to delete
+     * @throws NotFoundException if product doesn't exist or belong to tenant
+     * @throws IllegalStateException if product has associated sale details
      */
     @Transactional
     public void hardDelete(Long id) {
@@ -155,6 +162,13 @@ public class ProductService {
         if (!productRepository.existsByIdAndBusinessId(id, businessId)) {
             throw new NotFoundException("Product not found with id: " + id);
         }
+        
+        // BUG-001 fix: Check if product has sale history before hard delete
+        if (saleDetailRepository.existsByProductIdAndActiveTrue(id)) {
+            throw new IllegalStateException(
+                    "Cannot hard-delete product with active sale history. Use deactivate() instead to preserve audit trail.");
+        }
+        
         productRepository.deleteById(id);
         log.info("Product hard deleted: id={}", id);
     }
