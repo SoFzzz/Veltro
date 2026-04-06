@@ -13,12 +13,15 @@ import com.veltro.inventory.model.AuditAction;
 import com.veltro.inventory.model.AuditEntityType;
 import com.veltro.inventory.model.ProductEntity;
 import com.veltro.inventory.repository.ProductRepository;
+import com.veltro.inventory.model.InventoryEntity;
 import com.veltro.inventory.model.PaymentMethod;
 import com.veltro.inventory.model.SaleDetailEntity;
 import com.veltro.inventory.model.SaleEntity;
 import com.veltro.inventory.model.SaleStatus;
+import com.veltro.inventory.repository.InventoryRepository;
 import com.veltro.inventory.repository.SaleRepository;
 import com.veltro.inventory.exception.InvalidPaymentException;
+import com.veltro.inventory.exception.InsufficientStockException;
 import com.veltro.inventory.exception.NotFoundException;
 import com.veltro.inventory.security.TenantContext;
 import lombok.RequiredArgsConstructor;
@@ -49,6 +52,7 @@ public class SaleService {
 
     private final SaleRepository saleRepository;
     private final ProductRepository productRepository;
+    private final InventoryRepository inventoryRepository;
     private final SaleMapper saleMapper;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final AuditCommandExecutor auditCommandExecutor;
@@ -303,6 +307,14 @@ public class SaleService {
         for (QuickSaleRequest.Item item : request.items()) {
             ProductEntity product = productRepository.findByIdAndActiveTrueAndBusinessId(item.productId(), businessId)
                     .orElseThrow(() -> new NotFoundException("Product not found with id: " + item.productId()));
+
+            InventoryEntity inventory = inventoryRepository
+                    .findByProductIdAndActiveTrueAndBusinessId(item.productId(), businessId)
+                    .orElseThrow(() -> new NotFoundException("Inventory not found for product id: " + item.productId()));
+            int available = inventory.getCurrentStock();
+            if (available < item.quantity()) {
+                throw new InsufficientStockException(product.getName(), available, item.quantity());
+            }
 
             SaleDetailEntity detail = new SaleDetailEntity();
             detail.setProductId(product.getId());

@@ -849,3 +849,58 @@ Un agente de frontend que implemente esta feature debe hacer lo siguiente:
   - cubre enriquecimiento con match y fallback sin match
 - `ProductMatchingServiceTest`
   - cubre match unico, ambiguedad entre variantes y ausencia de candidatos
+
+---
+
+## Update 2026-04-20 - Carga de Variables de Entorno + ARREGLOS
+
+### Carga de .env al Iniciar
+
+El backend ahora carga variables de entorno desde un archivo `.env` en la raíz del proyecto al iniciar, sin hardcodear valores sensibles en configuración.
+
+**Cómo funciona:**
+- `application.yaml` importa el `.env` como configuración opcional:
+  ```yaml
+  spring:
+    config:
+      import: optional:file:./.env[.properties]
+  ```
+- Cualquier perfil puede usar placeholders como `${GEMINI_API_KEY}` y `${DB_PASSWORD}` que se resuelven desde el `.env`.
+- El archivo `.env` debe estar en la raíz del proyecto (mismo nivel que `pom.xml`).
+
+**Notas:**
+- El working directory al ejecutar debe ser la raíz del proyecto para que `./.env` se resuelva correctamente.
+- Si ejecutas desde el IDE, asegúrate que el directorio de trabajo sea la raíz.
+- `.env` está en `.gitignore` — nunca hacer commit de este archivo.
+
+### Métodos de Pago — Soporte para Alias
+
+El enum `PaymentMethod` ahora acepta aliases de los valores que el frontend puede enviar:
+- `NEQUI`, `DAVIPLATA`, `DAVI_PLATA` → `TRANSFER`
+- `TARJETA` → `CARD`
+- `EFECTIVO` → `CASH`
+- `MIXTO` → `MIXED`
+
+Esto permite que el frontend envíe los nombres visibles en español sin que el backend rechace.
+
+**Archivo relevante:**
+- `src/main/java/com/veltro/inventory/model/PaymentMethod.java`
+
+### Validación de Stock en Ventas Rápidas
+
+El endpoint `POST /api/v1/sales/quick` ahora valida stock disponible antes de procesar. Si el stock es insuficiente, devuelve `422 Unprocessable Entity` con mensaje claro incluyendo producto, disponible y solicitado.
+
+**Validación preventiva en:**
+- `src/main/java/com/veltro/inventory/service/SaleService.java`
+
+### Crear/Editar Empleados — Parsing de Roles
+
+La creación y edición de empleados ahora acepta roles en español:
+- `CAJERO`, `Cajero` → `CASHIER`
+- `ALMACEN`, `Almacén`, `BODEGA` → `WAREHOUSE`
+- `ADMIN`, `ADMINISTRADOR` → `ADMIN` (solo para registro inicial, no para workers)
+
+Esto corrige el bug donde el frontend envía "Cajero" o "Almacén" y el backend rechazaba con 400.
+
+**Archivo relevante:**
+- `src/main/java/com/veltro/inventory/service/AuthService.java`

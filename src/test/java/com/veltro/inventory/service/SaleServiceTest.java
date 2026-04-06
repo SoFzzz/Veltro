@@ -11,6 +11,7 @@ import com.veltro.inventory.event.SaleVoidedEvent;
 import com.veltro.inventory.mapper.SaleMapper;
 import com.veltro.inventory.model.ProductEntity;
 import com.veltro.inventory.repository.ProductRepository;
+import com.veltro.inventory.repository.InventoryRepository;
 import com.veltro.inventory.model.PaymentMethod;
 import com.veltro.inventory.model.SaleDetailEntity;
 import com.veltro.inventory.model.SaleEntity;
@@ -63,6 +64,9 @@ class SaleServiceTest {
     private ProductRepository productRepository;
 
     @Mock
+    private InventoryRepository inventoryRepository;
+
+    @Mock
     private SaleMapper saleMapper;
 
     @Mock
@@ -76,7 +80,13 @@ class SaleServiceTest {
     @BeforeEach
     void setUp() {
         // Manual service instantiation
-        saleService = new SaleService(saleRepository, productRepository, saleMapper, applicationEventPublisher, auditCommandExecutor);
+        saleService = new SaleService(
+                saleRepository,
+                productRepository,
+                inventoryRepository,
+                saleMapper,
+                applicationEventPublisher,
+                auditCommandExecutor);
         authenticateAsTenantUser();
     }
 

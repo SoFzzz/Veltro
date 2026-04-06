@@ -25,7 +25,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.text.Normalizer;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Application service for IAM operations (B1-02).
@@ -197,12 +199,7 @@ public class AuthService {
      */
     @Transactional
     public UserEntity createWorker(Long adminBusinessId, RegisterRequest request) {
-        Role role;
-        try {
-            role = Role.valueOf(request.role().toUpperCase());
-        } catch (IllegalArgumentException | NullPointerException e) {
-            throw new IllegalArgumentException("Invalid role. Must be CASHIER or WAREHOUSE");
-        }
+        Role role = parseWorkerRole(request.role());
         if (role == Role.ADMIN) {
             throw new IllegalArgumentException("Cannot create ADMIN workers. Use registration instead.");
         }
@@ -317,12 +314,7 @@ public class AuthService {
      */
     @Transactional
     public WorkerResponse updateWorkerRole(Long workerId, String newRole, Long businessId) {
-        Role role;
-        try {
-            role = Role.valueOf(newRole.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Invalid role. Must be CASHIER or WAREHOUSE");
-        }
+        Role role = parseWorkerRole(newRole);
         if (role == Role.ADMIN) {
             throw new IllegalArgumentException("Cannot assign ADMIN role to workers");
         }
@@ -348,5 +340,26 @@ public class AuthService {
                 worker.getRole().name(),
                 worker.isActive(),
                 worker.getCreatedAt());
+    }
+
+    private Role parseWorkerRole(String rawRole) {
+        if (rawRole == null || rawRole.isBlank()) {
+            throw new IllegalArgumentException("Invalid role. Must be CASHIER or WAREHOUSE");
+        }
+
+        String normalized = normalizeRole(rawRole);
+
+        return switch (normalized) {
+            case "CASHIER", "CAJERO" -> Role.CASHIER;
+            case "WAREHOUSE", "ALMACEN", "BODEGA" -> Role.WAREHOUSE;
+            case "ADMIN", "ADMINISTRADOR" -> Role.ADMIN;
+            default -> throw new IllegalArgumentException("Invalid role. Must be CASHIER or WAREHOUSE");
+        };
+    }
+
+    private String normalizeRole(String value) {
+        String withoutAccents = Normalizer.normalize(value, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "");
+        return withoutAccents.trim().replace('-', '_').replace(' ', '_').toUpperCase(Locale.ROOT);
     }
 }
