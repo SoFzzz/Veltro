@@ -5,6 +5,7 @@ import com.veltro.inventory.dto.LoginRequest;
 import com.veltro.inventory.dto.LoginResponse;
 import com.veltro.inventory.dto.RefreshRequest;
 import com.veltro.inventory.dto.RegisterRequest;
+import com.veltro.inventory.dto.WorkerResponse;
 import com.veltro.inventory.model.BusinessEntity;
 import com.veltro.inventory.model.Role;
 import com.veltro.inventory.model.UserEntity;
@@ -23,6 +24,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 /**
  * Application service for IAM operations (B1-02).
@@ -246,5 +249,104 @@ public class AuthService {
         userRepository.save(user);
 
         log.info("Password changed successfully for user '{}'", username);
+    }
+
+    // -------------------------------------------------------------------------
+    // List workers in a business
+    // -------------------------------------------------------------------------
+
+    /**
+     * Returns all active users (workers) belonging to the given business.
+     *
+     * @param businessId the business to list workers for
+     * @return list of worker DTOs (excludes passwordHash)
+     */
+    @Transactional(readOnly = true)
+    public List<WorkerResponse> getWorkers(Long businessId) {
+        return userRepository.findAllByBusinessIdAndActiveTrue(businessId).stream()
+                .filter(u -> u.getRole() != Role.ADMIN)
+                .map(u -> new WorkerResponse(
+                        u.getId(),
+                        u.getUsername(),
+                        u.getEmail(),
+                        u.getRole().name(),
+                        u.isActive(),
+                        u.getCreatedAt()))
+                .toList();
+    }
+
+    // -------------------------------------------------------------------------
+    // Deactivate worker (soft delete)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Deactivates (soft-deletes) a worker in the admin's business.
+     * Only non-ADMIN workers can be deactivated.
+     *
+     * @param workerId    the ID of the worker to deactivate
+     * @param businessId  the admin's business ID (for tenant isolation)
+     */
+    @Transactional
+    public void deactivateWorker(Long workerId, Long businessId) {
+        UserEntity worker = userRepository.findById(workerId)
+                .orElseThrow(() -> new NotFoundException("Worker not found with id: " + workerId));
+
+        if (!worker.getBusinessId().equals(businessId)) {
+            throw new IllegalArgumentException("Worker does not belong to your business");
+        }
+        if (worker.getRole() == Role.ADMIN) {
+            throw new IllegalArgumentException("Cannot deactivate ADMIN users from this endpoint");
+        }
+
+        worker.setActive(false);
+        userRepository.save(worker);
+        log.info("Worker '{}' (id={}) deactivated in business {}", worker.getUsername(), workerId, businessId);
+    }
+
+    // -------------------------------------------------------------------------
+    // Update worker role
+    // -------------------------------------------------------------------------
+
+    /**
+     * Updates the role of a worker in the admin's business.
+     * Only CASHIER ↔ WAREHOUSE transitions are allowed.
+     *
+     * @param workerId    the ID of the worker
+     * @param newRole     the new role (CASHIER or WAREHOUSE)
+     * @param businessId  the admin's business ID (for tenant isolation)
+     */
+    @Transactional
+    public WorkerResponse updateWorkerRole(Long workerId, String newRole, Long businessId) {
+        Role role;
+        try {
+            role = Role.valueOf(newRole.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid role. Must be CASHIER or WAREHOUSE");
+        }
+        if (role == Role.ADMIN) {
+            throw new IllegalArgumentException("Cannot assign ADMIN role to workers");
+        }
+
+        UserEntity worker = userRepository.findById(workerId)
+                .orElseThrow(() -> new NotFoundException("Worker not found with id: " + workerId));
+
+        if (!worker.getBusinessId().equals(businessId)) {
+            throw new IllegalArgumentException("Worker does not belong to your business");
+        }
+        if (worker.getRole() == Role.ADMIN) {
+            throw new IllegalArgumentException("Cannot change role of ADMIN users");
+        }
+
+        worker.setRole(role);
+        userRepository.save(worker);
+        log.info("Worker '{}' (id={}) role updated to {} in business {}", worker.getUsername(), workerId, role, businessId);
+
+        return new WorkerResponse(
+                worker.getId(),
+                worker.getUsername(),
+                worker.getEmail(),
+                worker.getRole().name(),
+                worker.isActive(),
+                worker.getCreatedAt());
     }
 }
