@@ -4,7 +4,7 @@ spring:
   config:
     import: optional:file:./.env[.properties]
   profiles:
-    active: local
+    active: dev-with-ai
 
 # JWT configuration (B1-02).
 # Override jwt.secret per environment profile; never commit a real secret here.
