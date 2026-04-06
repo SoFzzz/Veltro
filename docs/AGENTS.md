@@ -287,8 +287,12 @@ veltro:
 4. Al presionar → captura frame del video (`canvas.toBlob()`)
 5. Envía imagen como `FormData` a `POST /scanner/ai`
 6. Backend (AiVisionStrategy → OpenAiVisionClient → GPT-4o-mini) analiza la imagen
-7. Retorna `ProductSuggestionResponse` con sugerencias, confianza, precio sugerido
-8. Usuario selecciona sugerencia → busca por barcode/nombre → agrega al carrito
+7. Retorna `ProductSuggestionResponse` con dos modos:
+   - match de catalogo: `productId != null`, `barcode` poblado, `suggested* = null`
+   - sugerencia para creacion: `productId = null`, `suggestedName/suggestedBarcode/suggestedPrice` poblados si la IA los detecta
+8. Usuario selecciona sugerencia:
+   - si `productId != null` → busca por `productId` o barcode/nombre y agrega al carrito
+   - si `productId == null` → el frontend debe ofrecer CTA "Crear producto" y navegar al formulario de catalogo con prefill
 
 ### Flujo de IA en Catálogo (ProductFormPage)
 
@@ -298,9 +302,14 @@ veltro:
    - Si existe: muestra advertencia con el nombre del producto
    - Si no existe: llena el campo de código de barras
 4. Si no se detecta código → botón "Identificar con IA" (mismo flujo 3s)
-5. IA retorna sugerencias → usuario selecciona una → auto-completa campos:
-   - Nombre, código de barras, precio de venta, descripción
-6. Usuario revisa, completa datos faltantes, y guarda
+5. IA retorna sugerencias:
+   - si `productId != null`, la sugerencia representa un producto ya existente
+   - si `productId == null`, la sugerencia representa un posible producto nuevo y el frontend debe usar `suggested*`
+6. Usuario selecciona una sugerencia sin match → auto-completa campos:
+   - Nombre desde `suggestedName`
+   - Código de barras desde `suggestedBarcode`
+   - Precio de venta desde `suggestedPrice`
+7. Usuario revisa, completa datos faltantes, y guarda
 
 ### Tipos Frontend (pos.ts)
 
@@ -309,8 +318,10 @@ interface SuggestedProduct {
   productId: number | null;
   productName: string;
   confidence: number;        // 0.0–1.0
-  suggestedPrice: string | null;
   barcode: string | null;
+  suggestedName: string | null;
+  suggestedBarcode: string | null;
+  suggestedPrice: string | null;
 }
 
 interface ProductSuggestionResponse {
@@ -728,15 +739,17 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 
 ---
 
-## Update 2026-04-08 - AI Catalog Matching
+## Update 2026-04-09 - AI Catalog Matching + Create Product Prefill
 
 ### Estado actual del scanner IA
 
 - `POST /api/v1/scanner/ai` ya no devuelve solo sugerencias textuales.
 - Despues de parsear la respuesta del modelo, el backend intenta enriquecer cada sugerencia con datos del catalogo existente del negocio actual.
-- Los campos que ahora pueden completarse automaticamente son:
+- Los campos que ahora puede devolver el backend son:
   - `productId`
   - `barcode`
+  - `suggestedName`
+  - `suggestedBarcode`
   - `suggestedPrice`
 
 ### Flujo backend real
@@ -748,8 +761,8 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 5. `OpenAiVisionClient` parsea el JSON de respuesta a `ProductSuggestionResponse`.
 6. Por cada sugerencia, `OpenAiVisionClient` invoca `ProductMatchingService`.
 7. `ProductMatchingService` busca candidatos activos del mismo `businessId` usando `ProductRepository`.
-8. Si hay un match claro, la sugerencia vuelve enriquecida con `productId`, `barcode` y `suggestedPrice`.
-9. Si no hay match o el resultado es ambiguo, la sugerencia sigue siendo valida pero conserva esos campos en `null`.
+8. Si hay un match claro, la sugerencia vuelve enriquecida con `productId` y `barcode`.
+9. Si no hay match o el resultado es ambiguo, la sugerencia sigue siendo valida pero vuelve con `productId = null` y con `suggestedName`, `suggestedBarcode` y `suggestedPrice` cuando la IA los haya detectado.
 
 ### Reglas de matching
 
@@ -769,21 +782,66 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 
 ### Contrato efectivo de `ProductSuggestionResponse`
 
-`SuggestedProduct` mantiene el mismo shape:
+`SuggestedProduct` ahora tiene este shape efectivo:
 
 ```typescript
 interface SuggestedProduct {
   productId: number | null;
   productName: string;
   confidence: number;
-  suggestedPrice: string | null;
   barcode: string | null;
+  suggestedName: string | null;
+  suggestedBarcode: string | null;
+  suggestedPrice: string | null;
 }
 ```
 
-Pero ahora:
-- `productId`, `barcode` y `suggestedPrice` pueden venir poblados si existe un match claro
-- si no existe match, siguen viniendo en `null` sin romper compatibilidad con frontend
+Semantica contractual:
+- Si `productId != null`, la sugerencia matcheo un producto existente del catalogo:
+  - usar datos del catalogo
+  - `suggestedName`, `suggestedBarcode` y `suggestedPrice` vienen en `null`
+- Si `productId == null`, la sugerencia representa un posible producto nuevo:
+  - usar `suggestedName`, `suggestedBarcode` y `suggestedPrice` para pre-llenar el formulario
+  - `barcode` viene en `null` porque no hay match de catalogo
+
+### Trabajo pendiente para frontend
+
+Un agente de frontend que implemente esta feature debe hacer lo siguiente:
+
+1. En `AiIdentificationModal` o componente equivalente:
+   - detectar cuando una sugerencia tenga `productId == null`
+   - renderizar un boton o CTA visible como `Crear producto`
+
+2. En el flujo POS (`ScannerContainer` / `AiIdentificationModal`):
+   - si `productId != null`, mantener el flujo actual de agregar producto existente
+   - si `productId == null`, navegar al formulario de catalogo
+
+3. En la navegacion al formulario:
+   - preferir `React Router state` para pasar el prefill temporal
+   - payload recomendado:
+     ```ts
+     {
+       aiPrefill: {
+         name: suggestedName,
+         barcode: suggestedBarcode,
+         salePrice: suggestedPrice
+       }
+     }
+     ```
+   - query params solo como fallback si el equipo necesita deep-linking
+
+4. En `ProductFormPage`:
+   - leer `location.state.aiPrefill`
+   - rellenar solo al entrar en modo crear, no en modo editar
+   - mapear:
+     - nombre ← `suggestedName`
+     - barcode ← `suggestedBarcode`
+     - precio de venta ← `suggestedPrice`
+   - no inventar otros campos; categoria, descripcion, costo y stock siguen siendo manuales
+
+5. Compatibilidad:
+   - si la IA devuelve solo `suggestedName` y no barcode/precio, el formulario debe completar solo lo disponible
+   - si el usuario llega al formulario sin `state`, el flujo normal de creacion no debe cambiar
 
 ### Testing agregado
 

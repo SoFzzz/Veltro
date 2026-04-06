@@ -39,7 +39,7 @@ veltro:
     openai:
       enabled: true
       # Using a mock/test key for demonstration - replace with real key to test actual API
-      api-key: "AIzaSyBxQuA-J_H_3bqd_8lGPB1WctyhBx-0Dg0"
+      api-key: "${GEMINI_API_KEY:}"
       model: "gemini-2.5-flash-lite"
       max-tokens: 1000
       timeout-seconds: 60
