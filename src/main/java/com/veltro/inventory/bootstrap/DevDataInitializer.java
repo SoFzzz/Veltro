@@ -31,7 +31,7 @@ public class DevDataInitializer implements CommandLineRunner {
             admin.setActive(true);
             admin.setCreatedBy("SYSTEM");
             userRepository.save(admin);
-            System.out.println("✅ Default admin user created (admin/admin123)");
+            System.out.println(" Default admin user created (admin/admin123)");
         }
     }
 }
