@@ -4,6 +4,7 @@ import com.veltro.inventory.model.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -20,4 +21,10 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
     boolean existsByUsernameAndBusinessId(String username, Long businessId);
 
     boolean existsByEmail(String email);
+
+    /**
+     * Lists all active users belonging to a given business.
+     * Used by the Workers management page to display employees.
+     */
+    List<UserEntity> findAllByBusinessIdAndActiveTrue(Long businessId);
 }
