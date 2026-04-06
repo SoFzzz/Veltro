@@ -22,10 +22,10 @@ veltro:
   ai:
     openai:
       enabled: true                               # AI vision enabled
-      api-key: "${GEMINI_API_KEY:}"
-      model: "gemini-2.5-flash-lite"
-      max-tokens: 1000
-      timeout-seconds: 60
-      max-image-size-mb: 200
+      api-key: ${GEMINI_API_KEY}
+      model: "gemini-2.5-flash"
+      max-tokens: 2000
+      timeout-seconds: 30
+      max-image-size-mb: 10
       max-retries: 3
 

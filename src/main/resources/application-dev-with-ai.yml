@@ -3,7 +3,7 @@ spring:
     url: jdbc:postgresql://127.0.0.1:5432/veltro_db
     driver-class-name: org.postgresql.Driver
     username: postgres
-    password: lolxd777
+    password: ${DB_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: validate
@@ -39,9 +39,9 @@ veltro:
     openai:
       enabled: true
       # Using a mock/test key for demonstration - replace with real key to test actual API
-      api-key: "${GEMINI_API_KEY:}"
-      model: "gemini-2.5-flash-lite"
-      max-tokens: 1000
-      timeout-seconds: 60
-      max-image-size-mb: 100
+      api-key: ${GEMINI_API_KEY}
+      model: "gemini-2.5-flash"
+      max-tokens: 2000
+      timeout-seconds: 30
+      max-image-size-mb: 10
       max-retries: 3  # Reduced for testing to avoid delays
