@@ -1,12 +1,12 @@
 package com.veltro.inventory.controller;
 
-import com.veltro.inventory.dto.AlertResponse;
-import com.veltro.inventory.dto.UpdateAlertConfigurationRequest;
+import com.veltro.inventory.dto.inventory.AlertResponse;
+import com.veltro.inventory.dto.inventory.UpdateAlertConfigurationRequest;
+import com.veltro.inventory.dto.common.PageResponse;
 import com.veltro.inventory.service.AlertConfigurationService;
 import com.veltro.inventory.service.AlertService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +28,7 @@ public class AlertController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','WAREHOUSE')")
-    public Page<AlertResponse> listAlerts(Pageable pageable) {
+    public PageResponse<AlertResponse> listAlerts(Pageable pageable) {
         return alertService.listActiveAlerts(pageable);
     }
 
@@ -66,3 +66,4 @@ public class AlertController {
         return ResponseEntity.ok(configurationService.updateConfiguration(productId, request));
     }
 }
+
