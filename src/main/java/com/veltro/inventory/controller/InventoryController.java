@@ -1,15 +1,15 @@
 package com.veltro.inventory.controller;
 
-import com.veltro.inventory.dto.InventoryMovementResponse;
-import com.veltro.inventory.dto.InventoryResponse;
-import com.veltro.inventory.dto.StockAdjustmentRequest;
-import com.veltro.inventory.dto.StockEntryRequest;
-import com.veltro.inventory.dto.StockExitRequest;
-import com.veltro.inventory.dto.UpdateStockLimitsRequest;
+import com.veltro.inventory.dto.inventory.InventoryMovementResponse;
+import com.veltro.inventory.dto.inventory.InventoryResponse;
+import com.veltro.inventory.dto.inventory.StockAdjustmentRequest;
+import com.veltro.inventory.dto.inventory.StockEntryRequest;
+import com.veltro.inventory.dto.inventory.StockExitRequest;
+import com.veltro.inventory.dto.inventory.UpdateStockLimitsRequest;
+import com.veltro.inventory.dto.common.PageResponse;
 import com.veltro.inventory.service.InventoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
@@ -31,13 +31,13 @@ import org.springframework.web.bind.annotation.RestController;
  *   <li>POST / PUT (mutations): ADMIN or WAREHOUSE only.</li>
  * </ul>
  *
- * All endpoints are keyed on {@code productId} — the natural key for inventory
+ * All endpoints are keyed on {@code productId} 窶・the natural key for inventory
  * from the caller's perspective (1-to-1 with products).
  *
  * AC-04: {@code POST /exit} will return HTTP 422 with error code
  * "INSUFFICIENT_STOCK" if the requested quantity exceeds the current stock.
  *
- * AC-07: {@code GET /movements} returns a {@link Page} with pagination metadata.
+ * AC-07: {@code GET /movements} returns a {@link PageResponse} with pagination metadata.
  */
 @RestController
 @RequestMapping("/api/v1/inventory")
@@ -47,7 +47,7 @@ public class InventoryController {
     private final InventoryService inventoryService;
 
     // -------------------------------------------------------------------------
-    // GET endpoints — readable by all authenticated roles
+    // GET endpoints 窶・readable by all authenticated roles
     // -------------------------------------------------------------------------
 
     /**
@@ -55,7 +55,7 @@ public class InventoryController {
      * Useful for inventory overview pages.
      */
     @GetMapping
-    public ResponseEntity<Page<InventoryResponse>> getAll(
+    public ResponseEntity<PageResponse<InventoryResponse>> getAll(
             @PageableDefault(size = 20, sort = "id") Pageable pageable) {
         return ResponseEntity.ok(inventoryService.findAll(pageable));
     }
@@ -74,14 +74,14 @@ public class InventoryController {
      * Default: page=0, size=20, newest-first.
      */
     @GetMapping("/{productId}/movements")
-    public ResponseEntity<Page<InventoryMovementResponse>> getMovements(
+    public ResponseEntity<PageResponse<InventoryMovementResponse>> getMovements(
             @PathVariable Long productId,
             @PageableDefault(size = 20, sort = "id") Pageable pageable) {
         return ResponseEntity.ok(inventoryService.getMovements(productId, pageable));
     }
 
     // -------------------------------------------------------------------------
-    // POST / PUT endpoints — ADMIN or WAREHOUSE only
+    // POST / PUT endpoints 窶・ADMIN or WAREHOUSE only
     // -------------------------------------------------------------------------
 
     /**
@@ -131,3 +131,4 @@ public class InventoryController {
         return ResponseEntity.ok(inventoryService.updateLimits(productId, request));
     }
 }
+
