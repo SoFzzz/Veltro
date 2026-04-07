@@ -1,6 +1,6 @@
 package com.veltro.inventory.controller;
 
-import com.veltro.inventory.dto.DashboardResponse;
+import com.veltro.inventory.dto.dashboard.DashboardResponse;
 import com.veltro.inventory.service.DashboardService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,3 +44,4 @@ public class DashboardController {
         return ResponseEntity.ok(response);
     }
 }
+
