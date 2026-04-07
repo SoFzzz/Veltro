@@ -1,12 +1,12 @@
 package com.veltro.inventory.controller;
 
-import com.veltro.inventory.dto.AuditFilterRequest;
-import com.veltro.inventory.dto.AuditRecordResponse;
+import com.veltro.inventory.dto.audit.AuditFilterRequest;
+import com.veltro.inventory.dto.audit.AuditRecordResponse;
+import com.veltro.inventory.dto.common.PageResponse;
 import com.veltro.inventory.service.ForensicAuditService;
 import com.veltro.inventory.model.AuditEntityType;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -52,7 +52,7 @@ public class AuditController {
      * @return paginated audit records
      */
     @GetMapping
-    public Page<AuditRecordResponse> findAll(
+    public PageResponse<AuditRecordResponse> findAll(
             @ModelAttribute AuditFilterRequest filter,
             Pageable pageable) {
         return auditService.findAll(filter, pageable);
@@ -111,3 +111,4 @@ public class AuditController {
         return request.getRemoteAddr();
     }
 }
+
