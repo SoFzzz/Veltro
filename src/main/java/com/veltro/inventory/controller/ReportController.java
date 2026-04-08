@@ -1,7 +1,7 @@
 package com.veltro.inventory.controller;
 
-import com.veltro.inventory.dto.ProfitabilityReport;
-import com.veltro.inventory.dto.ReportType;
+import com.veltro.inventory.dto.report.ProfitabilityReport;
+import com.veltro.inventory.dto.report.ReportType;
 import com.veltro.inventory.service.ReportService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -91,3 +91,4 @@ public class ReportController {
                 .body(exportedReport);
     }
 }
+
