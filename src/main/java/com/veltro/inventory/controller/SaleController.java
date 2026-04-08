@@ -1,10 +1,10 @@
 package com.veltro.inventory.controller;
 
-import com.veltro.inventory.dto.AddItemRequest;
-import com.veltro.inventory.dto.ConfirmSaleRequest;
-import com.veltro.inventory.dto.ModifyItemRequest;
-import com.veltro.inventory.dto.QuickSaleRequest;
-import com.veltro.inventory.dto.SaleResponse;
+import com.veltro.inventory.dto.pos.AddItemRequest;
+import com.veltro.inventory.dto.pos.ConfirmSaleRequest;
+import com.veltro.inventory.dto.pos.ModifyItemRequest;
+import com.veltro.inventory.dto.pos.QuickSaleRequest;
+import com.veltro.inventory.dto.pos.SaleResponse;
 import com.veltro.inventory.event.SaleCompletedEvent;
 import com.veltro.inventory.event.SaleVoidedEvent;
 import com.veltro.inventory.service.SaleService;
@@ -34,7 +34,7 @@ public class SaleController {
     private final SaleService saleService;
 
     // -------------------------------------------------------------------------
-    // POST /api/v1/sales/start — Start new sale (ADMIN, CASHIER)
+    // POST /api/v1/sales/start 窶・Start new sale (ADMIN, CASHIER)
     // -------------------------------------------------------------------------
 
     /**
@@ -50,7 +50,7 @@ public class SaleController {
     }
 
     // -------------------------------------------------------------------------
-    // POST /api/v1/sales/quick — Quick sale (start+items+confirm in one shot)
+    // POST /api/v1/sales/quick 窶・Quick sale (start+items+confirm in one shot)
     // -------------------------------------------------------------------------
 
     /**
@@ -70,7 +70,7 @@ public class SaleController {
     }
 
     // -------------------------------------------------------------------------
-    // GET /api/v1/sales/{id} — Get sale by ID (ADMIN, CASHIER)
+    // GET /api/v1/sales/{id} 窶・Get sale by ID (ADMIN, CASHIER)
     // -------------------------------------------------------------------------
 
     /**
@@ -86,7 +86,7 @@ public class SaleController {
     }
 
     // -------------------------------------------------------------------------
-    // POST /api/v1/sales/{id}/items — Add item to sale (ADMIN, CASHIER)
+    // POST /api/v1/sales/{id}/items 窶・Add item to sale (ADMIN, CASHIER)
     // -------------------------------------------------------------------------
 
     /**
@@ -105,7 +105,7 @@ public class SaleController {
     }
 
     // -------------------------------------------------------------------------
-    // PUT /api/v1/sales/{id}/items/{itemId} — Modify item quantity (ADMIN, CASHIER)
+    // PUT /api/v1/sales/{id}/items/{itemId} 窶・Modify item quantity (ADMIN, CASHIER)
     // -------------------------------------------------------------------------
 
     /**
@@ -126,7 +126,7 @@ public class SaleController {
     }
 
     // -------------------------------------------------------------------------
-    // DELETE /api/v1/sales/{id}/items/{itemId} — Remove item (ADMIN, CASHIER)
+    // DELETE /api/v1/sales/{id}/items/{itemId} 窶・Remove item (ADMIN, CASHIER)
     // -------------------------------------------------------------------------
 
     /**
@@ -145,7 +145,7 @@ public class SaleController {
     }
 
     // -------------------------------------------------------------------------
-    // POST /api/v1/sales/{id}/confirm — Confirm sale (ADMIN, CASHIER)
+    // POST /api/v1/sales/{id}/confirm 窶・Confirm sale (ADMIN, CASHIER)
     // -------------------------------------------------------------------------
 
     /**
@@ -168,7 +168,7 @@ public class SaleController {
     }
 
     // -------------------------------------------------------------------------
-    // POST /api/v1/sales/{id}/void — Void completed sale (ADMIN only)
+    // POST /api/v1/sales/{id}/void 窶・Void completed sale (ADMIN only)
     // -------------------------------------------------------------------------
 
     /**
@@ -187,3 +187,4 @@ public class SaleController {
         return ResponseEntity.ok(saleService.voidSale(id));
     }
 }
+
