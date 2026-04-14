@@ -1,6 +1,6 @@
 package com.veltro.inventory.listener;
 
-import com.veltro.inventory.dto.StockEntryRequest;
+import com.veltro.inventory.dto.inventory.StockEntryRequest;
 import com.veltro.inventory.service.InventoryService;
 import com.veltro.inventory.event.OrderReceivedEvent;
 import com.veltro.inventory.event.ReceivedItemInfo;
@@ -35,7 +35,7 @@ public class IncrementStockOrderListener {
     @EventListener
     public void onOrderReceived(OrderReceivedEvent event) {
         if (event.items() == null || event.items().isEmpty()) {
-            log.info("Order {} contains no items — nothing to increment", event.orderNumber());
+            log.info("Order {} contains no items 窶・nothing to increment", event.orderNumber());
             return;
         }
 
