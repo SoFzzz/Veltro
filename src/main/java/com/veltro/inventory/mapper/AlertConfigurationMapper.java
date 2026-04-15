@@ -1,6 +1,6 @@
 package com.veltro.inventory.mapper;
 
-import com.veltro.inventory.dto.AlertConfigurationResponse;
+import com.veltro.inventory.dto.inventory.AlertConfigurationResponse;
 import com.veltro.inventory.model.AlertConfigurationEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -11,3 +11,4 @@ public interface AlertConfigurationMapper {
     @Mapping(target = "productId", expression = "java(entity.getProduct() != null ? entity.getProduct().getId() : null)")
     AlertConfigurationResponse toResponse(AlertConfigurationEntity entity);
 }
+
