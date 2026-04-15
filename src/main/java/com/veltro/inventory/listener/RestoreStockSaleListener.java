@@ -1,6 +1,6 @@
 package com.veltro.inventory.listener;
 
-import com.veltro.inventory.dto.StockEntryRequest;
+import com.veltro.inventory.dto.inventory.StockEntryRequest;
 import com.veltro.inventory.service.InventoryService;
 import com.veltro.inventory.event.SaleItemInfo;
 import com.veltro.inventory.event.SaleVoidedEvent;
@@ -18,7 +18,7 @@ public class RestoreStockSaleListener {
     @EventListener
     public void onSaleVoided(SaleVoidedEvent event) {
         if (event.items() == null || event.items().isEmpty()) {
-            log.info("Voided sale {} contains no items — nothing to restore", event.saleNumber());
+            log.info("Voided sale {} contains no items 窶・nothing to restore", event.saleNumber());
             return;
         }
         for (SaleItemInfo item : event.items()) {
@@ -30,3 +30,4 @@ public class RestoreStockSaleListener {
         }
     }
 }
+
