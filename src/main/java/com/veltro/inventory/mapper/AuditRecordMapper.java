@@ -1,12 +1,12 @@
 package com.veltro.inventory.mapper;
 
-import com.veltro.inventory.dto.AuditRecordResponse;
+import com.veltro.inventory.dto.audit.AuditRecordResponse;
 import com.veltro.inventory.model.AuditRecordEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingConstants;
 
 /**
- * MapStruct mapper for AuditRecordEntity ↔ DTOs (B3-03).
+ * MapStruct mapper for AuditRecordEntity 竊・DTOs (B3-03).
  * 
  * <p>Component model is SPRING, so this mapper is auto-registered as a Spring bean
  * and can be injected via constructor.
@@ -22,3 +22,4 @@ public interface AuditRecordMapper {
      */
     AuditRecordResponse toResponse(AuditRecordEntity entity);
 }
+
