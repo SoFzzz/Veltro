@@ -1,8 +1,8 @@
 package com.veltro.inventory.mapper;
 
-import com.veltro.inventory.dto.PurchaseOrderDetailResponse;
+import com.veltro.inventory.dto.purchasing.PurchaseOrderDetailResponse;
 import com.veltro.inventory.model.PurchaseOrderDetailEntity;
-import com.veltro.inventory.dto.AuditInfo;
+import com.veltro.inventory.dto.audit.AuditInfo;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 /**
- * MapStruct mapper for {@link PurchaseOrderDetailEntity} ↔ {@link PurchaseOrderDetailResponse} (B2-04).
+ * MapStruct mapper for {@link PurchaseOrderDetailEntity} 竊・{@link PurchaseOrderDetailResponse} (B2-04).
  *
  * <p>ADR-005: Monetary fields are converted to String with 4 decimal places.
  */
