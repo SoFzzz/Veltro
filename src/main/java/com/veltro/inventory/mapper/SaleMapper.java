@@ -1,8 +1,8 @@
 package com.veltro.inventory.mapper;
 
-import com.veltro.inventory.dto.SaleDetailResponse;
-import com.veltro.inventory.dto.SaleResponse;
-import com.veltro.inventory.dto.AuditInfo;
+import com.veltro.inventory.dto.pos.SaleDetailResponse;
+import com.veltro.inventory.dto.pos.SaleResponse;
+import com.veltro.inventory.dto.audit.AuditInfo;
 import com.veltro.inventory.model.SaleEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * MapStruct mapper for {@link SaleEntity} ↔ {@link SaleResponse} (B2-01).
+ * MapStruct mapper for {@link SaleEntity} 竊・{@link SaleResponse} (B2-01).
  *
  * <p>Monetary fields ({@code subtotal}, {@code total}, {@code amountReceived}, {@code change})
  * are converted from {@link BigDecimal} to {@link String} with 4 decimal places (ADR-005).
@@ -76,3 +76,4 @@ public abstract class SaleMapper {
         return instant != null ? LocalDateTime.ofInstant(instant, ZoneId.systemDefault()) : null;
     }
 }
+
