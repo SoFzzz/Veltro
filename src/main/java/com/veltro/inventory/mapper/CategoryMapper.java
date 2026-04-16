@@ -1,15 +1,15 @@
 package com.veltro.inventory.mapper;
 
-import com.veltro.inventory.dto.CategoryResponse;
-import com.veltro.inventory.dto.CreateCategoryRequest;
-import com.veltro.inventory.dto.UpdateCategoryRequest;
+import com.veltro.inventory.dto.catalog.CategoryResponse;
+import com.veltro.inventory.dto.catalog.CreateCategoryRequest;
+import com.veltro.inventory.dto.catalog.UpdateCategoryRequest;
 import com.veltro.inventory.model.CategoryEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
 /**
- * MapStruct mapper for {@link CategoryEntity} ↔ category DTOs.
+ * MapStruct mapper for {@link CategoryEntity} 竊・category DTOs.
  *
  * {@code componentModel = "spring"} registers the generated implementation
  * as a Spring bean, injectable via {@code @RequiredArgsConstructor}.
@@ -54,3 +54,4 @@ public interface CategoryMapper {
     @Mapping(target = "updatedBy", ignore = true)
     void updateEntity(UpdateCategoryRequest request, @MappingTarget CategoryEntity entity);
 }
+
