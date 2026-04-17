@@ -1,11 +1,11 @@
 package com.veltro.inventory.service;
 
-import com.veltro.inventory.dto.ChangePasswordRequest;
-import com.veltro.inventory.dto.LoginRequest;
-import com.veltro.inventory.dto.LoginResponse;
-import com.veltro.inventory.dto.RefreshRequest;
-import com.veltro.inventory.dto.RegisterRequest;
-import com.veltro.inventory.dto.WorkerResponse;
+import com.veltro.inventory.dto.auth.ChangePasswordRequest;
+import com.veltro.inventory.dto.auth.LoginRequest;
+import com.veltro.inventory.dto.auth.LoginResponse;
+import com.veltro.inventory.dto.auth.RefreshRequest;
+import com.veltro.inventory.dto.auth.RegisterRequest;
+import com.veltro.inventory.dto.auth.WorkerResponse;
 import com.veltro.inventory.model.BusinessEntity;
 import com.veltro.inventory.model.Role;
 import com.veltro.inventory.model.UserEntity;
@@ -33,10 +33,10 @@ import java.util.Locale;
  * Application service for IAM operations (B1-02).
  *
  * <ul>
- *   <li>{@link #login} — authenticates credentials, issues Access + Refresh tokens.</li>
- *   <li>{@link #refresh} — validates a Refresh token, issues a new Access token.</li>
- *   <li>{@link #logout} — stateless: no server-side action needed; documented for clarity.</li>
- *   <li>{@link #changePassword} — validates current password, hashes and persists the new one.</li>
+ *   <li>{@link #login} 窶・authenticates credentials, issues Access + Refresh tokens.</li>
+ *   <li>{@link #refresh} 窶・validates a Refresh token, issues a new Access token.</li>
+ *   <li>{@link #logout} 窶・stateless: no server-side action needed; documented for clarity.</li>
+ *   <li>{@link #changePassword} 窶・validates current password, hashes and persists the new one.</li>
  * </ul>
  */
 @Slf4j
@@ -132,7 +132,7 @@ public class AuthService {
     }
 
     // -------------------------------------------------------------------------
-    // Logout (stateless — documented no-op on the server)
+    // Logout (stateless 窶・documented no-op on the server)
     // -------------------------------------------------------------------------
 
     /**
@@ -141,11 +141,11 @@ public class AuthService {
      * changing the controller contract.
      */
     public void logout(String username) {
-        log.info("User '{}' logged out (stateless — client must discard tokens)", username);
+        log.info("User '{}' logged out (stateless 窶・client must discard tokens)", username);
     }
 
     // -------------------------------------------------------------------------
-    // Register (ADMIN only — creates business + admin user)
+    // Register (ADMIN only 窶・creates business + admin user)
     // -------------------------------------------------------------------------
 
     /**
@@ -306,7 +306,7 @@ public class AuthService {
 
     /**
      * Updates the role of a worker in the admin's business.
-     * Only CASHIER ↔ WAREHOUSE transitions are allowed.
+     * Only CASHIER 竊・WAREHOUSE transitions are allowed.
      *
      * @param workerId    the ID of the worker
      * @param newRole     the new role (CASHIER or WAREHOUSE)
@@ -363,3 +363,4 @@ public class AuthService {
         return withoutAccents.trim().replace('-', '_').replace(' ', '_').toUpperCase(Locale.ROOT);
     }
 }
+
