@@ -1,6 +1,6 @@
 package com.veltro.inventory.repository;
 
-import com.veltro.inventory.dto.DashboardResponse;
+import com.veltro.inventory.dto.dashboard.DashboardResponse;
 import com.veltro.inventory.model.AlertType;
 import com.veltro.inventory.model.SaleStatus;
 import jakarta.persistence.EntityManager;
@@ -219,3 +219,4 @@ public class DashboardQueryRepository implements com.veltro.inventory.service.Da
                 .toList();
     }
 }
+
