@@ -2,6 +2,8 @@ package com.veltro.inventory.repository;
 
 import com.veltro.inventory.model.PurchaseOrderEntity;
 import com.veltro.inventory.model.PurchaseOrderStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -12,11 +14,11 @@ import java.util.Optional;
 @Repository
 public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrderEntity, Long> {
 
-    List<PurchaseOrderEntity> findAllByActiveTrueAndBusinessId(Long businessId);
+    Page<PurchaseOrderEntity> findAllByActiveTrueAndBusinessId(Long businessId, Pageable pageable);
 
-    List<PurchaseOrderEntity> findAllByActiveTrueAndStatusAndBusinessId(PurchaseOrderStatus status, Long businessId);
+    Page<PurchaseOrderEntity> findAllByActiveTrueAndStatusAndBusinessId(PurchaseOrderStatus status, Long businessId, Pageable pageable);
 
-    List<PurchaseOrderEntity> findBySupplierIdAndActiveTrueAndBusinessId(Long supplierId, Long businessId);
+    Page<PurchaseOrderEntity> findBySupplierIdAndActiveTrueAndBusinessId(Long supplierId, Long businessId, Pageable pageable);
 
     Optional<PurchaseOrderEntity> findByIdAndActiveTrueAndBusinessId(Long id, Long businessId);
 
