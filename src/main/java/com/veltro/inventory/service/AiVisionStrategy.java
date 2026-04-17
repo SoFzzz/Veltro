@@ -1,7 +1,8 @@
 package com.veltro.inventory.service;
 
-import com.veltro.inventory.config.OpenAiConfig;
-import com.veltro.inventory.dto.ProductSuggestionResponse;
+import com.veltro.inventory.dto.scanner.ProductSuggestionResponse;
+import com.veltro.inventory.infrastructure.ai.VisionApiConfig;
+import com.veltro.inventory.infrastructure.ai.VisionClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -31,7 +32,7 @@ import org.springframework.web.multipart.MultipartFile;
  * </ol>
  *
  * @see ScannerStrategy
- * @see OpenAiVisionClient
+ * @see VisionClient
  */
 @Slf4j
 @Component
@@ -40,13 +41,13 @@ public class AiVisionStrategy implements ScannerStrategy {
 
     private static final String TYPE = "AI_VISION";
 
-    private final OpenAiVisionClient openAiVisionClient;
-    private final OpenAiConfig openAiConfig;
+    private final VisionClient visionClient;
+    private final VisionApiConfig visionApiConfig;
 
     /**
      * Processes an image file using AI vision.
      *
-     * <p>Delegates to {@link OpenAiVisionClient} for actual API interaction.
+     * <p>Delegates to {@link VisionClient} for actual API interaction.
      * Returns empty suggestions if API is not configured (graceful degradation).
      *
      * @param input the image file (MultipartFile)
@@ -63,7 +64,7 @@ public class AiVisionStrategy implements ScannerStrategy {
         log.info("Processing image with AI Vision: {} ({} bytes)", 
                  image.getOriginalFilename(), image.getSize());
 
-        return openAiVisionClient.analyzeProductImage(image);
+        return visionClient.analyzeProductImage(image);
     }
 
     @Override
@@ -91,7 +92,7 @@ public class AiVisionStrategy implements ScannerStrategy {
      * @return true if API is configured and enabled
      */
     public boolean isApiKeyConfigured() {
-        return openAiConfig.isConfigured();
+        return visionApiConfig.isConfigured();
     }
 
     /**
@@ -100,7 +101,7 @@ public class AiVisionStrategy implements ScannerStrategy {
      * @return true if API is configured and enabled
      */
     public boolean isAvailable() {
-        return openAiConfig.isConfigured();
+        return visionApiConfig.isConfigured();
     }
 
     private boolean isImageContentType(String contentType) {
@@ -110,3 +111,4 @@ public class AiVisionStrategy implements ScannerStrategy {
         return contentType.startsWith("image/");
     }
 }
+
