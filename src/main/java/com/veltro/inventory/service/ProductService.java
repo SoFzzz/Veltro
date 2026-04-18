@@ -1,8 +1,9 @@
 package com.veltro.inventory.service;
 
-import com.veltro.inventory.dto.CreateProductRequest;
-import com.veltro.inventory.dto.ProductResponse;
-import com.veltro.inventory.dto.UpdateProductRequest;
+import com.veltro.inventory.dto.catalog.CreateProductRequest;
+import com.veltro.inventory.dto.catalog.ProductResponse;
+import com.veltro.inventory.dto.catalog.UpdateProductRequest;
+import com.veltro.inventory.dto.common.PageResponse;
 import com.veltro.inventory.mapper.ProductMapper;
 import com.veltro.inventory.model.CategoryEntity;
 import com.veltro.inventory.model.ProductEntity;
@@ -15,7 +16,6 @@ import com.veltro.inventory.exception.NotFoundException;
 import com.veltro.inventory.security.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,10 +46,12 @@ public class ProductService {
      * Returns a paginated page of active products (AC-07).
      */
     @Transactional(readOnly = true)
-    public Page<ProductResponse> findAll(Pageable pageable) {
+    public PageResponse<ProductResponse> findAll(Pageable pageable) {
         Long businessId = TenantContext.getBusinessId();
-        return productRepository.findAllByActiveTrueAndBusinessId(businessId, pageable)
-                .map(productMapper::toResponse);
+        return PageResponse.from(
+                productRepository.findAllByActiveTrueAndBusinessId(businessId, pageable)
+                        .map(productMapper::toResponse)
+        );
     }
 
     @Transactional(readOnly = true)
@@ -58,7 +60,7 @@ public class ProductService {
     }
 
     /**
-     * Looks up a product by its barcode — used by the POS scanner (UC-01).
+     * Looks up a product by its barcode 窶・used by the POS scanner (UC-01).
      * Uses the B-Tree index on {@code barcode} created in V1 migration.
      */
     @Transactional(readOnly = true)
@@ -237,3 +239,4 @@ public class ProductService {
         }
     }
 }
+
