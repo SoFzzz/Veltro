@@ -11,8 +11,8 @@ import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
-import com.veltro.inventory.dto.ProfitabilityReport;
-import com.veltro.inventory.dto.ReportType;
+import com.veltro.inventory.dto.report.ProfitabilityReport;
+import com.veltro.inventory.dto.report.ReportType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -150,3 +150,4 @@ public class PdfReportExporter implements ReportExporter {
         return value != null ? String.format("%.1f%%", value) : "0.0%";
     }
 }
+
