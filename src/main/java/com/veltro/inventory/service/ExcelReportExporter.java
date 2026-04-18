@@ -1,7 +1,7 @@
 package com.veltro.inventory.service;
 
-import com.veltro.inventory.dto.ProfitabilityReport;
-import com.veltro.inventory.dto.ReportType;
+import com.veltro.inventory.dto.report.ProfitabilityReport;
+import com.veltro.inventory.dto.report.ReportType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
@@ -188,3 +188,4 @@ public class ExcelReportExporter implements ReportExporter {
         return style;
     }
 }
+
