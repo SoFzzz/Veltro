@@ -1,8 +1,9 @@
 package com.veltro.inventory.service;
 
-import com.veltro.inventory.dto.AddOrderItemRequest;
-import com.veltro.inventory.dto.CreatePurchaseOrderRequest;
-import com.veltro.inventory.dto.PurchaseOrderResponse;
+import com.veltro.inventory.dto.purchasing.AddOrderItemRequest;
+import com.veltro.inventory.dto.purchasing.CreatePurchaseOrderRequest;
+import com.veltro.inventory.dto.purchasing.PurchaseOrderResponse;
+import com.veltro.inventory.dto.common.PageResponse;
 import com.veltro.inventory.event.OrderReceivedEvent;
 import com.veltro.inventory.event.ReceivedItemInfo;
 import com.veltro.inventory.mapper.PurchaseOrderMapper;
@@ -23,6 +24,7 @@ import com.veltro.inventory.security.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -64,19 +66,20 @@ public class PurchaseOrderService {
      * @return list of purchase order responses
      */
     @Transactional(readOnly = true)
-    public List<PurchaseOrderResponse> findAll(PurchaseOrderStatus status) {
+    public PageResponse<PurchaseOrderResponse> findAll(PurchaseOrderStatus status, Pageable pageable) {
         Long businessId = TenantContext.getBusinessId();
-        List<PurchaseOrderEntity> orders;
-        
+
         if (status != null) {
-            orders = orderRepository.findAllByActiveTrueAndStatusAndBusinessId(status, businessId);
-        } else {
-            orders = orderRepository.findAllByActiveTrueAndBusinessId(businessId);
+            return PageResponse.from(
+                    orderRepository.findAllByActiveTrueAndStatusAndBusinessId(status, businessId, pageable)
+                            .map(orderMapper::toResponse)
+            );
         }
-        
-        return orders.stream()
-                .map(orderMapper::toResponse)
-                .collect(Collectors.toList());
+
+        return PageResponse.from(
+                orderRepository.findAllByActiveTrueAndBusinessId(businessId, pageable)
+                        .map(orderMapper::toResponse)
+        );
     }
 
     /**
@@ -86,11 +89,12 @@ public class PurchaseOrderService {
      * @return list of purchase order responses
      */
     @Transactional(readOnly = true)
-    public List<PurchaseOrderResponse> findBySupplier(Long supplierId) {
+    public PageResponse<PurchaseOrderResponse> findBySupplier(Long supplierId, Pageable pageable) {
         Long businessId = TenantContext.getBusinessId();
-        return orderRepository.findBySupplierIdAndActiveTrueAndBusinessId(supplierId, businessId).stream()
-                .map(orderMapper::toResponse)
-                .collect(Collectors.toList());
+        return PageResponse.from(
+                orderRepository.findBySupplierIdAndActiveTrueAndBusinessId(supplierId, businessId, pageable)
+                        .map(orderMapper::toResponse)
+        );
     }
 
     /**
@@ -423,4 +427,5 @@ public class PurchaseOrderService {
         return snapshot;
     }
 }
+
 
