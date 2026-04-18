@@ -1,6 +1,6 @@
 package com.veltro.inventory.service;
 
-import com.veltro.inventory.dto.DashboardResponse;
+import com.veltro.inventory.dto.dashboard.DashboardResponse;
 import com.veltro.inventory.model.AlertType;
 
 import java.math.BigDecimal;
@@ -79,3 +79,4 @@ public interface DashboardQueryRepository {
 
     List<DashboardResponse.RecentSale> findRecentSales(int limit, Long businessId);
 }
+
