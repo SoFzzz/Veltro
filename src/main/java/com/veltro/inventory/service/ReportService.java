@@ -1,7 +1,7 @@
 package com.veltro.inventory.service;
 
-import com.veltro.inventory.dto.ProfitabilityReport;
-import com.veltro.inventory.dto.ReportType;
+import com.veltro.inventory.dto.report.ProfitabilityReport;
+import com.veltro.inventory.dto.report.ReportType;
 import com.veltro.inventory.model.SaleStatus;
 import com.veltro.inventory.security.TenantContext;
 import jakarta.persistence.EntityManager;
@@ -99,7 +99,7 @@ public class ReportService {
                 .getSingleResult();
 
         // Get product-level breakdown
-        // Note: SaleDetailEntity has no @ManyToOne to ProductEntity — it stores productId
+        // Note: SaleDetailEntity has no @ManyToOne to ProductEntity 窶・it stores productId
         // as a plain Long column. We use a cross-entity join via WHERE clause instead.
         @SuppressWarnings("unchecked")
         List<Object[]> productResults = entityManager.createQuery(
@@ -213,3 +213,4 @@ public class ReportService {
         return exporter.getFileExtension();
     }
 }
+
