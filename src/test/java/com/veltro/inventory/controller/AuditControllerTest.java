@@ -1,8 +1,9 @@
 package com.veltro.inventory.controller;
 
 import com.veltro.inventory.controller.AuditController;
-import com.veltro.inventory.dto.AuditFilterRequest;
-import com.veltro.inventory.dto.AuditRecordResponse;
+import com.veltro.inventory.dto.audit.AuditFilterRequest;
+import com.veltro.inventory.dto.audit.AuditRecordResponse;
+import com.veltro.inventory.dto.common.PageResponse;
 import com.veltro.inventory.service.ForensicAuditService;
 import com.veltro.inventory.model.AuditAction;
 import com.veltro.inventory.model.AuditEntityType;
@@ -11,7 +12,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -46,19 +46,19 @@ class AuditControllerTest {
         // Given
         Pageable pageable = PageRequest.of(0, 20);
         AuditRecordResponse response = createAuditResponse(1L, AuditEntityType.SALE, 100L, AuditAction.CONFIRM);
-        Page<AuditRecordResponse> page = new PageImpl<>(List.of(response), pageable, 1);
+        PageImpl<AuditRecordResponse> page = new PageImpl<>(List.of(response), pageable, 1);
 
-        when(auditService.findAll(any(AuditFilterRequest.class), any(Pageable.class))).thenReturn(page);
+        when(auditService.findAll(any(AuditFilterRequest.class), any(Pageable.class))).thenReturn(PageResponse.from(page));
 
         // When
         AuditFilterRequest filter = AuditFilterRequest.empty();
-        Page<AuditRecordResponse> result = auditController.findAll(filter, pageable);
+        PageResponse<AuditRecordResponse> result = auditController.findAll(filter, pageable);
 
         // Then
         assertThat(result).isNotNull();
-        assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0).id()).isEqualTo(1L);
-        assertThat(result.getTotalElements()).isEqualTo(1);
+        assertThat(result.content()).hasSize(1);
+        assertThat(result.content().get(0).id()).isEqualTo(1L);
+        assertThat(result.totalElements()).isEqualTo(1);
     }
 
     @Test
@@ -66,17 +66,17 @@ class AuditControllerTest {
         // Given
         Pageable pageable = PageRequest.of(0, 20);
         AuditRecordResponse response = createAuditResponse(1L, AuditEntityType.SALE, 100L, AuditAction.CONFIRM);
-        Page<AuditRecordResponse> page = new PageImpl<>(List.of(response), pageable, 1);
+        PageImpl<AuditRecordResponse> page = new PageImpl<>(List.of(response), pageable, 1);
 
-        when(auditService.findAll(any(AuditFilterRequest.class), any(Pageable.class))).thenReturn(page);
+        when(auditService.findAll(any(AuditFilterRequest.class), any(Pageable.class))).thenReturn(PageResponse.from(page));
 
         // When
         AuditFilterRequest filter = new AuditFilterRequest(AuditEntityType.SALE, null, null, null, null);
-        Page<AuditRecordResponse> result = auditController.findAll(filter, pageable);
+        PageResponse<AuditRecordResponse> result = auditController.findAll(filter, pageable);
 
         // Then
         assertThat(result).isNotNull();
-        assertThat(result.getContent().get(0).entityType()).isEqualTo(AuditEntityType.SALE);
+        assertThat(result.content().get(0).entityType()).isEqualTo(AuditEntityType.SALE);
     }
 
     @Test
@@ -84,17 +84,17 @@ class AuditControllerTest {
         // Given
         Pageable pageable = PageRequest.of(0, 20);
         AuditRecordResponse response = createAuditResponse(1L, AuditEntityType.SALE, 100L, AuditAction.VOID);
-        Page<AuditRecordResponse> page = new PageImpl<>(List.of(response), pageable, 1);
+        PageImpl<AuditRecordResponse> page = new PageImpl<>(List.of(response), pageable, 1);
 
-        when(auditService.findAll(any(AuditFilterRequest.class), any(Pageable.class))).thenReturn(page);
+        when(auditService.findAll(any(AuditFilterRequest.class), any(Pageable.class))).thenReturn(PageResponse.from(page));
 
         // When
         AuditFilterRequest filter = new AuditFilterRequest(null, AuditAction.VOID, null, null, null);
-        Page<AuditRecordResponse> result = auditController.findAll(filter, pageable);
+        PageResponse<AuditRecordResponse> result = auditController.findAll(filter, pageable);
 
         // Then
         assertThat(result).isNotNull();
-        assertThat(result.getContent().get(0).action()).isEqualTo(AuditAction.VOID);
+        assertThat(result.content().get(0).action()).isEqualTo(AuditAction.VOID);
     }
 
     @Test
@@ -112,17 +112,17 @@ class AuditControllerTest {
                 "192.168.1.1",
                 Instant.now()
         );
-        Page<AuditRecordResponse> page = new PageImpl<>(List.of(response), pageable, 1);
+        PageImpl<AuditRecordResponse> page = new PageImpl<>(List.of(response), pageable, 1);
 
-        when(auditService.findAll(any(AuditFilterRequest.class), any(Pageable.class))).thenReturn(page);
+        when(auditService.findAll(any(AuditFilterRequest.class), any(Pageable.class))).thenReturn(PageResponse.from(page));
 
         // When
         AuditFilterRequest filter = new AuditFilterRequest(null, null, "john.doe", null, null);
-        Page<AuditRecordResponse> result = auditController.findAll(filter, pageable);
+        PageResponse<AuditRecordResponse> result = auditController.findAll(filter, pageable);
 
         // Then
         assertThat(result).isNotNull();
-        assertThat(result.getContent().get(0).username()).isEqualTo("john.doe");
+        assertThat(result.content().get(0).username()).isEqualTo("john.doe");
     }
 
     @Test
@@ -176,3 +176,4 @@ class AuditControllerTest {
         );
     }
 }
+
