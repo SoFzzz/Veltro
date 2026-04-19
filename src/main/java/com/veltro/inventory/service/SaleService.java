@@ -1,10 +1,10 @@
 package com.veltro.inventory.service;
 
-import com.veltro.inventory.dto.AddItemRequest;
-import com.veltro.inventory.dto.ConfirmSaleRequest;
-import com.veltro.inventory.dto.ModifyItemRequest;
-import com.veltro.inventory.dto.QuickSaleRequest;
-import com.veltro.inventory.dto.SaleResponse;
+import com.veltro.inventory.dto.pos.AddItemRequest;
+import com.veltro.inventory.dto.pos.ConfirmSaleRequest;
+import com.veltro.inventory.dto.pos.ModifyItemRequest;
+import com.veltro.inventory.dto.pos.QuickSaleRequest;
+import com.veltro.inventory.dto.pos.SaleResponse;
 import com.veltro.inventory.event.SaleCompletedEvent;
 import com.veltro.inventory.event.SaleItemInfo;
 import com.veltro.inventory.event.SaleVoidedEvent;
@@ -257,7 +257,7 @@ public class SaleService {
 
         SaleEntity saved = saleRepository.save(sale);
 
-        // Publish event 窶・listener in B2-02 will handle stock reversal
+        // Publish event 遯ｶ繝ｻlistener in B2-02 will handle stock reversal
         applicationEventPublisher.publishEvent(buildSaleVoidedEvent(saved));
 
         // Create forensic audit record (B3-03)
@@ -462,4 +462,5 @@ public class SaleService {
         return snapshot;
     }
 }
+
 
