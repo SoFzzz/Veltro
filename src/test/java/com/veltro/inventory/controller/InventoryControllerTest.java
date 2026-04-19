@@ -1,12 +1,13 @@
 package com.veltro.inventory.controller;
 
 import com.veltro.inventory.controller.InventoryController;
-import com.veltro.inventory.dto.InventoryMovementResponse;
-import com.veltro.inventory.dto.InventoryResponse;
-import com.veltro.inventory.dto.StockAdjustmentRequest;
-import com.veltro.inventory.dto.StockEntryRequest;
-import com.veltro.inventory.dto.StockExitRequest;
-import com.veltro.inventory.dto.UpdateStockLimitsRequest;
+import com.veltro.inventory.dto.common.PageResponse;
+import com.veltro.inventory.dto.inventory.InventoryMovementResponse;
+import com.veltro.inventory.dto.inventory.InventoryResponse;
+import com.veltro.inventory.dto.inventory.StockAdjustmentRequest;
+import com.veltro.inventory.dto.inventory.StockEntryRequest;
+import com.veltro.inventory.dto.inventory.StockExitRequest;
+import com.veltro.inventory.dto.inventory.UpdateStockLimitsRequest;
 import com.veltro.inventory.service.InventoryService;
 import com.veltro.inventory.exception.InsufficientStockException;
 import com.veltro.inventory.exception.NotFoundException;
@@ -16,7 +17,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -105,16 +105,16 @@ class InventoryControllerTest {
     @DisplayName("GET /inventory/{productId}/movements returns paginated results")
     void getMovements_validProduct_returnsPaginatedResults() {
         Pageable pageable = PageRequest.of(0, 20);
-        Page<InventoryMovementResponse> page = new PageImpl<>(List.of(stubMovement()), pageable, 1);
-        when(inventoryService.getMovements(10L, pageable)).thenReturn(page);
+        PageImpl<InventoryMovementResponse> page = new PageImpl<>(List.of(stubMovement()), pageable, 1);
+        when(inventoryService.getMovements(10L, pageable)).thenReturn(PageResponse.from(page));
 
-        ResponseEntity<Page<InventoryMovementResponse>> response = controller.getMovements(10L, pageable);
+        ResponseEntity<PageResponse<InventoryMovementResponse>> response = controller.getMovements(10L, pageable);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getContent()).hasSize(1);
-        assertThat(response.getBody().getContent().get(0).inventoryId()).isEqualTo(1L);
-        assertThat(response.getBody().getContent().get(0).movementType()).isEqualTo("ENTRY");
+        assertThat(response.getBody().content()).hasSize(1);
+        assertThat(response.getBody().content().get(0).inventoryId()).isEqualTo(1L);
+        assertThat(response.getBody().content().get(0).movementType()).isEqualTo("ENTRY");
         verify(inventoryService).getMovements(10L, pageable);
     }
 
@@ -122,14 +122,14 @@ class InventoryControllerTest {
     @DisplayName("GET /inventory/{productId}/movements returns empty page when no movements exist")
     void getMovements_noMovements_returnsEmptyPage() {
         Pageable pageable = PageRequest.of(0, 20);
-        Page<InventoryMovementResponse> page = new PageImpl<>(List.of(), pageable, 0);
-        when(inventoryService.getMovements(10L, pageable)).thenReturn(page);
+        PageImpl<InventoryMovementResponse> page = new PageImpl<>(List.of(), pageable, 0);
+        when(inventoryService.getMovements(10L, pageable)).thenReturn(PageResponse.from(page));
 
-        ResponseEntity<Page<InventoryMovementResponse>> response = controller.getMovements(10L, pageable);
+        ResponseEntity<PageResponse<InventoryMovementResponse>> response = controller.getMovements(10L, pageable);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getContent()).isEmpty();
+        assertThat(response.getBody().content()).isEmpty();
         verify(inventoryService).getMovements(10L, pageable);
     }
 
@@ -288,7 +288,7 @@ class InventoryControllerTest {
     void allMethodsDelegateToService() {
         // Setup mocks for all service calls
         when(inventoryService.findByProductId(any())).thenReturn(stubInventory());
-        when(inventoryService.getMovements(any(), any())).thenReturn(new PageImpl<>(List.of()));
+        when(inventoryService.getMovements(any(), any())).thenReturn(PageResponse.from(new PageImpl<>(List.of())));
         when(inventoryService.recordEntry(any(), any())).thenReturn(stubInventory());
         when(inventoryService.recordExit(any(), any())).thenReturn(stubInventory());
         when(inventoryService.recordAdjustment(any(), any())).thenReturn(stubInventory());
@@ -311,3 +311,4 @@ class InventoryControllerTest {
         verify(inventoryService).updateLimits(eq(1L), any(UpdateStockLimitsRequest.class));
     }
 }
+
