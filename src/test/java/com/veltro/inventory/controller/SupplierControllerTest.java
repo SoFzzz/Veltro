@@ -1,9 +1,10 @@
 package com.veltro.inventory.controller;
 
 import com.veltro.inventory.controller.SupplierController;
-import com.veltro.inventory.dto.CreateSupplierRequest;
-import com.veltro.inventory.dto.SupplierResponse;
-import com.veltro.inventory.dto.UpdateSupplierRequest;
+import com.veltro.inventory.dto.common.PageResponse;
+import com.veltro.inventory.dto.purchasing.CreateSupplierRequest;
+import com.veltro.inventory.dto.purchasing.SupplierResponse;
+import com.veltro.inventory.dto.purchasing.UpdateSupplierRequest;
 import com.veltro.inventory.service.SupplierService;
 import com.veltro.inventory.exception.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,6 +13,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -56,37 +60,46 @@ class SupplierControllerTest {
         );
     }
 
+    private static PageResponse<SupplierResponse> stubSupplierPage() {
+        Pageable pageable = PageRequest.of(0, 20);
+        return PageResponse.from(new PageImpl<>(List.of(stubSupplier()), pageable, 1));
+    }
+
     // -------------------------------------------------------------------------
-    // GET /suppliers — list all
+    // GET /suppliers 窶・list all
     // -------------------------------------------------------------------------
 
     @Test
     @DisplayName("GET /suppliers returns 200 with supplier list")
     void findAll_returns200WithList() {
-        when(supplierService.findAll()).thenReturn(List.of(stubSupplier()));
+        Pageable pageable = PageRequest.of(0, 20);
+        when(supplierService.findAll(pageable)).thenReturn(stubSupplierPage());
 
-        ResponseEntity<List<SupplierResponse>> response = controller.findAll();
+        ResponseEntity<PageResponse<SupplierResponse>> response = controller.findAll(pageable);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody()).hasSize(1);
-        assertThat(response.getBody().get(0).id()).isEqualTo(1L);
-        assertThat(response.getBody().get(0).name()).isEqualTo("Test Supplier Corp");
-        assertThat(response.getBody().get(0).taxId()).isEqualTo("12345678901");
-        verify(supplierService).findAll();
+        assertThat(response.getBody().content()).hasSize(1);
+        assertThat(response.getBody().content().get(0).id()).isEqualTo(1L);
+        assertThat(response.getBody().content().get(0).name()).isEqualTo("Test Supplier Corp");
+        assertThat(response.getBody().content().get(0).taxId()).isEqualTo("12345678901");
+        verify(supplierService).findAll(pageable);
     }
 
     @Test
     @DisplayName("GET /suppliers returns empty list when no suppliers exist")
     void findAll_noSuppliers_returnsEmptyList() {
-        when(supplierService.findAll()).thenReturn(List.of());
+        Pageable pageable = PageRequest.of(0, 20);
+        when(supplierService.findAll(pageable)).thenReturn(
+                PageResponse.from(new PageImpl<>(List.of(), pageable, 0))
+        );
 
-        ResponseEntity<List<SupplierResponse>> response = controller.findAll();
+        ResponseEntity<PageResponse<SupplierResponse>> response = controller.findAll(pageable);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody()).isEmpty();
-        verify(supplierService).findAll();
+        assertThat(response.getBody().content()).isEmpty();
+        verify(supplierService).findAll(pageable);
     }
 
     // -------------------------------------------------------------------------
@@ -284,3 +297,4 @@ class SupplierControllerTest {
         verify(supplierService).delete(999L);
     }
 }
+
