@@ -1,5 +1,6 @@
 package com.veltro.inventory.exception;
 
+import com.veltro.inventory.dto.common.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -48,9 +49,9 @@ class GlobalExceptionHandlerAuthTest {
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().success()).isFalse();
-        assertThat(response.getBody().error()).isEqualTo("INVALID_CREDENTIALS");
+        assertThat(response.getBody().code()).isEqualTo("INVALID_CREDENTIALS");
         assertThat(response.getBody().message()).isEqualTo("Invalid username or password.");
+        assertThat(response.getBody().status()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
         assertThat(response.getBody().path()).isEqualTo("/api/v1/auth/login");
         assertThat(response.getBody().timestamp()).isNotNull();
     }
@@ -67,9 +68,9 @@ class GlobalExceptionHandlerAuthTest {
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().success()).isFalse();
-        assertThat(response.getBody().error()).isEqualTo("INVALID_CREDENTIALS");
+        assertThat(response.getBody().code()).isEqualTo("INVALID_CREDENTIALS");
         assertThat(response.getBody().message()).isEqualTo("Invalid username or password.");
+        assertThat(response.getBody().status()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
         assertThat(response.getBody().path()).isEqualTo("/api/v1/auth/login");
         assertThat(response.getBody().timestamp()).isNotNull();
     }
@@ -86,9 +87,9 @@ class GlobalExceptionHandlerAuthTest {
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().success()).isFalse();
-        assertThat(response.getBody().error()).isEqualTo("ACCOUNT_DISABLED");
+        assertThat(response.getBody().code()).isEqualTo("ACCOUNT_DISABLED");
         assertThat(response.getBody().message()).isEqualTo("Your account is disabled.");
+        assertThat(response.getBody().status()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
         assertThat(response.getBody().path()).isEqualTo("/api/v1/auth/login");
         assertThat(response.getBody().timestamp()).isNotNull();
     }
@@ -105,9 +106,9 @@ class GlobalExceptionHandlerAuthTest {
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().success()).isFalse();
-        assertThat(response.getBody().error()).isEqualTo("ACCOUNT_LOCKED");
+        assertThat(response.getBody().code()).isEqualTo("ACCOUNT_LOCKED");
         assertThat(response.getBody().message()).isEqualTo("Your account is locked. Contact support.");
+        assertThat(response.getBody().status()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
         assertThat(response.getBody().path()).isEqualTo("/api/v1/auth/login");
         assertThat(response.getBody().timestamp()).isNotNull();
     }
@@ -124,9 +125,9 @@ class GlobalExceptionHandlerAuthTest {
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().success()).isFalse();
-        assertThat(response.getBody().error()).isEqualTo("INVALID_ARGUMENT");
+        assertThat(response.getBody().code()).isEqualTo("INVALID_ARGUMENT");
         assertThat(response.getBody().message()).isEqualTo("Role ADMIN is not allowed for worker registration");
+        assertThat(response.getBody().status()).isEqualTo(HttpStatus.BAD_REQUEST.value());
         assertThat(response.getBody().path()).isEqualTo("/api/v1/auth/login");
         assertThat(response.getBody().timestamp()).isNotNull();
     }
