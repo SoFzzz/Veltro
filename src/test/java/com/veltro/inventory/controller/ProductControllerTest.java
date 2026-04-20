@@ -1,9 +1,10 @@
 package com.veltro.inventory.controller;
 
 import com.veltro.inventory.controller.ProductController;
-import com.veltro.inventory.dto.CreateProductRequest;
-import com.veltro.inventory.dto.ProductResponse;
-import com.veltro.inventory.dto.UpdateProductRequest;
+import com.veltro.inventory.dto.catalog.CreateProductRequest;
+import com.veltro.inventory.dto.common.PageResponse;
+import com.veltro.inventory.dto.catalog.ProductResponse;
+import com.veltro.inventory.dto.catalog.UpdateProductRequest;
 import com.veltro.inventory.service.ProductService;
 import com.veltro.inventory.exception.InvalidPriceException;
 import com.veltro.inventory.exception.NotFoundException;
@@ -13,7 +14,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -62,7 +62,7 @@ class ProductControllerTest {
     }
 
     // -------------------------------------------------------------------------
-    // GET /products — paginated listing
+    // GET /products 窶・paginated listing
     // -------------------------------------------------------------------------
 
     @Test
@@ -71,16 +71,16 @@ class ProductControllerTest {
         Pageable pageable = PageRequest.of(0, 20);
         PageImpl<ProductResponse> page = new PageImpl<>(
                 List.of(stubProduct()), pageable, 1);
-        when(productService.findAll(pageable)).thenReturn(page);
+        when(productService.findAll(pageable)).thenReturn(PageResponse.from(page));
 
-        ResponseEntity<Page<ProductResponse>> response = controller.listProducts(pageable);
+        ResponseEntity<PageResponse<ProductResponse>> response = controller.listProducts(pageable);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getContent()).hasSize(1);
-        assertThat(response.getBody().getContent().get(0).id()).isEqualTo(1L);
-        assertThat(response.getBody().getContent().get(0).name()).isEqualTo("Widget A");
-        assertThat(response.getBody().getTotalElements()).isEqualTo(1);
+        assertThat(response.getBody().content()).hasSize(1);
+        assertThat(response.getBody().content().get(0).id()).isEqualTo(1L);
+        assertThat(response.getBody().content().get(0).name()).isEqualTo("Widget A");
+        assertThat(response.getBody().totalElements()).isEqualTo(1);
         verify(productService).findAll(pageable);
     }
 
@@ -89,14 +89,14 @@ class ProductControllerTest {
     void listProducts_noProducts_returnsEmptyPage() {
         Pageable pageable = PageRequest.of(0, 20);
         PageImpl<ProductResponse> page = new PageImpl<>(List.of(), pageable, 0);
-        when(productService.findAll(pageable)).thenReturn(page);
+        when(productService.findAll(pageable)).thenReturn(PageResponse.from(page));
 
-        ResponseEntity<Page<ProductResponse>> response = controller.listProducts(pageable);
+        ResponseEntity<PageResponse<ProductResponse>> response = controller.listProducts(pageable);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getContent()).isEmpty();
-        assertThat(response.getBody().getTotalElements()).isEqualTo(0);
+        assertThat(response.getBody().content()).isEmpty();
+        assertThat(response.getBody().totalElements()).isEqualTo(0);
         verify(productService).findAll(pageable);
     }
 
@@ -325,3 +325,4 @@ class ProductControllerTest {
         verify(productService).hardDelete(1L);
     }
 }
+
