@@ -1,7 +1,7 @@
 package com.veltro.inventory.controller;
 
 import com.veltro.inventory.controller.ScannerController;
-import com.veltro.inventory.dto.ProductSuggestionResponse;
+import com.veltro.inventory.dto.scanner.ProductSuggestionResponse;
 import com.veltro.inventory.service.ProductRecognitionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -92,8 +93,8 @@ class ScannerControllerTest {
     }
 
     @Test
-    @DisplayName("scanWithAi returns 501 when AI Vision is not available")
-    void scanWithAi_aiNotAvailable_returnsNotImplemented() {
+    @DisplayName("scanWithAi propagates unsupported operation when AI Vision is unavailable")
+    void scanWithAi_aiNotAvailable_propagatesUnsupportedOperation() {
         // Arrange
         MockMultipartFile imageFile = new MockMultipartFile(
                 "image", "product.jpg", "image/jpeg", new byte[]{1, 2, 3}
@@ -101,11 +102,10 @@ class ScannerControllerTest {
         when(scannerService.processImage(any(MultipartFile.class)))
                 .thenThrow(new UnsupportedOperationException("AI Vision not configured"));
 
-        // Act
-        ResponseEntity<ProductSuggestionResponse> response = scannerController.scanWithAi(imageFile);
-
-        // Assert
-        assertThat(response.getStatusCode().value()).isEqualTo(501);
+        // Act + Assert
+        assertThatThrownBy(() -> scannerController.scanWithAi(imageFile))
+                .isInstanceOf(UnsupportedOperationException.class)
+                .hasMessage("AI Vision not configured");
     }
 
     @Test
@@ -157,4 +157,5 @@ class ScannerControllerTest {
         assertThat(response.getBody()).containsEntry("available", true);
     }
 }
+
 
