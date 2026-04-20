@@ -1,8 +1,8 @@
 package com.veltro.inventory.controller;
 
 import com.veltro.inventory.controller.ReportController;
-import com.veltro.inventory.dto.ProfitabilityReport;
-import com.veltro.inventory.dto.ReportType;
+import com.veltro.inventory.dto.report.ProfitabilityReport;
+import com.veltro.inventory.dto.report.ReportType;
 import com.veltro.inventory.service.ReportService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -161,3 +161,4 @@ class ReportControllerTest {
         assertThat(response.getStatusCode().value()).isEqualTo(400);
     }
 }
+
