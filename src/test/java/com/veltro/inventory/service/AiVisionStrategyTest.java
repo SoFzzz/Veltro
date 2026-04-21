@@ -1,9 +1,8 @@
 package com.veltro.inventory.service;
 
-import com.veltro.inventory.service.AiVisionStrategy;
-import com.veltro.inventory.service.OpenAiVisionClient;
-import com.veltro.inventory.config.OpenAiConfig;
-import com.veltro.inventory.dto.ProductSuggestionResponse;
+import com.veltro.inventory.dto.scanner.ProductSuggestionResponse;
+import com.veltro.inventory.infrastructure.ai.VisionApiConfig;
+import com.veltro.inventory.infrastructure.ai.VisionClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,10 +29,10 @@ import static org.mockito.Mockito.when;
 class AiVisionStrategyTest {
 
     @Mock
-    private OpenAiVisionClient openAiVisionClient;
+    private VisionClient visionClient;
 
     @Mock
-    private OpenAiConfig openAiConfig;
+    private VisionApiConfig visionApiConfig;
 
     @InjectMocks
     private AiVisionStrategy strategy;
@@ -41,7 +40,7 @@ class AiVisionStrategyTest {
     @BeforeEach
     void setUp() {
         // Default configuration: not enabled
-        lenient().when(openAiConfig.isConfigured()).thenReturn(false);
+        lenient().when(visionApiConfig.isConfigured()).thenReturn(false);
     }
 
     @Test
@@ -97,35 +96,35 @@ class AiVisionStrategyTest {
     @Test
     @DisplayName("isApiKeyConfigured returns false when not configured")
     void isApiKeyConfigured_notConfigured_returnsFalse() {
-        lenient().when(openAiConfig.isConfigured()).thenReturn(false);
+        lenient().when(visionApiConfig.isConfigured()).thenReturn(false);
         assertThat(strategy.isApiKeyConfigured()).isFalse();
     }
 
     @Test
     @DisplayName("isApiKeyConfigured returns true when configured")
     void isApiKeyConfigured_configured_returnsTrue() {
-        lenient().when(openAiConfig.isConfigured()).thenReturn(true);
+        lenient().when(visionApiConfig.isConfigured()).thenReturn(true);
         assertThat(strategy.isApiKeyConfigured()).isTrue();
     }
 
     @Test
     @DisplayName("isAvailable returns false when API is not configured")
     void isAvailable_notConfigured_returnsFalse() {
-        lenient().when(openAiConfig.isConfigured()).thenReturn(false);
+        lenient().when(visionApiConfig.isConfigured()).thenReturn(false);
         assertThat(strategy.isAvailable()).isFalse();
     }
 
     @Test
     @DisplayName("isAvailable returns true when API is configured")
     void isAvailable_configured_returnsTrue() {
-        lenient().when(openAiConfig.isConfigured()).thenReturn(true);
+        lenient().when(visionApiConfig.isConfigured()).thenReturn(true);
         assertThat(strategy.isAvailable()).isTrue();
     }
 
     @Test
-    @DisplayName("process delegates to OpenAiVisionClient and returns response")
+    @DisplayName("process delegates to VisionClient and returns response")
     void process_validImage_delegatesToClient() {
-        lenient().when(openAiConfig.isConfigured()).thenReturn(true);
+        lenient().when(visionApiConfig.isConfigured()).thenReturn(true);
         MultipartFile imageFile = new MockMultipartFile(
                 "image", "test.jpg", "image/jpeg", new byte[]{1, 2, 3}
         );
@@ -135,7 +134,7 @@ class AiVisionStrategyTest {
                 100,
                 "AI_VISION"
         );
-        when(openAiVisionClient.analyzeProductImage(any())).thenReturn(mockResponse);
+        when(visionClient.analyzeProductImage(any())).thenReturn(mockResponse);
 
         ProductSuggestionResponse result = strategy.process(imageFile);
 
@@ -158,3 +157,4 @@ class AiVisionStrategyTest {
                 .hasMessageContaining("MultipartFile");
     }
 }
+
