@@ -1,7 +1,8 @@
 package com.veltro.inventory.service;
 
-import com.veltro.inventory.dto.AuditFilterRequest;
-import com.veltro.inventory.dto.AuditRecordResponse;
+import com.veltro.inventory.dto.audit.AuditFilterRequest;
+import com.veltro.inventory.dto.audit.AuditRecordResponse;
+import com.veltro.inventory.dto.common.PageResponse;
 import com.veltro.inventory.mapper.AuditRecordMapper;
 import com.veltro.inventory.model.AuditAction;
 import com.veltro.inventory.model.AuditEntityType;
@@ -80,13 +81,13 @@ class ForensicAuditServiceTest {
         when(mapper.toResponse(entity2)).thenReturn(response2);
 
         // When
-        Page<AuditRecordResponse> result = auditService.findAll(filter, pageable);
+        PageResponse<AuditRecordResponse> result = auditService.findAll(filter, pageable);
 
         // Then
-        assertThat(result.getTotalElements()).isEqualTo(2);
-        assertThat(result.getContent()).hasSize(2);
-        assertThat(result.getContent().get(0).id()).isEqualTo(1L);
-        assertThat(result.getContent().get(1).id()).isEqualTo(2L);
+        assertThat(result.totalElements()).isEqualTo(2);
+        assertThat(result.content()).hasSize(2);
+        assertThat(result.content().get(0).id()).isEqualTo(1L);
+        assertThat(result.content().get(1).id()).isEqualTo(2L);
     }
 
     @Test
@@ -106,11 +107,11 @@ class ForensicAuditServiceTest {
         when(mapper.toResponse(entity)).thenReturn(response);
 
         // When
-        Page<AuditRecordResponse> result = auditService.findAll(filter, pageable);
+        PageResponse<AuditRecordResponse> result = auditService.findAll(filter, pageable);
 
         // Then
-        assertThat(result.getTotalElements()).isEqualTo(1);
-        assertThat(result.getContent().get(0).entityType()).isEqualTo(AuditEntityType.SALE);
+        assertThat(result.totalElements()).isEqualTo(1);
+        assertThat(result.content().get(0).entityType()).isEqualTo(AuditEntityType.SALE);
     }
 
     @Test
@@ -130,11 +131,11 @@ class ForensicAuditServiceTest {
         when(mapper.toResponse(entity)).thenReturn(response);
 
         // When
-        Page<AuditRecordResponse> result = auditService.findAll(filter, pageable);
+        PageResponse<AuditRecordResponse> result = auditService.findAll(filter, pageable);
 
         // Then
-        assertThat(result.getTotalElements()).isEqualTo(1);
-        assertThat(result.getContent().get(0).action()).isEqualTo(AuditAction.VOID);
+        assertThat(result.totalElements()).isEqualTo(1);
+        assertThat(result.content().get(0).action()).isEqualTo(AuditAction.VOID);
     }
 
     @Test
@@ -155,10 +156,10 @@ class ForensicAuditServiceTest {
         when(mapper.toResponse(entity)).thenReturn(response);
 
         // When
-        Page<AuditRecordResponse> result = auditService.findAll(filter, pageable);
+        PageResponse<AuditRecordResponse> result = auditService.findAll(filter, pageable);
 
         // Then
-        assertThat(result.getTotalElements()).isEqualTo(1);
+        assertThat(result.totalElements()).isEqualTo(1);
         verify(auditRepository).findByFiltersAndBusinessId(null, null, "john.doe", null, null, BUSINESS_ID, pageable);
     }
 
@@ -182,10 +183,10 @@ class ForensicAuditServiceTest {
         when(mapper.toResponse(entity)).thenReturn(response);
 
         // When
-        Page<AuditRecordResponse> result = auditService.findAll(filter, pageable);
+        PageResponse<AuditRecordResponse> result = auditService.findAll(filter, pageable);
 
         // Then
-        assertThat(result.getTotalElements()).isEqualTo(1);
+        assertThat(result.totalElements()).isEqualTo(1);
     }
 
     @Test
@@ -220,13 +221,13 @@ class ForensicAuditServiceTest {
         when(mapper.toResponse(entity)).thenReturn(response);
 
         // When
-        Page<AuditRecordResponse> result = auditService.findAll(filter, pageable);
+        PageResponse<AuditRecordResponse> result = auditService.findAll(filter, pageable);
 
         // Then
-        assertThat(result.getTotalElements()).isEqualTo(1);
-        assertThat(result.getContent().get(0).entityType()).isEqualTo(AuditEntityType.PURCHASE_ORDER);
-        assertThat(result.getContent().get(0).entityId()).isEqualTo(200L);
-        assertThat(result.getContent().get(0).action()).isEqualTo(AuditAction.RECEIVE);
+        assertThat(result.totalElements()).isEqualTo(1);
+        assertThat(result.content().get(0).entityType()).isEqualTo(AuditEntityType.PURCHASE_ORDER);
+        assertThat(result.content().get(0).entityId()).isEqualTo(200L);
+        assertThat(result.content().get(0).action()).isEqualTo(AuditAction.RECEIVE);
     }
 
     @Test
@@ -242,11 +243,11 @@ class ForensicAuditServiceTest {
                 .thenReturn(emptyPage);
 
         // When
-        Page<AuditRecordResponse> result = auditService.findAll(filter, pageable);
+        PageResponse<AuditRecordResponse> result = auditService.findAll(filter, pageable);
 
         // Then
-        assertThat(result.getTotalElements()).isZero();
-        assertThat(result.getContent()).isEmpty();
+        assertThat(result.totalElements()).isZero();
+        assertThat(result.content()).isEmpty();
     }
 
     @Test
@@ -349,3 +350,5 @@ class ForensicAuditServiceTest {
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 }
+
+
