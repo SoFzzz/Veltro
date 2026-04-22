@@ -1,7 +1,7 @@
 package com.veltro.inventory.service;
 
-import com.veltro.inventory.dto.CategoryResponse;
-import com.veltro.inventory.dto.UpdateCategoryRequest;
+import com.veltro.inventory.dto.catalog.CategoryResponse;
+import com.veltro.inventory.dto.catalog.UpdateCategoryRequest;
 import com.veltro.inventory.exception.DuplicateResourceException;
 import com.veltro.inventory.exception.InactiveResourceExistsException;
 import com.veltro.inventory.mapper.CategoryMapper;
@@ -147,3 +147,4 @@ class CategoryServiceTest {
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 }
+
