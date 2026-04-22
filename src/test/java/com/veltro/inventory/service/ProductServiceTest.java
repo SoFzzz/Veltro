@@ -2,11 +2,11 @@ package com.veltro.inventory.service;
 
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
-import com.veltro.inventory.dto.CreateProductRequest;
-import com.veltro.inventory.dto.UpdateProductRequest;
+import com.veltro.inventory.dto.catalog.CreateProductRequest;
+import com.veltro.inventory.dto.catalog.UpdateProductRequest;
 import com.veltro.inventory.exception.DuplicateResourceException;
 import com.veltro.inventory.exception.InactiveResourceExistsException;
-import com.veltro.inventory.dto.ProductResponse;
+import com.veltro.inventory.dto.catalog.ProductResponse;
 import com.veltro.inventory.mapper.ProductMapper;
 import com.veltro.inventory.service.InventoryService;
 import com.veltro.inventory.model.ProductEntity;
@@ -74,7 +74,7 @@ class ProductServiceTest {
     }
 
     // -------------------------------------------------------------------------
-    // validatePrice — InvalidPriceException
+    // validatePrice 窶・InvalidPriceException
     // -------------------------------------------------------------------------
 
     @Test
@@ -86,7 +86,7 @@ class ProductServiceTest {
                 "WGT-001",
                 "A test widget",
                 new BigDecimal("10.0000"),   // costPrice
-                new BigDecimal("9.9999"),    // salePrice — violates constraint
+                new BigDecimal("9.9999"),    // salePrice 窶・violates constraint
                 null,                        // categoryId
                 5,                           // minStockInfo
                 10,                          // minStockWarning
@@ -164,7 +164,7 @@ class ProductServiceTest {
     }
 
     // -------------------------------------------------------------------------
-    // findByBarcode — NotFoundException
+    // findByBarcode 窶・NotFoundException
     // -------------------------------------------------------------------------
 
     @Test
@@ -198,7 +198,7 @@ class ProductServiceTest {
     }
 
     // -------------------------------------------------------------------------
-    // findById — NotFoundException
+    // findById 窶・NotFoundException
     // -------------------------------------------------------------------------
 
     @Test
@@ -389,3 +389,4 @@ class ProductServiceTest {
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 }
+
