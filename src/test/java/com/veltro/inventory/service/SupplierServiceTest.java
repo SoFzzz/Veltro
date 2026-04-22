@@ -1,9 +1,10 @@
 package com.veltro.inventory.service;
 
 import static org.mockito.ArgumentMatchers.anyLong;
-import com.veltro.inventory.dto.CreateSupplierRequest;
-import com.veltro.inventory.dto.SupplierResponse;
-import com.veltro.inventory.dto.UpdateSupplierRequest;
+import com.veltro.inventory.dto.common.PageResponse;
+import com.veltro.inventory.dto.purchasing.CreateSupplierRequest;
+import com.veltro.inventory.dto.purchasing.SupplierResponse;
+import com.veltro.inventory.dto.purchasing.UpdateSupplierRequest;
 import com.veltro.inventory.mapper.SupplierMapper;
 import com.veltro.inventory.model.SupplierEntity;
 import com.veltro.inventory.repository.SupplierRepository;
@@ -18,6 +19,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -98,16 +101,18 @@ class SupplierServiceTest {
     @DisplayName("Should find all active suppliers")
     void shouldFindAllActiveSuppliers() {
         // Given
-        when(supplierRepository.findAllByActiveTrueAndBusinessId(anyLong())).thenReturn(List.of(supplierEntity));
+        var pageable = PageRequest.of(0, 20);
+        when(supplierRepository.findAllByActiveTrueAndBusinessId(anyLong(), eq(pageable)))
+                .thenReturn(new PageImpl<>(List.of(supplierEntity), pageable, 1));
         when(supplierMapper.toResponse(supplierEntity)).thenReturn(supplierResponse);
 
         // When
-        List<SupplierResponse> result = supplierService.findAll();
+        PageResponse<SupplierResponse> result = supplierService.findAll(pageable);
 
         // Then
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0)).isEqualTo(supplierResponse);
-        verify(supplierRepository, times(1)).findAllByActiveTrueAndBusinessId(anyLong());
+        assertThat(result.content()).hasSize(1);
+        assertThat(result.content().getFirst()).isEqualTo(supplierResponse);
+        verify(supplierRepository, times(1)).findAllByActiveTrueAndBusinessId(anyLong(), eq(pageable));
         verify(supplierMapper, times(1)).toResponse(supplierEntity);
     }
 
@@ -237,3 +242,4 @@ class SupplierServiceTest {
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 }
+
