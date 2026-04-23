@@ -1,15 +1,15 @@
 package com.veltro.inventory.mapper;
 
-import com.veltro.inventory.dto.InventoryMovementResponse;
+import com.veltro.inventory.dto.inventory.InventoryMovementResponse;
 import com.veltro.inventory.model.InventoryMovementEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 /**
- * MapStruct mapper for {@link InventoryMovementEntity} ↔ movement DTOs.
+ * MapStruct mapper for {@link InventoryMovementEntity} 竊・movement DTOs.
  *
  * {@code movementType} is the string representation of the enum
- * (MapStruct maps enum → String by default via {@code name()}).
+ * (MapStruct maps enum 竊・String by default via {@code name()}).
  */
 @Mapper(componentModel = "spring")
 public interface InventoryMovementMapper {
@@ -18,3 +18,4 @@ public interface InventoryMovementMapper {
     @Mapping(target = "movementType", source = "movementType")
     InventoryMovementResponse toResponse(InventoryMovementEntity entity);
 }
+

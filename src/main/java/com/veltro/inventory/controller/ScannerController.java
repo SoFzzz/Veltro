@@ -1,6 +1,6 @@
 package com.veltro.inventory.controller;
 
-import com.veltro.inventory.dto.ProductSuggestionResponse;
+import com.veltro.inventory.dto.scanner.ProductSuggestionResponse;
 import com.veltro.inventory.service.ProductRecognitionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -59,13 +59,8 @@ public class ScannerController {
             return ResponseEntity.badRequest().build();
         }
 
-        try {
-            ProductSuggestionResponse response = scannerService.processImage(image);
-            return ResponseEntity.ok(response);
-        } catch (UnsupportedOperationException e) {
-            log.warn("AI Vision not available: {}", e.getMessage());
-            return ResponseEntity.status(501).build();
-        }
+        ProductSuggestionResponse response = scannerService.processImage(image);
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -96,4 +91,5 @@ public class ScannerController {
         return ResponseEntity.ok(Map.of("available", available));
     }
 }
+
 

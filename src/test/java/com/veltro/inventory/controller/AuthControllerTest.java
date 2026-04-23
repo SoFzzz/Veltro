@@ -1,10 +1,10 @@
 package com.veltro.inventory.controller;
 
 import com.veltro.inventory.controller.AuthController;
-import com.veltro.inventory.dto.ChangePasswordRequest;
-import com.veltro.inventory.dto.LoginRequest;
-import com.veltro.inventory.dto.LoginResponse;
-import com.veltro.inventory.dto.RefreshRequest;
+import com.veltro.inventory.dto.auth.ChangePasswordRequest;
+import com.veltro.inventory.dto.auth.LoginRequest;
+import com.veltro.inventory.dto.auth.LoginResponse;
+import com.veltro.inventory.dto.auth.RefreshRequest;
 import com.veltro.inventory.service.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -227,3 +227,4 @@ class AuthControllerTest {
         verify(authService).changePassword(eq("alice"), any(ChangePasswordRequest.class));
     }
 }
+

@@ -1,6 +1,8 @@
 package com.veltro.inventory.repository;
 
 import com.veltro.inventory.model.SupplierEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -18,7 +20,7 @@ public interface SupplierRepository extends JpaRepository<SupplierEntity, Long> 
 
     Optional<SupplierEntity> findByIdAndBusinessId(Long id, Long businessId);
 
-    List<SupplierEntity> findAllByActiveTrueAndBusinessId(Long businessId);
+    Page<SupplierEntity> findAllByActiveTrueAndBusinessId(Long businessId, Pageable pageable);
 
     Optional<SupplierEntity> findByTaxIdAndActiveTrueAndBusinessId(String taxId, Long businessId);
 

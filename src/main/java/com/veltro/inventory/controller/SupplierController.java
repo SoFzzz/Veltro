@@ -1,11 +1,14 @@
 package com.veltro.inventory.controller;
 
-import com.veltro.inventory.dto.CreateSupplierRequest;
-import com.veltro.inventory.dto.SupplierResponse;
-import com.veltro.inventory.dto.UpdateSupplierRequest;
+import com.veltro.inventory.dto.purchasing.CreateSupplierRequest;
+import com.veltro.inventory.dto.purchasing.SupplierResponse;
+import com.veltro.inventory.dto.purchasing.UpdateSupplierRequest;
+import com.veltro.inventory.dto.common.PageResponse;
 import com.veltro.inventory.service.SupplierService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -17,8 +20,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 /**
  * REST controller for supplier management (B2-04).
@@ -47,9 +48,9 @@ public class SupplierController {
      */
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'WAREHOUSE')")
-    public ResponseEntity<List<SupplierResponse>> findAll() {
-        List<SupplierResponse> suppliers = supplierService.findAll();
-        return ResponseEntity.ok(suppliers);
+    public ResponseEntity<PageResponse<SupplierResponse>> findAll(
+            @PageableDefault(size = 20, sort = "id") Pageable pageable) {
+        return ResponseEntity.ok(supplierService.findAll(pageable));
     }
 
     /**

@@ -1,8 +1,8 @@
 package com.veltro.inventory.service;
 
-import com.veltro.inventory.dto.CategoryResponse;
-import com.veltro.inventory.dto.CreateCategoryRequest;
-import com.veltro.inventory.dto.UpdateCategoryRequest;
+import com.veltro.inventory.dto.catalog.CategoryResponse;
+import com.veltro.inventory.dto.catalog.CreateCategoryRequest;
+import com.veltro.inventory.dto.catalog.UpdateCategoryRequest;
 import com.veltro.inventory.mapper.CategoryMapper;
 import com.veltro.inventory.model.CategoryEntity;
 import com.veltro.inventory.repository.CategoryRepository;
@@ -175,3 +175,4 @@ public class CategoryService {
                 .orElseThrow(() -> new NotFoundException("Category not found with id: " + id));
     }
 }
+

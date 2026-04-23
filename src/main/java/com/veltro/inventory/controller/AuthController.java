@@ -1,11 +1,11 @@
 package com.veltro.inventory.controller;
 
-import com.veltro.inventory.dto.ChangePasswordRequest;
-import com.veltro.inventory.dto.LoginRequest;
-import com.veltro.inventory.dto.LoginResponse;
-import com.veltro.inventory.dto.RefreshRequest;
-import com.veltro.inventory.dto.RegisterRequest;
-import com.veltro.inventory.dto.WorkerResponse;
+import com.veltro.inventory.dto.auth.ChangePasswordRequest;
+import com.veltro.inventory.dto.auth.LoginRequest;
+import com.veltro.inventory.dto.auth.LoginResponse;
+import com.veltro.inventory.dto.auth.RefreshRequest;
+import com.veltro.inventory.dto.auth.RegisterRequest;
+import com.veltro.inventory.dto.auth.WorkerResponse;
 import com.veltro.inventory.service.AuthService;
 import com.veltro.inventory.model.UserEntity;
 import com.veltro.inventory.security.TenantContext;
@@ -80,7 +80,7 @@ public class AuthController {
     }
 
     /**
-     * Stateless logout — the server has no session to invalidate.
+     * Stateless logout 窶・the server has no session to invalidate.
      * The client is responsible for discarding its tokens.
      *
      * @return HTTP 200 with a confirmation message.
@@ -166,7 +166,7 @@ public class AuthController {
 
     /**
      * Updates the role of a worker in the current admin's business.
-     * Only CASHIER ↔ WAREHOUSE transitions are allowed.
+     * Only CASHIER 竊・WAREHOUSE transitions are allowed.
      *
      * @return HTTP 200 with updated {@link WorkerResponse}.
      *         HTTP 400 if role is invalid or worker is an ADMIN.
@@ -189,3 +189,4 @@ public class AuthController {
         return ResponseEntity.ok(updated);
     }
 }
+

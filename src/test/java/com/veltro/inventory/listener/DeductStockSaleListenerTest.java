@@ -1,6 +1,6 @@
 package com.veltro.inventory.listener;
 
-import com.veltro.inventory.dto.StockExitRequest;
+import com.veltro.inventory.dto.inventory.StockExitRequest;
 import com.veltro.inventory.listener.DeductStockSaleListener;
 import com.veltro.inventory.service.InventoryService;
 import com.veltro.inventory.event.SaleCompletedEvent;
@@ -68,3 +68,4 @@ class DeductStockSaleListenerTest {
         assertThat(captor.getValue().reason()).contains("MY-TEST-SALE");
     }
 }
+

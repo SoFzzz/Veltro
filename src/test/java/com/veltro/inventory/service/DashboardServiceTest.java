@@ -1,6 +1,6 @@
 package com.veltro.inventory.service;
 
-import com.veltro.inventory.dto.DashboardResponse;
+import com.veltro.inventory.dto.dashboard.DashboardResponse;
 import com.veltro.inventory.model.AlertType;
 import com.veltro.inventory.security.VeltroUserDetails;
 import com.veltro.inventory.service.DashboardQueryRepository;
@@ -180,3 +180,4 @@ class DashboardServiceTest {
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 }
+

@@ -1,15 +1,15 @@
 package com.veltro.inventory.mapper;
 
-import com.veltro.inventory.dto.CreateSupplierRequest;
-import com.veltro.inventory.dto.SupplierResponse;
-import com.veltro.inventory.dto.UpdateSupplierRequest;
+import com.veltro.inventory.dto.purchasing.CreateSupplierRequest;
+import com.veltro.inventory.dto.purchasing.SupplierResponse;
+import com.veltro.inventory.dto.purchasing.UpdateSupplierRequest;
 import com.veltro.inventory.model.SupplierEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
 /**
- * MapStruct mapper for {@link SupplierEntity} ↔ supplier DTOs (B2-04).
+ * MapStruct mapper for {@link SupplierEntity} 竊・supplier DTOs (B2-04).
  */
 @Mapper(componentModel = "spring")
 public interface SupplierMapper {

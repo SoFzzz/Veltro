@@ -1,12 +1,15 @@
 package com.veltro.inventory.controller;
 
-import com.veltro.inventory.dto.AddOrderItemRequest;
-import com.veltro.inventory.dto.CreatePurchaseOrderRequest;
-import com.veltro.inventory.dto.PurchaseOrderResponse;
+import com.veltro.inventory.dto.purchasing.AddOrderItemRequest;
+import com.veltro.inventory.dto.purchasing.CreatePurchaseOrderRequest;
+import com.veltro.inventory.dto.purchasing.PurchaseOrderResponse;
+import com.veltro.inventory.dto.common.PageResponse;
 import com.veltro.inventory.model.PurchaseOrderStatus;
 import com.veltro.inventory.service.PurchaseOrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,8 +22,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 /**
  * REST controller for purchase order management (B2-04).
@@ -52,10 +53,10 @@ public class PurchaseOrderController {
      */
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'WAREHOUSE')")
-    public ResponseEntity<List<PurchaseOrderResponse>> findAll(
-            @RequestParam(required = false) PurchaseOrderStatus status) {
-        List<PurchaseOrderResponse> orders = purchaseOrderService.findAll(status);
-        return ResponseEntity.ok(orders);
+    public ResponseEntity<PageResponse<PurchaseOrderResponse>> findAll(
+            @RequestParam(required = false) PurchaseOrderStatus status,
+            @PageableDefault(size = 20, sort = "id") Pageable pageable) {
+        return ResponseEntity.ok(purchaseOrderService.findAll(status, pageable));
     }
 
     /**
@@ -66,9 +67,10 @@ public class PurchaseOrderController {
      */
     @GetMapping(params = "supplierId")
     @PreAuthorize("hasAnyRole('ADMIN', 'WAREHOUSE')")
-    public ResponseEntity<List<PurchaseOrderResponse>> findBySupplier(@RequestParam Long supplierId) {
-        List<PurchaseOrderResponse> orders = purchaseOrderService.findBySupplier(supplierId);
-        return ResponseEntity.ok(orders);
+    public ResponseEntity<PageResponse<PurchaseOrderResponse>> findBySupplier(
+            @RequestParam Long supplierId,
+            @PageableDefault(size = 20, sort = "id") Pageable pageable) {
+        return ResponseEntity.ok(purchaseOrderService.findBySupplier(supplierId, pageable));
     }
 
     /**

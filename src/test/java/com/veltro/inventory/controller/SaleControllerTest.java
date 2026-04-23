@@ -1,10 +1,10 @@
 package com.veltro.inventory.controller;
 
 import com.veltro.inventory.controller.SaleController;
-import com.veltro.inventory.dto.AddItemRequest;
-import com.veltro.inventory.dto.ConfirmSaleRequest;
-import com.veltro.inventory.dto.ModifyItemRequest;
-import com.veltro.inventory.dto.SaleResponse;
+import com.veltro.inventory.dto.pos.AddItemRequest;
+import com.veltro.inventory.dto.pos.ConfirmSaleRequest;
+import com.veltro.inventory.dto.pos.ModifyItemRequest;
+import com.veltro.inventory.dto.pos.SaleResponse;
 import com.veltro.inventory.service.SaleService;
 import com.veltro.inventory.model.PaymentMethod;
 import com.veltro.inventory.model.SaleStatus;
@@ -313,3 +313,4 @@ class SaleControllerTest {
         verify(saleService).voidSale(1L);
     }
 }
+

@@ -1,6 +1,7 @@
 package com.veltro.inventory.service;
 
-import com.veltro.inventory.dto.AlertResponse;
+import com.veltro.inventory.dto.inventory.AlertResponse;
+import com.veltro.inventory.dto.common.PageResponse;
 import com.veltro.inventory.mapper.AlertMapper;
 import com.veltro.inventory.model.AlertConfigurationEntity;
 import com.veltro.inventory.model.AlertEntity;
@@ -15,7 +16,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -82,10 +82,12 @@ public class AlertService {
     }
 
     @Transactional(readOnly = true)
-    public Page<AlertResponse> listActiveAlerts(Pageable pageable) {
+    public PageResponse<AlertResponse> listActiveAlerts(Pageable pageable) {
         Long businessId = TenantContext.getBusinessId();
-        return alertRepository.findByResolvedFalseAndBusinessIdOrderBySeverityDescCreatedAtAsc(businessId, pageable)
-                .map(alertMapper::toResponse);
+        return PageResponse.from(
+                alertRepository.findByResolvedFalseAndBusinessIdOrderBySeverityDescCreatedAtAsc(businessId, pageable)
+                        .map(alertMapper::toResponse)
+        );
     }
 
     @Transactional
@@ -112,4 +114,5 @@ public class AlertService {
         return alertRepository.countByReadFalseAndResolvedFalseAndBusinessId(businessId);
     }
 }
+
 

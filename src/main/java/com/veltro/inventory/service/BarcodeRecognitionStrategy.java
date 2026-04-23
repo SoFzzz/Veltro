@@ -1,6 +1,6 @@
 package com.veltro.inventory.service;
 
-import com.veltro.inventory.dto.ProductSuggestionResponse;
+import com.veltro.inventory.dto.scanner.ProductSuggestionResponse;
 import org.springframework.stereotype.Component;
 
 /**
@@ -55,4 +55,5 @@ public class BarcodeRecognitionStrategy implements ScannerStrategy {
         return input instanceof String && !((String) input).isBlank();
     }
 }
+
 

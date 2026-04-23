@@ -1,12 +1,12 @@
 package com.veltro.inventory.controller;
 
-import com.veltro.inventory.dto.CreateProductRequest;
-import com.veltro.inventory.dto.ProductResponse;
-import com.veltro.inventory.dto.UpdateProductRequest;
+import com.veltro.inventory.dto.catalog.CreateProductRequest;
+import com.veltro.inventory.dto.catalog.ProductResponse;
+import com.veltro.inventory.dto.catalog.UpdateProductRequest;
+import com.veltro.inventory.dto.common.PageResponse;
 import com.veltro.inventory.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
@@ -27,11 +27,11 @@ import org.springframework.web.bind.annotation.RestController;
  * Role rules (RF-12):
  * <ul>
  *   <li>GET /products and GET /products/{id}: ADMIN, WAREHOUSE, CASHIER.</li>
- *   <li>GET /products/barcode/{barcode}: any authenticated user (primary POS path — UC-01).</li>
+ *   <li>GET /products/barcode/{barcode}: any authenticated user (primary POS path 窶・UC-01).</li>
  *   <li>POST / PUT: ADMIN or WAREHOUSE only.</li>
  * </ul>
  *
- * AC-07: {@code GET /products} returns a {@link Page} with pagination metadata.
+ * AC-07: {@code GET /products} returns a {@link PageResponse} with pagination metadata.
  */
 @RestController
 @RequestMapping("/api/v1/products")
@@ -49,7 +49,7 @@ public class ProductController {
      * Defaults: page=0, size=20, sort=id,asc.
      */
     @GetMapping
-    public ResponseEntity<Page<ProductResponse>> listProducts(
+    public ResponseEntity<PageResponse<ProductResponse>> listProducts(
             @PageableDefault(size = 20, sort = "id") Pageable pageable) {
         return ResponseEntity.ok(productService.findAll(pageable));
     }
@@ -60,7 +60,7 @@ public class ProductController {
     }
 
     /**
-     * Barcode lookup — the primary endpoint called by the POS scanner (UC-01).
+     * Barcode lookup 窶・the primary endpoint called by the POS scanner (UC-01).
      * Returns 404 when no active product matches the barcode.
      */
     @GetMapping("/barcode/{barcode}")
@@ -69,7 +69,7 @@ public class ProductController {
     }
 
     // -------------------------------------------------------------------------
-    // POST / PUT endpoints — ADMIN or WAREHOUSE only
+    // POST / PUT endpoints 窶・ADMIN or WAREHOUSE only
     // -------------------------------------------------------------------------
 
     @PostMapping
@@ -119,3 +119,4 @@ public class ProductController {
         return ResponseEntity.noContent().build();
     }
 }
+

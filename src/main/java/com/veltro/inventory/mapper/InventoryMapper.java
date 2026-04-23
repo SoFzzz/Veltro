@@ -1,12 +1,12 @@
 package com.veltro.inventory.mapper;
 
-import com.veltro.inventory.dto.InventoryResponse;
+import com.veltro.inventory.dto.inventory.InventoryResponse;
 import com.veltro.inventory.model.InventoryEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 /**
- * MapStruct mapper for {@link InventoryEntity} ↔ inventory DTOs.
+ * MapStruct mapper for {@link InventoryEntity} 竊・inventory DTOs.
  */
 @Mapper(componentModel = "spring")
 public interface InventoryMapper {
@@ -19,3 +19,4 @@ public interface InventoryMapper {
     @Mapping(target = "productName", source = "product.name")
     InventoryResponse toResponse(InventoryEntity entity);
 }
+

@@ -1,11 +1,12 @@
 package com.veltro.inventory.service;
 
-import com.veltro.inventory.dto.InventoryMovementResponse;
-import com.veltro.inventory.dto.InventoryResponse;
-import com.veltro.inventory.dto.StockAdjustmentRequest;
-import com.veltro.inventory.dto.StockEntryRequest;
-import com.veltro.inventory.dto.StockExitRequest;
-import com.veltro.inventory.dto.UpdateStockLimitsRequest;
+import com.veltro.inventory.dto.inventory.InventoryMovementResponse;
+import com.veltro.inventory.dto.inventory.InventoryResponse;
+import com.veltro.inventory.dto.inventory.StockAdjustmentRequest;
+import com.veltro.inventory.dto.inventory.StockEntryRequest;
+import com.veltro.inventory.dto.inventory.StockExitRequest;
+import com.veltro.inventory.dto.inventory.UpdateStockLimitsRequest;
+import com.veltro.inventory.dto.common.PageResponse;
 import com.veltro.inventory.event.StockChangedEvent;
 import com.veltro.inventory.mapper.InventoryMapper;
 import com.veltro.inventory.mapper.InventoryMovementMapper;
@@ -27,7 +28,6 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,10 +48,12 @@ public class InventoryService {
     private final AuditCommandExecutor auditCommandExecutor;
 
     @Transactional(readOnly = true)
-    public Page<InventoryResponse> findAll(Pageable pageable) {
+    public PageResponse<InventoryResponse> findAll(Pageable pageable) {
         Long businessId = TenantContext.getBusinessId();
-        return inventoryRepository.findAllByActiveTrueAndBusinessId(businessId, pageable)
-                .map(inventoryMapper::toResponse);
+        return PageResponse.from(
+                inventoryRepository.findAllByActiveTrueAndBusinessId(businessId, pageable)
+                        .map(inventoryMapper::toResponse)
+        );
     }
 
     @Transactional(readOnly = true)
@@ -61,11 +63,13 @@ public class InventoryService {
     }
 
     @Transactional(readOnly = true)
-    public Page<InventoryMovementResponse> getMovements(Long productId, Pageable pageable) {
+    public PageResponse<InventoryMovementResponse> getMovements(Long productId, Pageable pageable) {
         Long businessId = TenantContext.getBusinessId();
         InventoryEntity inventory = requireByProductId(productId, businessId);
-        return movementRepository.findByInventoryIdAndBusinessId(inventory.getId(), businessId, pageable)
-                .map(movementMapper::toResponse);
+        return PageResponse.from(
+                movementRepository.findByInventoryIdAndBusinessId(inventory.getId(), businessId, pageable)
+                        .map(movementMapper::toResponse)
+        );
     }
 
     @Transactional
@@ -230,4 +234,5 @@ public class InventoryService {
         return snapshot;
     }
 }
+
 

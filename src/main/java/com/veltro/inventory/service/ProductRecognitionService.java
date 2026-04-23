@@ -1,6 +1,6 @@
 package com.veltro.inventory.service;
 
-import com.veltro.inventory.dto.ProductSuggestionResponse;
+import com.veltro.inventory.dto.scanner.ProductSuggestionResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -79,4 +79,5 @@ public class ProductRecognitionService {
                 .orElse(null);
     }
 }
+
 

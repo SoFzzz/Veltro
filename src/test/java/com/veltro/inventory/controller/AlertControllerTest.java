@@ -1,9 +1,10 @@
 package com.veltro.inventory.controller;
 
 import com.veltro.inventory.controller.AlertController;
-import com.veltro.inventory.dto.AlertConfigurationResponse;
-import com.veltro.inventory.dto.AlertResponse;
-import com.veltro.inventory.dto.UpdateAlertConfigurationRequest;
+import com.veltro.inventory.dto.common.PageResponse;
+import com.veltro.inventory.dto.inventory.AlertConfigurationResponse;
+import com.veltro.inventory.dto.inventory.AlertResponse;
+import com.veltro.inventory.dto.inventory.UpdateAlertConfigurationRequest;
 import com.veltro.inventory.service.AlertConfigurationService;
 import com.veltro.inventory.service.AlertService;
 import org.junit.jupiter.api.BeforeEach;
@@ -58,16 +59,16 @@ class AlertControllerTest {
                 "CRITICAL", "Out of stock", false, false, OffsetDateTime.now());
         
         PageImpl<AlertResponse> alertPage = new PageImpl<>(List.of(alert1, alert2), PageRequest.of(0, 20), 2);
-        when(alertService.listActiveAlerts(any(Pageable.class))).thenReturn(alertPage);
+        when(alertService.listActiveAlerts(any(Pageable.class))).thenReturn(PageResponse.from(alertPage));
 
         // Act
         var result = alertController.listAlerts(PageRequest.of(0, 20));
 
         // Assert
-        assertThat(result.getContent()).hasSize(2);
-        assertThat(result.getTotalElements()).isEqualTo(2);
-        assertThat(result.getContent().get(0).id()).isEqualTo(1L);
-        assertThat(result.getContent().get(1).id()).isEqualTo(2L);
+        assertThat(result.content()).hasSize(2);
+        assertThat(result.totalElements()).isEqualTo(2);
+        assertThat(result.content().get(0).id()).isEqualTo(1L);
+        assertThat(result.content().get(1).id()).isEqualTo(2L);
         verify(alertService).listActiveAlerts(any(Pageable.class));
     }
 
@@ -148,3 +149,4 @@ class AlertControllerTest {
         verify(configurationService).updateConfiguration(eq(productId), any(UpdateAlertConfigurationRequest.class));
     }
 }
+

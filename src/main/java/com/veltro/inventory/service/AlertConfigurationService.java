@@ -1,7 +1,7 @@
 package com.veltro.inventory.service;
 
-import com.veltro.inventory.dto.AlertConfigurationResponse;
-import com.veltro.inventory.dto.UpdateAlertConfigurationRequest;
+import com.veltro.inventory.dto.inventory.AlertConfigurationResponse;
+import com.veltro.inventory.dto.inventory.UpdateAlertConfigurationRequest;
 import com.veltro.inventory.mapper.AlertConfigurationMapper;
 import com.veltro.inventory.model.AlertConfigurationEntity;
 import com.veltro.inventory.repository.AlertConfigurationRepository;
@@ -70,3 +70,4 @@ public class AlertConfigurationService {
         return configurationRepository.save(config);
     }
 }
+

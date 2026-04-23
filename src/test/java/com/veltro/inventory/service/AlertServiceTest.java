@@ -4,7 +4,8 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import com.veltro.inventory.service.AlertHandler;
 import com.veltro.inventory.service.StockAlertEvaluationContext;
-import com.veltro.inventory.dto.AlertResponse;
+import com.veltro.inventory.dto.common.PageResponse;
+import com.veltro.inventory.dto.inventory.AlertResponse;
 import com.veltro.inventory.mapper.AlertMapper;
 import com.veltro.inventory.model.ProductEntity;
 import com.veltro.inventory.model.AlertConfigurationEntity;
@@ -25,7 +26,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -291,7 +291,7 @@ class AlertServiceTest {
         Pageable pageable = PageRequest.of(0, 10);
         AlertEntity alert1 = createAlert(1L, AlertType.OUT_OF_STOCK, 1L, false, false);
         AlertEntity alert2 = createAlert(2L, AlertType.LOW_STOCK, 2L, false, true);
-        Page<AlertEntity> alertPage = new PageImpl<>(List.of(alert1, alert2), pageable, 2);
+        PageImpl<AlertEntity> alertPage = new PageImpl<>(List.of(alert1, alert2), pageable, 2);
         
         AlertResponse response1 = new AlertResponse(1L, 1L, "Product 1", "OUT_OF_STOCK", 
                 "CRITICAL", "Out of stock", false, false, OffsetDateTime.now());
@@ -304,13 +304,13 @@ class AlertServiceTest {
         when(alertMapper.toResponse(alert2)).thenReturn(response2);
 
         // Act
-        Page<AlertResponse> result = alertService.listActiveAlerts(pageable);
+        PageResponse<AlertResponse> result = alertService.listActiveAlerts(pageable);
 
         // Assert
-        assertThat(result.getContent()).hasSize(2);
-        assertThat(result.getTotalElements()).isEqualTo(2);
-        assertThat(result.getContent().get(0).id()).isEqualTo(1L);
-        assertThat(result.getContent().get(1).id()).isEqualTo(2L);
+        assertThat(result.content()).hasSize(2);
+        assertThat(result.totalElements()).isEqualTo(2);
+        assertThat(result.content().get(0).id()).isEqualTo(1L);
+        assertThat(result.content().get(1).id()).isEqualTo(2L);
     }
 
     @Test
@@ -399,3 +399,4 @@ class AlertServiceTest {
                 .hasMessageContaining("Alert not found");
     }
 }
+

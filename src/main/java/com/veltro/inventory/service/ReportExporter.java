@@ -1,7 +1,7 @@
 package com.veltro.inventory.service;
 
-import com.veltro.inventory.dto.ProfitabilityReport;
-import com.veltro.inventory.dto.ReportType;
+import com.veltro.inventory.dto.report.ProfitabilityReport;
+import com.veltro.inventory.dto.report.ReportType;
 
 /**
  * Interface for report exporters (B3-02 Factory Method Pattern).
@@ -47,3 +47,4 @@ public interface ReportExporter {
         return getType().getExtension();
     }
 }
+

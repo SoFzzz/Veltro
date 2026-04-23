@@ -1,6 +1,6 @@
 package com.veltro.inventory.listener;
 
-import com.veltro.inventory.dto.StockEntryRequest;
+import com.veltro.inventory.dto.inventory.StockEntryRequest;
 import com.veltro.inventory.listener.IncrementStockOrderListener;
 import com.veltro.inventory.service.InventoryService;
 import com.veltro.inventory.event.OrderReceivedEvent;
@@ -121,3 +121,4 @@ class IncrementStockOrderListenerTest {
         // Note: Testing exact behavior would require integration testing
     }
 }
+

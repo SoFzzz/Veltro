@@ -1,6 +1,6 @@
 package com.veltro.inventory.listener;
 
-import com.veltro.inventory.dto.StockExitRequest;
+import com.veltro.inventory.dto.inventory.StockExitRequest;
 import com.veltro.inventory.service.InventoryService;
 import com.veltro.inventory.event.SaleCompletedEvent;
 import com.veltro.inventory.event.SaleItemInfo;
@@ -18,7 +18,7 @@ public class DeductStockSaleListener {
     @EventListener
     public void onSaleCompleted(SaleCompletedEvent event) {
         if (event.items() == null || event.items().isEmpty()) {
-            log.info("Sale {} contains no items — nothing to deduct", event.saleNumber());
+            log.info("Sale {} contains no items 窶・nothing to deduct", event.saleNumber());
             return;
         }
         for (SaleItemInfo item : event.items()) {
@@ -30,3 +30,4 @@ public class DeductStockSaleListener {
         }
     }
 }
+

@@ -1,9 +1,9 @@
 package com.veltro.inventory.mapper;
 
-import com.veltro.inventory.dto.CreatePurchaseOrderRequest;
-import com.veltro.inventory.dto.PurchaseOrderDetailResponse;
-import com.veltro.inventory.dto.PurchaseOrderResponse;
-import com.veltro.inventory.dto.AuditInfo;
+import com.veltro.inventory.dto.purchasing.CreatePurchaseOrderRequest;
+import com.veltro.inventory.dto.purchasing.PurchaseOrderDetailResponse;
+import com.veltro.inventory.dto.purchasing.PurchaseOrderResponse;
+import com.veltro.inventory.dto.audit.AuditInfo;
 import com.veltro.inventory.model.PurchaseOrderEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * MapStruct mapper for {@link PurchaseOrderEntity} ↔ {@link PurchaseOrderResponse} (B2-04).
+ * MapStruct mapper for {@link PurchaseOrderEntity} 竊・{@link PurchaseOrderResponse} (B2-04).
  *
  * <p>ADR-005: Monetary fields are converted to String with 4 decimal places.
  * <p>AC-05: Only active details are included in the response.

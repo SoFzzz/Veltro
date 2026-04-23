@@ -2,10 +2,10 @@ package com.veltro.inventory.service;
 
 import static org.mockito.ArgumentMatchers.anyLong;
 import com.veltro.inventory.service.AuditCommandExecutor;
-import com.veltro.inventory.dto.AddItemRequest;
-import com.veltro.inventory.dto.ConfirmSaleRequest;
-import com.veltro.inventory.dto.ModifyItemRequest;
-import com.veltro.inventory.dto.SaleResponse;
+import com.veltro.inventory.dto.pos.AddItemRequest;
+import com.veltro.inventory.dto.pos.ConfirmSaleRequest;
+import com.veltro.inventory.dto.pos.ModifyItemRequest;
+import com.veltro.inventory.dto.pos.SaleResponse;
 import com.veltro.inventory.event.SaleCompletedEvent;
 import com.veltro.inventory.event.SaleVoidedEvent;
 import com.veltro.inventory.mapper.SaleMapper;
@@ -194,7 +194,7 @@ class SaleServiceTest {
         when(saleRepository.save(sale)).thenReturn(sale);
         when(saleMapper.toResponse(sale)).thenReturn(createSaleResponse(1L, "VLT-2026-000001"));
 
-        // Do not add item directly—only go through service call
+        // Do not add item directly窶俳nly go through service call
         // SaleDetailEntity detail = createSaleDetail(product, 2, new BigDecimal("15.0000"));
 
         SaleResponse response = saleService.addItem(1L, request);
@@ -411,3 +411,4 @@ class SaleServiceTest {
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 }
+

@@ -1,6 +1,6 @@
 package com.veltro.inventory.mapper;
 
-import com.veltro.inventory.dto.AlertResponse;
+import com.veltro.inventory.dto.inventory.AlertResponse;
 import com.veltro.inventory.model.AlertEntity;
 import java.time.OffsetDateTime;
 import org.mapstruct.Mapper;
@@ -22,3 +22,4 @@ public interface AlertMapper {
         return instant != null ? instant.atOffset(java.time.ZoneOffset.UTC) : null;
     }
 }
+

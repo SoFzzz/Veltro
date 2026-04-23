@@ -1,12 +1,13 @@
 package com.veltro.inventory.service;
 
 import static org.mockito.ArgumentMatchers.anyLong;
-import com.veltro.inventory.dto.AddOrderItemRequest;
-import com.veltro.inventory.dto.CreatePurchaseOrderRequest;
-import com.veltro.inventory.dto.PurchaseOrderResponse;
+import com.veltro.inventory.dto.common.PageResponse;
+import com.veltro.inventory.dto.purchasing.AddOrderItemRequest;
+import com.veltro.inventory.dto.purchasing.CreatePurchaseOrderRequest;
+import com.veltro.inventory.dto.purchasing.PurchaseOrderResponse;
 import com.veltro.inventory.event.OrderReceivedEvent;
 import com.veltro.inventory.mapper.PurchaseOrderMapper;
-import com.veltro.inventory.dto.AuditInfo;
+import com.veltro.inventory.dto.audit.AuditInfo;
 import com.veltro.inventory.model.ProductEntity;
 import com.veltro.inventory.repository.ProductRepository;
 import com.veltro.inventory.model.UserEntity;
@@ -28,6 +29,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -159,16 +163,18 @@ class PurchaseOrderServiceTest {
     @DisplayName("Should find all active purchase orders")
     void shouldFindAllActivePurchaseOrders() {
         // Given
-        when(orderRepository.findAllByActiveTrueAndBusinessId(anyLong())).thenReturn(List.of(orderEntity));
+        Pageable pageable = PageRequest.of(0, 20);
+        when(orderRepository.findAllByActiveTrueAndBusinessId(anyLong(), eq(pageable)))
+                .thenReturn(new PageImpl<>(List.of(orderEntity), pageable, 1));
         when(orderMapper.toResponse(orderEntity)).thenReturn(orderResponse);
 
         // When
-        List<PurchaseOrderResponse> result = orderService.findAll(null);
+        PageResponse<PurchaseOrderResponse> result = orderService.findAll(null, pageable);
 
         // Then
-        assertThat(result).hasSize(1);
-        assertThat(result.getFirst()).isEqualTo(orderResponse);
-        verify(orderRepository, times(1)).findAllByActiveTrueAndBusinessId(anyLong());
+        assertThat(result.content()).hasSize(1);
+        assertThat(result.content().getFirst()).isEqualTo(orderResponse);
+        verify(orderRepository, times(1)).findAllByActiveTrueAndBusinessId(anyLong(), eq(pageable));
         verify(orderMapper, times(1)).toResponse(orderEntity);
     }
 
@@ -177,16 +183,18 @@ class PurchaseOrderServiceTest {
     void shouldFindPurchaseOrdersBySupplier() {
         // Given
         Long supplierId = 1L;
-        when(orderRepository.findBySupplierIdAndActiveTrueAndBusinessId(eq(supplierId), anyLong())).thenReturn(List.of(orderEntity));
+        Pageable pageable = PageRequest.of(0, 20);
+        when(orderRepository.findBySupplierIdAndActiveTrueAndBusinessId(eq(supplierId), anyLong(), eq(pageable)))
+                .thenReturn(new PageImpl<>(List.of(orderEntity), pageable, 1));
         when(orderMapper.toResponse(orderEntity)).thenReturn(orderResponse);
 
         // When
-        List<PurchaseOrderResponse> result = orderService.findBySupplier(supplierId);
+        PageResponse<PurchaseOrderResponse> result = orderService.findBySupplier(supplierId, pageable);
 
         // Then
-        assertThat(result).hasSize(1);
-        assertThat(result.getFirst()).isEqualTo(orderResponse);
-        verify(orderRepository, times(1)).findBySupplierIdAndActiveTrueAndBusinessId(eq(supplierId), anyLong());
+        assertThat(result.content()).hasSize(1);
+        assertThat(result.content().getFirst()).isEqualTo(orderResponse);
+        verify(orderRepository, times(1)).findBySupplierIdAndActiveTrueAndBusinessId(eq(supplierId), anyLong(), eq(pageable));
         verify(orderMapper, times(1)).toResponse(orderEntity);
     }
 
@@ -433,3 +441,4 @@ class PurchaseOrderServiceTest {
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 }
+

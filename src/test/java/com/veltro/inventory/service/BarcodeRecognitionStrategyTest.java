@@ -1,6 +1,6 @@
 package com.veltro.inventory.service;
 
-import com.veltro.inventory.dto.ProductSuggestionResponse;
+import com.veltro.inventory.dto.scanner.ProductSuggestionResponse;
 import com.veltro.inventory.service.BarcodeRecognitionStrategy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -67,4 +67,5 @@ class BarcodeRecognitionStrategyTest {
         assertThat(response.strategyUsed()).isEqualTo("BARCODE");
     }
 }
+
 

@@ -1,8 +1,8 @@
 package com.veltro.inventory.controller;
 
 import com.veltro.inventory.controller.CategoryController;
-import com.veltro.inventory.dto.CategoryResponse;
-import com.veltro.inventory.dto.CreateCategoryRequest;
+import com.veltro.inventory.dto.catalog.CategoryResponse;
+import com.veltro.inventory.dto.catalog.CreateCategoryRequest;
 import com.veltro.inventory.service.CategoryService;
 import com.veltro.inventory.exception.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -56,7 +56,7 @@ class CategoryControllerTest {
     }
 
     // -------------------------------------------------------------------------
-    // GET /categories — list roots
+    // GET /categories 窶・list roots
     // -------------------------------------------------------------------------
 
     @Test
@@ -223,3 +223,4 @@ class CategoryControllerTest {
         verify(categoryService).hardDelete(1L);
     }
 }
+

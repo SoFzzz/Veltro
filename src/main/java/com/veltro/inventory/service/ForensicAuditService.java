@@ -1,7 +1,8 @@
 package com.veltro.inventory.service;
 
-import com.veltro.inventory.dto.AuditFilterRequest;
-import com.veltro.inventory.dto.AuditRecordResponse;
+import com.veltro.inventory.dto.audit.AuditFilterRequest;
+import com.veltro.inventory.dto.audit.AuditRecordResponse;
+import com.veltro.inventory.dto.common.PageResponse;
 import com.veltro.inventory.mapper.AuditRecordMapper;
 import com.veltro.inventory.model.AuditEntityType;
 import com.veltro.inventory.repository.AuditRecordRepository;
@@ -9,7 +10,6 @@ import com.veltro.inventory.exception.NotFoundException;
 import com.veltro.inventory.security.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,7 +22,7 @@ import java.util.List;
  * <p>Provides filtered and paginated access to the append-only audit trail.
  * Supports filtering by entity type, action, username, and date range.
  * 
- * <p>All query methods are read-only — audit records cannot be updated or deleted.
+ * <p>All query methods are read-only 窶・audit records cannot be updated or deleted.
  */
 @Slf4j
 @Service
@@ -43,12 +43,12 @@ public class ForensicAuditService {
      * @param pageable pagination and sorting parameters
      * @return page of audit records
      */
-    public Page<AuditRecordResponse> findAll(AuditFilterRequest filter, Pageable pageable) {
+    public PageResponse<AuditRecordResponse> findAll(AuditFilterRequest filter, Pageable pageable) {
         log.debug("Finding audit records with filters: {}", filter);
 
         Long businessId = TenantContext.getBusinessId();
 
-        Page<AuditRecordResponse> results = auditRepository.findByFiltersAndBusinessId(
+        var page = auditRepository.findByFiltersAndBusinessId(
                 filter.entityType(),
                 filter.action(),
                 filter.username(),
@@ -58,8 +58,10 @@ public class ForensicAuditService {
                 pageable
         ).map(mapper::toResponse);
 
+        PageResponse<AuditRecordResponse> results = PageResponse.from(page);
+
         log.debug("Found {} audit records (page {} of {})",
-                results.getNumberOfElements(), results.getNumber(), results.getTotalPages());
+                results.content().size(), results.page(), results.totalPages());
 
         return results;
     }
@@ -107,3 +109,4 @@ public class ForensicAuditService {
         return records;
     }
 }
+

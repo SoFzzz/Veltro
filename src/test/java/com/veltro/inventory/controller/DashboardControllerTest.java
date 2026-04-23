@@ -1,7 +1,7 @@
 package com.veltro.inventory.controller;
 
 import com.veltro.inventory.controller.DashboardController;
-import com.veltro.inventory.dto.DashboardResponse;
+import com.veltro.inventory.dto.dashboard.DashboardResponse;
 import com.veltro.inventory.service.DashboardService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -86,3 +86,4 @@ class DashboardControllerTest {
         verify(dashboardService).getDashboard();
     }
 }
+

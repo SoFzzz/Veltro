@@ -1,6 +1,6 @@
 package com.veltro.inventory.service;
 
-import com.veltro.inventory.dto.ProductSuggestionResponse;
+import com.veltro.inventory.dto.scanner.ProductSuggestionResponse;
 
 /**
  * Strategy Pattern interface for product scanning (B3-01).
@@ -43,4 +43,5 @@ public interface ScannerStrategy {
      */
     boolean supports(Object input);
 }
+
 

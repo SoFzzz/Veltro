@@ -2,11 +2,11 @@ package com.veltro.inventory.service;
 
 import static org.mockito.ArgumentMatchers.anyLong;
 import com.veltro.inventory.service.AuditCommandExecutor;
-import com.veltro.inventory.dto.InventoryResponse;
-import com.veltro.inventory.dto.StockAdjustmentRequest;
-import com.veltro.inventory.dto.StockEntryRequest;
-import com.veltro.inventory.dto.StockExitRequest;
-import com.veltro.inventory.dto.UpdateStockLimitsRequest;
+import com.veltro.inventory.dto.inventory.InventoryResponse;
+import com.veltro.inventory.dto.inventory.StockAdjustmentRequest;
+import com.veltro.inventory.dto.inventory.StockEntryRequest;
+import com.veltro.inventory.dto.inventory.StockExitRequest;
+import com.veltro.inventory.dto.inventory.UpdateStockLimitsRequest;
 import com.veltro.inventory.mapper.InventoryMapper;
 import com.veltro.inventory.mapper.InventoryMovementMapper;
 import com.veltro.inventory.model.ProductEntity;
@@ -189,7 +189,7 @@ class InventoryServiceTest {
     }
 
     // -------------------------------------------------------------------------
-    // recordExit — AC-04
+    // recordExit 窶・AC-04
     // -------------------------------------------------------------------------
 
     @Test
@@ -394,3 +394,4 @@ class InventoryServiceTest {
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 }
+

@@ -1,8 +1,8 @@
 package com.veltro.inventory.controller;
 
-import com.veltro.inventory.dto.CategoryResponse;
-import com.veltro.inventory.dto.CreateCategoryRequest;
-import com.veltro.inventory.dto.UpdateCategoryRequest;
+import com.veltro.inventory.dto.catalog.CategoryResponse;
+import com.veltro.inventory.dto.catalog.CreateCategoryRequest;
+import com.veltro.inventory.dto.catalog.UpdateCategoryRequest;
 import com.veltro.inventory.service.CategoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -55,7 +55,7 @@ public class CategoryController {
     }
 
     // -------------------------------------------------------------------------
-    // POST / PUT endpoints — ADMIN or WAREHOUSE only
+    // POST / PUT endpoints 窶・ADMIN or WAREHOUSE only
     // -------------------------------------------------------------------------
 
     @PostMapping
@@ -101,3 +101,4 @@ public class CategoryController {
         return ResponseEntity.noContent().build();
     }
 }
+
