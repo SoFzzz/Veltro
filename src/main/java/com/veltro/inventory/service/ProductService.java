@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * Application service for product management (B1-03).
@@ -116,6 +117,18 @@ public class ProductService {
         ProductEntity saved = productRepository.save(entity);
         log.info("Product updated: id={}", saved.getId());
         return productMapper.toResponse(saved);
+    }
+
+    @Transactional
+    public void uploadImages(Long id, java.util.List<MultipartFile> images) {
+        // Find product
+        ProductEntity entity = requireActive(id);
+        
+        // Save images/generate embedding logic would go here.
+        // For now, log the uploads.
+        for (MultipartFile image : images) {
+            log.info("Uploaded image for product id={}: {} ({} bytes)", id, image.getOriginalFilename(), image.getSize());
+        }
     }
 
     /**
