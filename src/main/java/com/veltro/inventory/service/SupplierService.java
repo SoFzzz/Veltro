@@ -1,7 +1,6 @@
 package com.veltro.inventory.service;
 
 import com.veltro.inventory.dto.purchasing.CreateSupplierRequest;
-import com.veltro.inventory.dto.common.PageResponse;
 import com.veltro.inventory.dto.purchasing.SupplierResponse;
 import com.veltro.inventory.dto.purchasing.UpdateSupplierRequest;
 import com.veltro.inventory.mapper.SupplierMapper;
@@ -12,9 +11,10 @@ import com.veltro.inventory.exception.NotFoundException;
 import com.veltro.inventory.security.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 /**
  * Application service for supplier management (B2-04).
@@ -39,12 +39,12 @@ public class SupplierService {
      * @return list of supplier responses
      */
     @Transactional(readOnly = true)
-    public PageResponse<SupplierResponse> findAll(Pageable pageable) {
+    public List<SupplierResponse> findAll() {
         Long businessId = TenantContext.getBusinessId();
-        return PageResponse.from(
-                supplierRepository.findAllByActiveTrueAndBusinessId(businessId, pageable)
-                        .map(supplierMapper::toResponse)
-        );
+        return supplierRepository.findAllByActiveTrueAndBusinessIdOrderByIdAsc(businessId)
+                .stream()
+                .map(supplierMapper::toResponse)
+                .toList();
     }
 
     /**
