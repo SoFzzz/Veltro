@@ -4,14 +4,11 @@ spring:
   config:
     import: optional:file:./.env[.properties]
   profiles:
-<<<<<<< HEAD
+    # Keep a single active profile to avoid merge-conflict artifacts.
     active: dev-with-ai
-=======
-    active: local
   threads:
     virtual:
       enabled: true
->>>>>>> Refactor-Backend
 
 # JWT configuration (B1-02).
 # Override jwt.secret per environment profile; never commit a real secret here.
