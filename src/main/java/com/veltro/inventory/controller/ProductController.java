@@ -19,7 +19,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * REST controller for product catalog management (B1-03).
@@ -86,6 +88,15 @@ public class ProductController {
             @PathVariable Long id,
             @Valid @RequestBody UpdateProductRequest request) {
         return ResponseEntity.ok(productService.update(id, request));
+    }
+
+    @PostMapping("/{id}/images")
+    @PreAuthorize("hasAnyRole('ADMIN', 'WAREHOUSE')")
+    public ResponseEntity<Void> uploadImages(
+            @PathVariable Long id,
+            @RequestParam("images") java.util.List<MultipartFile> images) {
+        productService.uploadImages(id, images);
+        return ResponseEntity.ok().build();
     }
 
     /**
