@@ -12,6 +12,7 @@ import com.veltro.inventory.service.InventoryService;
 import com.veltro.inventory.model.ProductEntity;
 import com.veltro.inventory.repository.CategoryRepository;
 import com.veltro.inventory.repository.ProductRepository;
+import com.veltro.inventory.repository.SaleDetailRepository;
 import com.veltro.inventory.exception.InvalidPriceException;
 import com.veltro.inventory.exception.NotFoundException;
 import com.veltro.inventory.security.VeltroUserDetails;
@@ -55,6 +56,9 @@ class ProductServiceTest {
     private CategoryRepository categoryRepository;
 
     @Mock
+    private SaleDetailRepository saleDetailRepository;
+
+    @Mock
     private ProductMapper productMapper;
 
     @Mock
@@ -62,10 +66,11 @@ class ProductServiceTest {
 
     private ProductService productService;
 
+
     @BeforeEach
     void setUp() {
         authenticateAsTenantUser();
-        productService = new ProductService(productRepository, categoryRepository, productMapper, inventoryService);
+        productService = new ProductService(productRepository, categoryRepository, saleDetailRepository, productMapper, inventoryService);
     }
 
     @AfterEach
