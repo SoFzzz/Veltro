@@ -5,6 +5,7 @@ import com.veltro.inventory.dto.auth.LoginRequest;
 import com.veltro.inventory.dto.auth.LoginResponse;
 import com.veltro.inventory.dto.auth.RefreshRequest;
 import com.veltro.inventory.dto.auth.RegisterRequest;
+import com.veltro.inventory.dto.auth.WorkerCreatedResponse;
 import com.veltro.inventory.dto.auth.WorkerResponse;
 import com.veltro.inventory.model.BusinessEntity;
 import com.veltro.inventory.model.Role;
@@ -195,10 +196,10 @@ public class AuthService {
      *
      * @param adminBusinessId the businessId of the admin creating the worker
      * @param request         the worker details
-     * @return the created UserEntity
+     * @return the created worker data (excludes passwordHash)
      */
     @Transactional
-    public UserEntity createWorker(Long adminBusinessId, RegisterRequest request) {
+    public WorkerCreatedResponse createWorker(Long adminBusinessId, RegisterRequest request) {
         Role role = parseWorkerRole(request.role());
         if (role == Role.ADMIN) {
             throw new IllegalArgumentException("Cannot create ADMIN workers. Use registration instead.");
@@ -219,10 +220,15 @@ public class AuthService {
         worker.setRole(role);
         worker.setBusinessId(adminBusinessId);
         worker.setActive(true);
-        worker = userRepository.save(worker);
+        userRepository.save(worker);
 
         log.info("Worker '{}' ({}) created in business {}", worker.getUsername(), role, adminBusinessId);
-        return worker;
+        return new WorkerCreatedResponse(
+                worker.getId(),
+                worker.getUsername(),
+                worker.getEmail(),
+                worker.getRole().name(),
+                worker.getCreatedAt());
     }
 
     // -------------------------------------------------------------------------

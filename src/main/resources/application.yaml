@@ -12,7 +12,7 @@ spring:
 # JWT configuration (B1-02).
 # Override jwt.secret per environment profile; never commit a real secret here.
 jwt:
-  secret: ${JWT_SECRET:dev-only-secret-do-not-use-in-production-min-256bits!!}
+  secret: ${JWT_SECRET}
   access-token-expiration: 900        # 15 minutes in seconds
   refresh-token-expiration: 604800    # 7 days in seconds
 

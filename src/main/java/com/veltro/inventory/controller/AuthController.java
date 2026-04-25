@@ -5,9 +5,10 @@ import com.veltro.inventory.dto.auth.LoginRequest;
 import com.veltro.inventory.dto.auth.LoginResponse;
 import com.veltro.inventory.dto.auth.RefreshRequest;
 import com.veltro.inventory.dto.auth.RegisterRequest;
+import com.veltro.inventory.dto.auth.WorkerCreatedResponse;
 import com.veltro.inventory.dto.auth.WorkerResponse;
+import com.veltro.inventory.dto.auth.UpdateRoleRequest;
 import com.veltro.inventory.service.AuthService;
-import com.veltro.inventory.model.UserEntity;
 import com.veltro.inventory.security.TenantContext;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -134,16 +135,12 @@ public class AuthController {
      */
     @PostMapping("/workers")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, Object>> createWorker(
+    public ResponseEntity<WorkerCreatedResponse> createWorker(
             @Valid @RequestBody RegisterRequest request) {
 
         Long businessId = TenantContext.getBusinessId();
-        UserEntity worker = authService.createWorker(businessId, request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
-                "success", true,
-                "message", "Worker created successfully",
-                "username", worker.getUsername(),
-                "role", worker.getRole().name()));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(authService.createWorker(businessId, request));
     }
 
     /**
@@ -177,15 +174,10 @@ public class AuthController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<WorkerResponse> updateWorkerRole(
             @PathVariable Long id,
-            @RequestBody Map<String, String> body) {
-
-        String newRole = body.get("role");
-        if (newRole == null || newRole.isBlank()) {
-            throw new IllegalArgumentException("Role is required");
-        }
+            @Valid @RequestBody UpdateRoleRequest request) {
 
         Long businessId = TenantContext.getBusinessId();
-        WorkerResponse updated = authService.updateWorkerRole(id, newRole, businessId);
+        WorkerResponse updated = authService.updateWorkerRole(id, request.role(), businessId);
         return ResponseEntity.ok(updated);
     }
 }
