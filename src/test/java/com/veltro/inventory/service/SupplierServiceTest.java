@@ -1,7 +1,6 @@
 package com.veltro.inventory.service;
 
 import static org.mockito.ArgumentMatchers.anyLong;
-import com.veltro.inventory.dto.common.PageResponse;
 import com.veltro.inventory.dto.purchasing.CreateSupplierRequest;
 import com.veltro.inventory.dto.purchasing.SupplierResponse;
 import com.veltro.inventory.dto.purchasing.UpdateSupplierRequest;
@@ -19,8 +18,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -101,18 +98,17 @@ class SupplierServiceTest {
     @DisplayName("Should find all active suppliers")
     void shouldFindAllActiveSuppliers() {
         // Given
-        var pageable = PageRequest.of(0, 20);
-        when(supplierRepository.findAllByActiveTrueAndBusinessId(anyLong(), eq(pageable)))
-                .thenReturn(new PageImpl<>(List.of(supplierEntity), pageable, 1));
+        when(supplierRepository.findAllByActiveTrueAndBusinessIdOrderByIdAsc(anyLong()))
+                .thenReturn(List.of(supplierEntity));
         when(supplierMapper.toResponse(supplierEntity)).thenReturn(supplierResponse);
 
         // When
-        PageResponse<SupplierResponse> result = supplierService.findAll(pageable);
+        List<SupplierResponse> result = supplierService.findAll();
 
         // Then
-        assertThat(result.content()).hasSize(1);
-        assertThat(result.content().getFirst()).isEqualTo(supplierResponse);
-        verify(supplierRepository, times(1)).findAllByActiveTrueAndBusinessId(anyLong(), eq(pageable));
+        assertThat(result).hasSize(1);
+        assertThat(result.getFirst()).isEqualTo(supplierResponse);
+        verify(supplierRepository, times(1)).findAllByActiveTrueAndBusinessIdOrderByIdAsc(anyLong());
         verify(supplierMapper, times(1)).toResponse(supplierEntity);
     }
 
