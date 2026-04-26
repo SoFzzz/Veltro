@@ -55,6 +55,9 @@ public class PurchaseOrderDetailEntity extends AbstractAuditableEntity {
     @Column(name = "unit_cost", nullable = false, precision = 19, scale = 4)
     private BigDecimal unitCost;
 
+    @Column(name = "business_id", nullable = false)
+    private Long businessId;
+
     /**
      * Calculates remaining quantity to be received.
      *
@@ -85,6 +88,7 @@ public class PurchaseOrderDetailEntity extends AbstractAuditableEntity {
         clone.requestedQuantity = this.requestedQuantity;
         clone.receivedQuantity = 0;  // Reset for new order
         clone.unitCost = this.unitCost;
+        clone.businessId = this.businessId;
         // Note: purchaseOrder, id, audit fields are null (will be set on save)
         return clone;
     }

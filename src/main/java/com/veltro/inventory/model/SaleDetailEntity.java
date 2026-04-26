@@ -44,6 +44,9 @@ public class SaleDetailEntity extends AbstractAuditableEntity {
     @Column(nullable = false)
     private Long version;
 
+    @Column(name = "business_id", nullable = false)
+    private Long businessId;
+
     public void calculateSubtotal() {
         this.subtotal = this.unitPrice.multiply(BigDecimal.valueOf(this.quantity));
     }
