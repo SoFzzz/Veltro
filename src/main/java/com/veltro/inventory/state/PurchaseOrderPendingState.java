@@ -15,6 +15,7 @@ public class PurchaseOrderPendingState implements PurchaseOrderState {
 
     @Override
     public void addItem(PurchaseOrderEntity order, PurchaseOrderDetailEntity detail) {
+        detail.setBusinessId(order.getBusinessId());
         detail.setPurchaseOrder(order);
         order.getDetails().add(detail);
         order.recalculateTotals();
