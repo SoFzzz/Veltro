@@ -1,7 +1,6 @@
 package com.veltro.inventory.controller;
 
 import com.veltro.inventory.controller.SupplierController;
-import com.veltro.inventory.dto.common.PageResponse;
 import com.veltro.inventory.dto.purchasing.CreateSupplierRequest;
 import com.veltro.inventory.dto.purchasing.SupplierResponse;
 import com.veltro.inventory.dto.purchasing.UpdateSupplierRequest;
@@ -13,9 +12,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -60,11 +56,6 @@ class SupplierControllerTest {
         );
     }
 
-    private static PageResponse<SupplierResponse> stubSupplierPage() {
-        Pageable pageable = PageRequest.of(0, 20);
-        return PageResponse.from(new PageImpl<>(List.of(stubSupplier()), pageable, 1));
-    }
-
     // -------------------------------------------------------------------------
     // GET /suppliers 窶・list all
     // -------------------------------------------------------------------------
@@ -72,34 +63,30 @@ class SupplierControllerTest {
     @Test
     @DisplayName("GET /suppliers returns 200 with supplier list")
     void findAll_returns200WithList() {
-        Pageable pageable = PageRequest.of(0, 20);
-        when(supplierService.findAll(pageable)).thenReturn(stubSupplierPage());
+        when(supplierService.findAll()).thenReturn(List.of(stubSupplier()));
 
-        ResponseEntity<PageResponse<SupplierResponse>> response = controller.findAll(pageable);
+        ResponseEntity<List<SupplierResponse>> response = controller.findAll();
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().content()).hasSize(1);
-        assertThat(response.getBody().content().get(0).id()).isEqualTo(1L);
-        assertThat(response.getBody().content().get(0).name()).isEqualTo("Test Supplier Corp");
-        assertThat(response.getBody().content().get(0).taxId()).isEqualTo("12345678901");
-        verify(supplierService).findAll(pageable);
+        assertThat(response.getBody()).hasSize(1);
+        assertThat(response.getBody().get(0).id()).isEqualTo(1L);
+        assertThat(response.getBody().get(0).name()).isEqualTo("Test Supplier Corp");
+        assertThat(response.getBody().get(0).taxId()).isEqualTo("12345678901");
+        verify(supplierService).findAll();
     }
 
     @Test
     @DisplayName("GET /suppliers returns empty list when no suppliers exist")
     void findAll_noSuppliers_returnsEmptyList() {
-        Pageable pageable = PageRequest.of(0, 20);
-        when(supplierService.findAll(pageable)).thenReturn(
-                PageResponse.from(new PageImpl<>(List.of(), pageable, 0))
-        );
+        when(supplierService.findAll()).thenReturn(List.of());
 
-        ResponseEntity<PageResponse<SupplierResponse>> response = controller.findAll(pageable);
+        ResponseEntity<List<SupplierResponse>> response = controller.findAll();
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().content()).isEmpty();
-        verify(supplierService).findAll(pageable);
+        assertThat(response.getBody()).isEmpty();
+        verify(supplierService).findAll();
     }
 
     // -------------------------------------------------------------------------

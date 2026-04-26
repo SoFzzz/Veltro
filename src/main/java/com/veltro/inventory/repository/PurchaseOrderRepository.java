@@ -20,6 +20,13 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrderEnti
 
     Page<PurchaseOrderEntity> findBySupplierIdAndActiveTrueAndBusinessId(Long supplierId, Long businessId, Pageable pageable);
 
+    // Non-paginated variants: POS purchase orders are short lists.
+    List<PurchaseOrderEntity> findAllByActiveTrueAndBusinessIdOrderByIdAsc(Long businessId);
+
+    List<PurchaseOrderEntity> findAllByActiveTrueAndStatusAndBusinessIdOrderByIdAsc(PurchaseOrderStatus status, Long businessId);
+
+    List<PurchaseOrderEntity> findBySupplierIdAndActiveTrueAndBusinessIdOrderByIdAsc(Long supplierId, Long businessId);
+
     Optional<PurchaseOrderEntity> findByIdAndActiveTrueAndBusinessId(Long id, Long businessId);
 
     Optional<PurchaseOrderEntity> findByOrderNumberAndActiveTrueAndBusinessId(String orderNumber, Long businessId);

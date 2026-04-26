@@ -1,7 +1,6 @@
 package com.veltro.inventory.controller;
 
 import com.veltro.inventory.controller.PurchaseOrderController;
-import com.veltro.inventory.dto.common.PageResponse;
 import com.veltro.inventory.dto.purchasing.AddOrderItemRequest;
 import com.veltro.inventory.dto.purchasing.CreatePurchaseOrderRequest;
 import com.veltro.inventory.dto.purchasing.PurchaseOrderResponse;
@@ -15,9 +14,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -68,11 +64,6 @@ class PurchaseOrderControllerTest {
         );
     }
 
-    private static PageResponse<PurchaseOrderResponse> stubOrderPage() {
-        Pageable pageable = PageRequest.of(0, 20);
-        return PageResponse.from(new PageImpl<>(List.of(stubPurchaseOrder()), pageable, 1));
-    }
-
     // -------------------------------------------------------------------------
     // GET /purchase-orders 窶・list all
     // -------------------------------------------------------------------------
@@ -80,33 +71,29 @@ class PurchaseOrderControllerTest {
     @Test
     @DisplayName("GET /purchase-orders returns 200 with order list")
     void findAll_returns200WithList() {
-        Pageable pageable = PageRequest.of(0, 20);
-        when(purchaseOrderService.findAll(null, pageable)).thenReturn(stubOrderPage());
+        when(purchaseOrderService.findAll(null)).thenReturn(List.of(stubPurchaseOrder()));
 
-        ResponseEntity<PageResponse<PurchaseOrderResponse>> response = controller.findAll(null, pageable);
+        ResponseEntity<List<PurchaseOrderResponse>> response = controller.findAll(null);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().content()).hasSize(1);
-        assertThat(response.getBody().content().get(0).id()).isEqualTo(1L);
-        assertThat(response.getBody().content().get(0).orderNumber()).isEqualTo("PO-2026-000001");
-        verify(purchaseOrderService).findAll(null, pageable);
+        assertThat(response.getBody()).hasSize(1);
+        assertThat(response.getBody().get(0).id()).isEqualTo(1L);
+        assertThat(response.getBody().get(0).orderNumber()).isEqualTo("PO-2026-000001");
+        verify(purchaseOrderService).findAll(null);
     }
 
     @Test
     @DisplayName("GET /purchase-orders returns empty list when no orders exist")
     void findAll_noOrders_returnsEmptyList() {
-        Pageable pageable = PageRequest.of(0, 20);
-        when(purchaseOrderService.findAll(null, pageable)).thenReturn(
-                PageResponse.from(new PageImpl<>(List.of(), pageable, 0))
-        );
+        when(purchaseOrderService.findAll(null)).thenReturn(List.of());
 
-        ResponseEntity<PageResponse<PurchaseOrderResponse>> response = controller.findAll(null, pageable);
+        ResponseEntity<List<PurchaseOrderResponse>> response = controller.findAll(null);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().content()).isEmpty();
-        verify(purchaseOrderService).findAll(null, pageable);
+        assertThat(response.getBody()).isEmpty();
+        verify(purchaseOrderService).findAll(null);
     }
 
     // -------------------------------------------------------------------------
@@ -116,32 +103,28 @@ class PurchaseOrderControllerTest {
     @Test
     @DisplayName("GET /purchase-orders?supplierId=1 returns 200 with supplier orders")
     void findBySupplier_returns200WithSupplierOrders() {
-        Pageable pageable = PageRequest.of(0, 20);
-        when(purchaseOrderService.findBySupplier(1L, pageable)).thenReturn(stubOrderPage());
+        when(purchaseOrderService.findBySupplier(1L)).thenReturn(List.of(stubPurchaseOrder()));
 
-        ResponseEntity<PageResponse<PurchaseOrderResponse>> response = controller.findBySupplier(1L, pageable);
+        ResponseEntity<List<PurchaseOrderResponse>> response = controller.findBySupplier(1L);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().content()).hasSize(1);
-        assertThat(response.getBody().content().get(0).supplierId()).isEqualTo(1L);
-        verify(purchaseOrderService).findBySupplier(1L, pageable);
+        assertThat(response.getBody()).hasSize(1);
+        assertThat(response.getBody().get(0).supplierId()).isEqualTo(1L);
+        verify(purchaseOrderService).findBySupplier(1L);
     }
 
     @Test
     @DisplayName("GET /purchase-orders?supplierId=999 returns empty list for non-existing supplier")
     void findBySupplier_nonExistingSupplier_returnsEmptyList() {
-        Pageable pageable = PageRequest.of(0, 20);
-        when(purchaseOrderService.findBySupplier(999L, pageable)).thenReturn(
-                PageResponse.from(new PageImpl<>(List.of(), pageable, 0))
-        );
+        when(purchaseOrderService.findBySupplier(999L)).thenReturn(List.of());
 
-        ResponseEntity<PageResponse<PurchaseOrderResponse>> response = controller.findBySupplier(999L, pageable);
+        ResponseEntity<List<PurchaseOrderResponse>> response = controller.findBySupplier(999L);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().content()).isEmpty();
-        verify(purchaseOrderService).findBySupplier(999L, pageable);
+        assertThat(response.getBody()).isEmpty();
+        verify(purchaseOrderService).findBySupplier(999L);
     }
 
     // -------------------------------------------------------------------------

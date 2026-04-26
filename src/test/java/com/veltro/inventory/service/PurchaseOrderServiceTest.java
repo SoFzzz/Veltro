@@ -1,7 +1,6 @@
 package com.veltro.inventory.service;
 
 import static org.mockito.ArgumentMatchers.anyLong;
-import com.veltro.inventory.dto.common.PageResponse;
 import com.veltro.inventory.dto.purchasing.AddOrderItemRequest;
 import com.veltro.inventory.dto.purchasing.CreatePurchaseOrderRequest;
 import com.veltro.inventory.dto.purchasing.PurchaseOrderResponse;
@@ -29,7 +28,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -163,18 +161,17 @@ class PurchaseOrderServiceTest {
     @DisplayName("Should find all active purchase orders")
     void shouldFindAllActivePurchaseOrders() {
         // Given
-        Pageable pageable = PageRequest.of(0, 20);
-        when(orderRepository.findAllByActiveTrueAndBusinessId(anyLong(), eq(pageable)))
-                .thenReturn(new PageImpl<>(List.of(orderEntity), pageable, 1));
+        when(orderRepository.findAllByActiveTrueAndBusinessIdOrderByIdAsc(anyLong()))
+                .thenReturn(List.of(orderEntity));
         when(orderMapper.toResponse(orderEntity)).thenReturn(orderResponse);
 
         // When
-        PageResponse<PurchaseOrderResponse> result = orderService.findAll(null, pageable);
+        List<PurchaseOrderResponse> result = orderService.findAll(null);
 
         // Then
-        assertThat(result.content()).hasSize(1);
-        assertThat(result.content().getFirst()).isEqualTo(orderResponse);
-        verify(orderRepository, times(1)).findAllByActiveTrueAndBusinessId(anyLong(), eq(pageable));
+        assertThat(result).hasSize(1);
+        assertThat(result.getFirst()).isEqualTo(orderResponse);
+        verify(orderRepository, times(1)).findAllByActiveTrueAndBusinessIdOrderByIdAsc(anyLong());
         verify(orderMapper, times(1)).toResponse(orderEntity);
     }
 
@@ -183,18 +180,17 @@ class PurchaseOrderServiceTest {
     void shouldFindPurchaseOrdersBySupplier() {
         // Given
         Long supplierId = 1L;
-        Pageable pageable = PageRequest.of(0, 20);
-        when(orderRepository.findBySupplierIdAndActiveTrueAndBusinessId(eq(supplierId), anyLong(), eq(pageable)))
-                .thenReturn(new PageImpl<>(List.of(orderEntity), pageable, 1));
+        when(orderRepository.findBySupplierIdAndActiveTrueAndBusinessIdOrderByIdAsc(eq(supplierId), anyLong()))
+                .thenReturn(List.of(orderEntity));
         when(orderMapper.toResponse(orderEntity)).thenReturn(orderResponse);
 
         // When
-        PageResponse<PurchaseOrderResponse> result = orderService.findBySupplier(supplierId, pageable);
+        List<PurchaseOrderResponse> result = orderService.findBySupplier(supplierId);
 
         // Then
-        assertThat(result.content()).hasSize(1);
-        assertThat(result.content().getFirst()).isEqualTo(orderResponse);
-        verify(orderRepository, times(1)).findBySupplierIdAndActiveTrueAndBusinessId(eq(supplierId), anyLong(), eq(pageable));
+        assertThat(result).hasSize(1);
+        assertThat(result.getFirst()).isEqualTo(orderResponse);
+        verify(orderRepository, times(1)).findBySupplierIdAndActiveTrueAndBusinessIdOrderByIdAsc(eq(supplierId), anyLong());
         verify(orderMapper, times(1)).toResponse(orderEntity);
     }
 

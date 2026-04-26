@@ -22,6 +22,9 @@ public interface SupplierRepository extends JpaRepository<SupplierEntity, Long> 
 
     Page<SupplierEntity> findAllByActiveTrueAndBusinessId(Long businessId, Pageable pageable);
 
+    // Non-paginated variant: suppliers are expected to be short lists in POS.
+    List<SupplierEntity> findAllByActiveTrueAndBusinessIdOrderByIdAsc(Long businessId);
+
     Optional<SupplierEntity> findByTaxIdAndActiveTrueAndBusinessId(String taxId, Long businessId);
 
     @Query("SELECT CASE WHEN COUNT(s) > 0 THEN true ELSE false END FROM SupplierEntity s " +
