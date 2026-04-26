@@ -43,12 +43,17 @@ public class ProductEmbeddingRepository {
         );
     }
 
-    public void insertEmbedding(Long productId, float[] embedding) {
+    public void insertEmbedding(Long productId, float[] embedding, String modelVersion) {
         String embeddingString = Arrays.toString(embedding);
         
         jdbcTemplate.update(
-            "INSERT INTO product_embeddings (product_id, embedding) VALUES (?, ?::vector)",
-            productId, embeddingString
+            "INSERT INTO product_embeddings (product_id, embedding, model_version) " +
+            "VALUES (?, ?::vector, ?) " +
+            "ON CONFLICT (product_id) DO UPDATE SET " +
+            "embedding = EXCLUDED.embedding, " +
+            "model_version = EXCLUDED.model_version, " +
+            "created_at = CURRENT_TIMESTAMP",
+            productId, embeddingString, modelVersion
         );
     }
 

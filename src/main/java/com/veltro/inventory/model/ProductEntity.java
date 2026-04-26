@@ -6,6 +6,8 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -75,4 +77,11 @@ public class ProductEntity extends AbstractAuditableEntity {
 
     @Column(name = "business_id", nullable = false)
     private Long businessId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "indexing_status", length = 50)
+    private IndexingStatus indexingStatus = IndexingStatus.NOT_INDEXED;
+
+    @Column(name = "last_indexing_error", columnDefinition = "TEXT")
+    private String lastIndexingError;
 }

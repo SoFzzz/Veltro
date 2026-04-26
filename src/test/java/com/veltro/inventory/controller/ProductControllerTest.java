@@ -8,6 +8,7 @@ import com.veltro.inventory.dto.catalog.UpdateProductRequest;
 import com.veltro.inventory.service.ProductService;
 import com.veltro.inventory.exception.InvalidPriceException;
 import com.veltro.inventory.exception.NotFoundException;
+import com.veltro.inventory.model.IndexingStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -58,7 +59,7 @@ class ProductControllerTest {
         return new ProductResponse(
                 1L, "Widget A", "BARC-001", "WGT-001", "A widget",
                 "5.0000", "9.9900", 10L, "Electronics", true,
-                5, 10, 2);
+                5, 10, 2, IndexingStatus.INDEXING_PENDING);
     }
 
     // -------------------------------------------------------------------------

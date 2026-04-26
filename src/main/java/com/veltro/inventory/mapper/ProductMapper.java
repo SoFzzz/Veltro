@@ -44,6 +44,8 @@ public interface ProductMapper {
     @Mapping(target = "createdBy", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "updatedBy", ignore = true)
+    @Mapping(target = "indexingStatus", ignore = true)
+    @Mapping(target = "lastIndexingError", ignore = true)
     ProductEntity toEntity(CreateProductRequest request);
 
     /**
@@ -56,6 +58,8 @@ public interface ProductMapper {
     @Mapping(target = "createdBy", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "updatedBy", ignore = true)
+    @Mapping(target = "indexingStatus", ignore = true)
+    @Mapping(target = "lastIndexingError", ignore = true)
     void updateEntity(UpdateProductRequest request, @MappingTarget ProductEntity entity);
 
     /**

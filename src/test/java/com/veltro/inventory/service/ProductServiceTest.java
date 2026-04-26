@@ -10,8 +10,11 @@ import com.veltro.inventory.dto.catalog.ProductResponse;
 import com.veltro.inventory.mapper.ProductMapper;
 import com.veltro.inventory.service.InventoryService;
 import com.veltro.inventory.model.ProductEntity;
+import com.veltro.inventory.model.IndexingStatus;
 import com.veltro.inventory.repository.CategoryRepository;
 import com.veltro.inventory.repository.ProductRepository;
+import com.veltro.inventory.infrastructure.ai.ClipInferenceService;
+import com.veltro.inventory.repository.ProductEmbeddingRepository;
 import com.veltro.inventory.repository.SaleDetailRepository;
 import com.veltro.inventory.exception.InvalidPriceException;
 import com.veltro.inventory.exception.NotFoundException;
@@ -64,13 +67,19 @@ class ProductServiceTest {
     @Mock
     private InventoryService inventoryService;
 
+    @Mock
+    private ClipInferenceService clipInferenceService;
+
+    @Mock
+    private ProductEmbeddingRepository productEmbeddingRepository;
+
     private ProductService productService;
 
 
     @BeforeEach
     void setUp() {
         authenticateAsTenantUser();
-        productService = new ProductService(productRepository, categoryRepository, saleDetailRepository, productMapper, inventoryService);
+        productService = new ProductService(productRepository, categoryRepository, saleDetailRepository, productMapper, inventoryService, clipInferenceService, productEmbeddingRepository);
     }
 
     @AfterEach
@@ -125,7 +134,7 @@ class ProductServiceTest {
         ProductResponse stubResponse = new ProductResponse(
                 1L, "Widget", "123456789", "WGT-001", "A test widget",
                 "5.0000", "5.0000", 1L, "Test Category", true,
-                5, 10, 2);
+                5, 10, 2, IndexingStatus.INDEXING_PENDING);
 
         when(productMapper.toEntity(any(CreateProductRequest.class))).thenReturn(entity);
         when(productRepository.save(any(ProductEntity.class))).thenReturn(entity);
@@ -157,7 +166,7 @@ class ProductServiceTest {
         ProductResponse stubResponse = new ProductResponse(
                 1L, "Widget", "123456789", "WGT-001", "A test widget",
                 "5.0000", "9.9999", 1L, "Test Category", true,
-                5, 10, 2);
+                5, 10, 2, IndexingStatus.INDEXING_PENDING);
 
         when(productMapper.toEntity(any(CreateProductRequest.class))).thenReturn(entity);
         when(productRepository.save(any(ProductEntity.class))).thenReturn(entity);
@@ -190,7 +199,7 @@ class ProductServiceTest {
         ProductResponse stubResponse = new ProductResponse(
                 42L, "Chip", "BARCODE-001", "CHI-001", null,
                 "1.0000", "2.0000", 1L, "Test Category", true,
-                5, 10, 2);
+                5, 10, 2, IndexingStatus.INDEXING_PENDING);
 
         when(productRepository.findByBarcodeAndActiveTrueAndBusinessId(eq("BARCODE-001"), anyLong()))
                 .thenReturn(Optional.of(entity));
@@ -241,7 +250,7 @@ class ProductServiceTest {
         ProductResponse response = new ProductResponse(
                 1L, "Widget Updated", "BARCODE-001", "SKU-001", "Updated description",
                 "5.0000", "9.0000", 1L, "Test Category", true,
-                5, 10, 2);
+                5, 10, 2, IndexingStatus.INDEXING_PENDING);
 
         when(productRepository.findByBarcodeAndBusinessId("BARCODE-001", BUSINESS_ID))
                 .thenReturn(Optional.of(existing));

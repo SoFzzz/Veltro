@@ -35,3 +35,9 @@ veltro:
       max-image-size-mb: 10
       max-retries: 3
 
+
+    clip:
+      enabled: true
+      model-path: "models/clip-image-vit-32.onnx"
+      model-checksum: ""
+      version: "ViT-B/32-v1"

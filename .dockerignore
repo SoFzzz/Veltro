@@ -1,0 +1,9 @@
+target/
+.git/
+.idea/
+.vscode/
+*.log
+.env
+.gemini/
+.agents/
+node_modules/

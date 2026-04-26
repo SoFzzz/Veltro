@@ -3,6 +3,9 @@ package com.veltro.inventory.controller;
 import com.veltro.inventory.controller.ScannerController;
 import com.veltro.inventory.dto.scanner.ProductSuggestionResponse;
 import com.veltro.inventory.service.ProductRecognitionService;
+import com.veltro.inventory.service.BatchIndexingService;
+import com.veltro.inventory.infrastructure.ai.ClipInferenceService;
+import com.veltro.inventory.repository.ProductEmbeddingRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -36,11 +39,20 @@ class ScannerControllerTest {
     @Mock
     private ProductRecognitionService scannerService;
 
+    @Mock
+    private BatchIndexingService batchIndexingService;
+
+    @Mock
+    private ClipInferenceService clipInferenceService;
+
+    @Mock
+    private ProductEmbeddingRepository productEmbeddingRepository;
+
     private ScannerController scannerController;
 
     @BeforeEach
     void setUp() {
-        scannerController = new ScannerController(scannerService);
+        scannerController = new ScannerController(scannerService, batchIndexingService, clipInferenceService, productEmbeddingRepository);
     }
 
     @Test

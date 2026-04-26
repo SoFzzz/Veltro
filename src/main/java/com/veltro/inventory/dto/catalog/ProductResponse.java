@@ -1,5 +1,7 @@
 package com.veltro.inventory.dto.catalog;
 
+import com.veltro.inventory.model.IndexingStatus;
+
 /**
  * Response record for a product.
  *
@@ -24,7 +26,8 @@ public record ProductResponse(
         // Stock alert thresholds (P4 - Inventory Alerts)
         Integer minStockInfo,
         Integer minStockWarning,
-        Integer minStockCritical
+        Integer minStockCritical,
+        IndexingStatus indexingStatus
 ) {
 }
 
