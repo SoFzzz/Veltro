@@ -9,6 +9,9 @@ import org.mapstruct.Mapping;
 public interface AlertConfigurationMapper {
 
     @Mapping(target = "productId", expression = "java(entity.getProduct() != null ? entity.getProduct().getId() : null)")
+    @Mapping(target = "criticalStock", source = "criticalStock")
+    @Mapping(target = "minStock", source = "minStock")
+    @Mapping(target = "overstockThreshold", source = "overstockThreshold")
     AlertConfigurationResponse toResponse(AlertConfigurationEntity entity);
 }
 
