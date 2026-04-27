@@ -11,7 +11,7 @@ import org.mapstruct.MappingTarget;
 /**
  * MapStruct mapper for {@link SupplierEntity} 竊・supplier DTOs (B2-04).
  */
-@Mapper(componentModel = "spring")
+@Mapper(config = BaseMapperConfig.class)
 public interface SupplierMapper {
 
     /**

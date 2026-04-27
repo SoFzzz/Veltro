@@ -1,31 +1,28 @@
 package com.veltro.inventory.service;
 
-import com.veltro.inventory.model.AlertEntity;
 import com.veltro.inventory.model.AlertSeverity;
 import com.veltro.inventory.model.AlertType;
 
-public class OverstockHandler implements AlertHandler {
-
-    private AlertHandler next;
+public class OverstockHandler extends AbstractAlertHandler {
 
     @Override
-    public void setNext(AlertHandler handler) {
-        this.next = handler;
+    protected boolean evaluate(StockAlertEvaluationContext context) {
+        int threshold = context.getOverstockThreshold();
+        return threshold > 0 && context.getCurrentStock() > threshold;
     }
 
     @Override
-    public void handle(StockAlertEvaluationContext context) {
-        int threshold = context.getOverstockThreshold();
-        if (threshold > 0 && context.getCurrentStock() > threshold) {
-            AlertEntity alert = new AlertEntity();
-            alert.setType(AlertType.OVERSTOCK);
-            alert.setSeverity(AlertSeverity.INFO);
-            alert.setMessage("Product " + context.getProductName() + " exceeds overstock threshold");
-            context.addAlert(alert);
-        }
-        if (next != null) {
-            next.handle(context);
-        }
+    protected AlertType getAlertType() {
+        return AlertType.OVERSTOCK;
+    }
+
+    @Override
+    protected AlertSeverity getAlertSeverity() {
+        return AlertSeverity.INFO;
+    }
+
+    @Override
+    protected String buildMessage(StockAlertEvaluationContext context) {
+        return "Product " + context.getProductName() + " exceeds overstock threshold";
     }
 }
-

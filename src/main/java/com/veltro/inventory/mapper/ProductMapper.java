@@ -18,7 +18,7 @@ import java.math.RoundingMode;
  * ADR-005: Monetary BigDecimal fields are converted to String with exactly
  * 4 decimal places to prevent precision loss in JSON serialization.
  */
-@Mapper(componentModel = "spring")
+@Mapper(config = BaseMapperConfig.class)
 public interface ProductMapper {
 
     /**

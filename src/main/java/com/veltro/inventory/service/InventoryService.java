@@ -23,7 +23,6 @@ import com.veltro.inventory.exception.MaxStockExceededException;
 import com.veltro.inventory.exception.NotFoundException;
 import com.veltro.inventory.security.TenantContext;
 import java.time.OffsetDateTime;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -224,14 +223,14 @@ public class InventoryService {
      * @return map containing inventory state for audit record
      */
     private Map<String, Object> buildInventorySnapshot(InventoryEntity inventory) {
-        Map<String, Object> snapshot = new LinkedHashMap<>();
-        snapshot.put("id", inventory.getId());
-        snapshot.put("productId", inventory.getProduct() != null ? inventory.getProduct().getId() : null);
-        snapshot.put("productName", inventory.getProduct() != null ? inventory.getProduct().getName() : null);
-        snapshot.put("currentStock", inventory.getCurrentStock());
-        snapshot.put("minStock", inventory.getMinStock());
-        snapshot.put("maxStock", inventory.getMaxStock());
-        return snapshot;
+        return AuditSnapshotBuilder.create()
+                .put("id", inventory.getId())
+                .put("productId", inventory.getProduct() != null ? inventory.getProduct().getId() : null)
+                .put("productName", inventory.getProduct() != null ? inventory.getProduct().getName() : null)
+                .put("currentStock", inventory.getCurrentStock())
+                .put("minStock", inventory.getMinStock())
+                .put("maxStock", inventory.getMaxStock())
+                .build();
     }
 }
 

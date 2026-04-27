@@ -11,7 +11,7 @@ import org.mapstruct.MappingConstants;
  * <p>Component model is SPRING, so this mapper is auto-registered as a Spring bean
  * and can be injected via constructor.
  */
-@Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
+@Mapper(config = BaseMapperConfig.class)
 public interface AuditRecordMapper {
 
     /**

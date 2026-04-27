@@ -1,12 +1,10 @@
 package com.veltro.inventory.controller;
 
-import com.veltro.inventory.controller.AlertController;
 import com.veltro.inventory.dto.common.PageResponse;
 import com.veltro.inventory.dto.inventory.AlertConfigurationResponse;
 import com.veltro.inventory.dto.inventory.AlertResponse;
 import com.veltro.inventory.dto.inventory.UpdateAlertConfigurationRequest;
-import com.veltro.inventory.service.AlertConfigurationService;
-import com.veltro.inventory.service.AlertService;
+import com.veltro.inventory.service.AlertFacadeService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,24 +27,19 @@ import static org.mockito.Mockito.when;
 /**
  * Unit tests for {@link AlertController} (B2-03).
  * 
- * Tests the REST controller endpoints for alert management.
- * Note: This uses pure unit testing approach rather than @WebMvcTest
- * to avoid Spring Boot test dependencies.
+ * Tests the REST controller endpoints for alert management using the facade.
  */
 @ExtendWith(MockitoExtension.class)
 class AlertControllerTest {
 
     @Mock
-    private AlertService alertService;
-
-    @Mock
-    private AlertConfigurationService configurationService;
+    private AlertFacadeService alertFacade;
 
     private AlertController alertController;
 
     @BeforeEach
     void setUp() {
-        alertController = new AlertController(alertService, configurationService);
+        alertController = new AlertController(alertFacade);
     }
 
     @Test
@@ -59,7 +52,7 @@ class AlertControllerTest {
                 "CRITICAL", "Out of stock", false, false, OffsetDateTime.now());
         
         PageImpl<AlertResponse> alertPage = new PageImpl<>(List.of(alert1, alert2), PageRequest.of(0, 20), 2);
-        when(alertService.listActiveAlerts(any(Pageable.class))).thenReturn(PageResponse.from(alertPage));
+        when(alertFacade.listActiveAlerts(any(Pageable.class))).thenReturn(PageResponse.from(alertPage));
 
         // Act
         var result = alertController.listAlerts(PageRequest.of(0, 20));
@@ -69,21 +62,21 @@ class AlertControllerTest {
         assertThat(result.totalElements()).isEqualTo(2);
         assertThat(result.content().get(0).id()).isEqualTo(1L);
         assertThat(result.content().get(1).id()).isEqualTo(2L);
-        verify(alertService).listActiveAlerts(any(Pageable.class));
+        verify(alertFacade).listActiveAlerts(any(Pageable.class));
     }
 
     @Test
     @DisplayName("unreadCount returns count of unread alerts")
     void unreadCount_returnsCount() {
         // Arrange
-        when(alertService.unreadCount()).thenReturn(5L);
+        when(alertFacade.unreadCount()).thenReturn(5L);
 
         // Act
         long result = alertController.unreadCount();
 
         // Assert
         assertThat(result).isEqualTo(5L);
-        verify(alertService).unreadCount();
+        verify(alertFacade).unreadCount();
     }
 
     @Test
@@ -97,7 +90,7 @@ class AlertControllerTest {
 
         // Assert
         assertThat(response.getStatusCode().value()).isEqualTo(204);
-        verify(alertService).markAsRead(alertId);
+        verify(alertFacade).markAsRead(alertId);
     }
 
     @Test
@@ -111,7 +104,7 @@ class AlertControllerTest {
 
         // Assert
         assertThat(response.getStatusCode().value()).isEqualTo(204);
-        verify(alertService).markAsResolved(alertId);
+        verify(alertFacade).markAsResolved(alertId);
     }
 
     @Test
@@ -120,14 +113,14 @@ class AlertControllerTest {
         // Arrange
         Long productId = 10L;
         AlertConfigurationResponse mockConfig = new AlertConfigurationResponse(productId, 2, 5, 50);
-        when(configurationService.getConfiguration(productId)).thenReturn(mockConfig);
+        when(alertFacade.getConfiguration(productId)).thenReturn(mockConfig);
 
         // Act
         var response = alertController.getConfiguration(productId);
 
         // Assert
         assertThat(response.getStatusCode().value()).isEqualTo(200);
-        verify(configurationService).getConfiguration(productId);
+        verify(alertFacade).getConfiguration(productId);
     }
 
     @Test
@@ -138,7 +131,7 @@ class AlertControllerTest {
         UpdateAlertConfigurationRequest request = new UpdateAlertConfigurationRequest(2, 5, 50);
         AlertConfigurationResponse mockResponse = new AlertConfigurationResponse(productId, 2, 5, 50);
         
-        when(configurationService.updateConfiguration(eq(productId), any(UpdateAlertConfigurationRequest.class)))
+        when(alertFacade.updateConfiguration(eq(productId), any(UpdateAlertConfigurationRequest.class)))
                 .thenReturn(mockResponse);
 
         // Act
@@ -146,7 +139,6 @@ class AlertControllerTest {
 
         // Assert
         assertThat(response.getStatusCode().value()).isEqualTo(200);
-        verify(configurationService).updateConfiguration(eq(productId), any(UpdateAlertConfigurationRequest.class));
+        verify(alertFacade).updateConfiguration(eq(productId), any(UpdateAlertConfigurationRequest.class));
     }
 }
-

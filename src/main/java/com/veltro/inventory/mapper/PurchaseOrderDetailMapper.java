@@ -18,7 +18,7 @@ import java.time.ZoneId;
  *
  * <p>ADR-005: Monetary fields are converted to String with 4 decimal places.
  */
-@Mapper(componentModel = "spring")
+@Mapper(config = BaseMapperConfig.class)
 public abstract class PurchaseOrderDetailMapper {
 
     @Mapping(target = "productId", source = "product.id")

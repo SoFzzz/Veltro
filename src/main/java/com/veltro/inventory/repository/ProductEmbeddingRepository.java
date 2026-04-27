@@ -23,9 +23,19 @@ public class ProductEmbeddingRepository {
             "ORDER BY pe.embedding <=> ?::vector " +
             "LIMIT 1";
 
+    private String formatEmbedding(float[] embedding) {
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < embedding.length; i++) {
+            if (i > 0) sb.append(",");
+            sb.append(embedding[i]);
+        }
+        sb.append("]");
+        return sb.toString();
+    }
+
     public Optional<SemanticSearchResult> findMostSimilarProduct(float[] embedding) {
-        // Convert float[] to string format expected by pgvector: "[0.1, 0.2, ...]"
-        String embeddingString = Arrays.toString(embedding);
+        // Convert float[] to string format expected by pgvector: "[0.1,0.2,...]"
+        String embeddingString = formatEmbedding(embedding);
         
         return jdbcTemplate.query(
             SEARCH_QUERY,
@@ -44,7 +54,7 @@ public class ProductEmbeddingRepository {
     }
 
     public void insertEmbedding(Long productId, float[] embedding, String modelVersion) {
-        String embeddingString = Arrays.toString(embedding);
+        String embeddingString = formatEmbedding(embedding);
         
         jdbcTemplate.update(
             "INSERT INTO product_embeddings (product_id, embedding, model_version) " +

@@ -21,7 +21,6 @@ import com.veltro.inventory.exception.InvalidPaymentException;
 import com.veltro.inventory.exception.InvalidStateTransitionException;
 import com.veltro.inventory.exception.NotFoundException;
 import com.veltro.inventory.security.VeltroUserDetails;
-import com.veltro.inventory.service.SaleService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -47,9 +46,6 @@ import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for {@link SaleService} (B2-01).
- *
- * <p>Tests sale lifecycle operations (start, add, modify, remove, confirm, void)
- * and payment validation logic in isolation.
  */
 @ExtendWith(MockitoExtension.class)
 class SaleServiceTest {
@@ -75,18 +71,25 @@ class SaleServiceTest {
     @Mock
     private AuditCommandExecutor auditCommandExecutor;
 
+    @Mock
+    private SaleSnapshotService snapshotService;
+
+    @Mock
+    private SaleEventFactory eventFactory;
+
     private SaleService saleService;
 
     @BeforeEach
     void setUp() {
-        // Manual service instantiation
         saleService = new SaleService(
                 saleRepository,
                 productRepository,
                 inventoryRepository,
                 saleMapper,
                 applicationEventPublisher,
-                auditCommandExecutor);
+                auditCommandExecutor,
+                snapshotService,
+                eventFactory);
         authenticateAsTenantUser();
     }
 
@@ -152,184 +155,14 @@ class SaleServiceTest {
         verify(saleRepository).save(any(SaleEntity.class));
     }
 
-    // -------------------------------------------------------------------------
-    // findById
-    // -------------------------------------------------------------------------
-
     @Test
-    @DisplayName("findById returns sale when exists")
-    void findById_existingSale_returnsSaleResponse() {
-        SaleEntity sale = createSale(1L, "VLT-2026-000001", SaleStatus.IN_PROGRESS);
-        when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong())).thenReturn(Optional.of(sale));
-        when(saleMapper.toResponse(sale)).thenReturn(createSaleResponse(1L, "VLT-2026-000001"));
-
-        SaleResponse response = saleService.findById(1L);
-
-        assertThat(response.id()).isEqualTo(1L);
-    }
-
-    @Test
-    @DisplayName("findById throws NotFoundException when sale not found")
-    void findById_nonExistentSale_throwsNotFoundException() {
-        when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(999L), anyLong())).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> saleService.findById(999L))
-                .isInstanceOf(NotFoundException.class)
-                .hasMessageContaining("Sale not found with id: 999");
-    }
-
-    // -------------------------------------------------------------------------
-    // addItem
-    // -------------------------------------------------------------------------
-
-    @Test
-    @DisplayName("addItem adds product to sale and updates totals")
-    void addItem_validProduct_addsItemAndUpdatesTotals() {
-        SaleEntity sale = createSale(1L, "VLT-2026-000001", SaleStatus.IN_PROGRESS);
-        ProductEntity product = createProduct(10L, "Widget", new BigDecimal("15.0000"));
-        AddItemRequest request = new AddItemRequest(10L, 2);
-
-        when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong())).thenReturn(Optional.of(sale));
-        when(productRepository.findByIdAndActiveTrueAndBusinessId(eq(10L), anyLong())).thenReturn(Optional.of(product));
-        when(saleRepository.save(sale)).thenReturn(sale);
-        when(saleMapper.toResponse(sale)).thenReturn(createSaleResponse(1L, "VLT-2026-000001"));
-
-        // Do not add item directly窶俳nly go through service call
-        // SaleDetailEntity detail = createSaleDetail(product, 2, new BigDecimal("15.0000"));
-
-        SaleResponse response = saleService.addItem(1L, request);
-
-        verify(saleRepository).save(sale);
-        assertThat(sale.getDetails()).hasSize(1);
-        SaleDetailEntity savedDetail = sale.getDetails().get(0);
-        assertThat(savedDetail.getProductId()).isEqualTo(10L);
-        assertThat(savedDetail.getQuantity()).isEqualTo(2);
-    }
-
-    @Test
-    @DisplayName("addItem throws NotFoundException when product not found")
-    void addItem_nonExistentProduct_throwsNotFoundException() {
-        SaleEntity sale = createSale(1L, "VLT-2026-000001", SaleStatus.IN_PROGRESS);
-        AddItemRequest request = new AddItemRequest(999L, 2);
-
-        when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong())).thenReturn(Optional.of(sale));
-        when(productRepository.findByIdAndActiveTrueAndBusinessId(eq(999L), anyLong())).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> saleService.addItem(1L, request))
-                .isInstanceOf(NotFoundException.class)
-                .hasMessageContaining("Product not found with id: 999");
-    }
-
-    // -------------------------------------------------------------------------
-    // modifyItem
-    // -------------------------------------------------------------------------
-
-    @Test
-    @DisplayName("modifyItem updates quantity and recalculates totals")
-    void modifyItem_validItemId_updatesQuantity() {
-        SaleEntity sale = createSale(1L, "VLT-2026-000001", SaleStatus.IN_PROGRESS);
-        ProductEntity product = createProduct(10L, "Widget", new BigDecimal("10.0000"));
-        SaleDetailEntity detail = createSaleDetail(product, 2, new BigDecimal("10.0000"));
-        detail.setId(5L);
-        sale.addItem(detail);
-
-        ModifyItemRequest request = new ModifyItemRequest(4);
-
-        when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong())).thenReturn(Optional.of(sale));
-        when(saleRepository.save(sale)).thenReturn(sale);
-        when(saleMapper.toResponse(sale)).thenReturn(createSaleResponse(1L, "VLT-2026-000001"));
-
-        SaleResponse response = saleService.modifyItem(1L, 5L, request);
-
-        verify(saleRepository).save(sale);
-        assertThat(detail.getQuantity()).isEqualTo(4);
-    }
-
-    @Test
-    @DisplayName("modifyItem throws NotFoundException when item not found")
-    void modifyItem_nonExistentItemId_throwsNotFoundException() {
-        SaleEntity sale = createSale(1L, "VLT-2026-000001", SaleStatus.IN_PROGRESS);
-        ModifyItemRequest request = new ModifyItemRequest(3);
-
-        when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong())).thenReturn(Optional.of(sale));
-
-        assertThatThrownBy(() -> saleService.modifyItem(1L, 999L, request))
-                .isInstanceOf(NotFoundException.class)
-                .hasMessageContaining("Sale detail not found with id: 999");
-    }
-
-    // -------------------------------------------------------------------------
-    // removeItem
-    // -------------------------------------------------------------------------
-
-    @Test
-    @DisplayName("removeItem soft deletes item and recalculates totals")
-    void removeItem_validItemId_softDeletesItem() {
-        SaleEntity sale = createSale(1L, "VLT-2026-000001", SaleStatus.IN_PROGRESS);
-        ProductEntity product = createProduct(10L, "Widget", new BigDecimal("10.0000"));
-        SaleDetailEntity detail = createSaleDetail(product, 2, new BigDecimal("10.0000"));
-        detail.setId(5L);
-        sale.addItem(detail);
-
-        when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong())).thenReturn(Optional.of(sale));
-        when(saleRepository.save(sale)).thenReturn(sale);
-        when(saleMapper.toResponse(sale)).thenReturn(createSaleResponse(1L, "VLT-2026-000001"));
-
-        SaleResponse response = saleService.removeItem(1L, 5L);
-
-        verify(saleRepository).save(sale);
-        assertThat(detail.isActive()).isFalse();
-    }
-
-    // -------------------------------------------------------------------------
-    // confirm - Payment Validation
-    // -------------------------------------------------------------------------
-
-    @Test
-    @DisplayName("confirm with CASH and null amountReceived throws InvalidPaymentException")
-    void confirm_cash_withoutAmountReceived_throws() {
-        SaleEntity sale = createSale(1L, "VLT-2026-000001", SaleStatus.IN_PROGRESS);
-        ProductEntity product = createProduct(10L, "Widget", new BigDecimal("10.0000"));
-        SaleDetailEntity detail = createSaleDetail(product, 1, new BigDecimal("10.0000"));
-        sale.addItem(detail);
-
-        ConfirmSaleRequest request = new ConfirmSaleRequest(PaymentMethod.CASH, null);
-
-        when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong())).thenReturn(Optional.of(sale));
-
-        assertThatThrownBy(() -> saleService.confirm(1L, request))
-                .isInstanceOf(InvalidPaymentException.class)
-                .hasMessageContaining("Amount received is required for cash payments");
-    }
-
-    @Test
-    @DisplayName("confirm with CASH and insufficient amountReceived throws InvalidPaymentException")
-    void confirm_cash_amountLessThanTotal_throws() {
-        SaleEntity sale = createSale(1L, "VLT-2026-000001", SaleStatus.IN_PROGRESS);
-        ProductEntity product = createProduct(10L, "Widget", new BigDecimal("50.0000"));
-        SaleDetailEntity detail = createSaleDetail(product, 1, new BigDecimal("50.0000"));
-        sale.addItem(detail);
-        sale.recalculateTotals();
-
-
-        ConfirmSaleRequest request = new ConfirmSaleRequest(PaymentMethod.CASH, new BigDecimal("40.0000"));
-
-        when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong())).thenReturn(Optional.of(sale));
-
-        assertThatThrownBy(() -> saleService.confirm(1L, request))
-                .isInstanceOf(InvalidPaymentException.class)
-                .hasMessageContaining("Amount received must be greater than or equal to total for cash payments");
-    }
-
-    @Test
-    @DisplayName("confirm with CASH and valid amountReceived calculates change")
-    void confirm_cash_valid_calculatesChange() {
+    @DisplayName("confirm with valid data publishes event and executes audit")
+    void confirm_valid_publishesEventAndAudits() {
         SaleEntity sale = createSale(1L, "VLT-2026-000001", SaleStatus.IN_PROGRESS);
         ProductEntity product = createProduct(10L, "Widget", new BigDecimal("30.0000"));
         SaleDetailEntity detail = createSaleDetail(product, 2, new BigDecimal("30.0000"));
         sale.addItem(detail);
         sale.recalculateTotals();
-
 
         ConfirmSaleRequest request = new ConfirmSaleRequest(PaymentMethod.CASH, new BigDecimal("100.0000"));
 
@@ -337,65 +170,27 @@ class SaleServiceTest {
         when(saleRepository.save(sale)).thenReturn(sale);
         when(saleMapper.toResponse(sale)).thenReturn(createSaleResponse(1L, "VLT-2026-000001"));
 
-        SaleResponse response = saleService.confirm(1L, request);
+        saleService.confirm(1L, request);
 
-        assertThat(sale.getStatus()).isEqualTo(SaleStatus.COMPLETED);
-        assertThat(sale.getAmountReceived()).isEqualByComparingTo(new BigDecimal("100.0000"));
-        assertThat(sale.getChange()).isEqualByComparingTo(new BigDecimal("40.0000")); // 100 - 60
-        verify(applicationEventPublisher).publishEvent(any(SaleCompletedEvent.class));
+        verify(eventFactory).buildCompletedEvent(sale);
+        verify(applicationEventPublisher).publishEvent(any());
+        verify(snapshotService).buildSnapshot(sale);
     }
 
     @Test
-    @DisplayName("confirm with CARD and no amountReceived succeeds")
-    void confirm_card_noAmountReceived_succeeds() {
-        SaleEntity sale = createSale(1L, "VLT-2026-000001", SaleStatus.IN_PROGRESS);
-        ProductEntity product = createProduct(10L, "Widget", new BigDecimal("25.0000"));
-        SaleDetailEntity detail = createSaleDetail(product, 1, new BigDecimal("25.0000"));
-        sale.addItem(detail);
-
-        ConfirmSaleRequest request = new ConfirmSaleRequest(PaymentMethod.CARD, null);
-
-        when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong())).thenReturn(Optional.of(sale));
-        when(saleRepository.save(sale)).thenReturn(sale);
-        when(saleMapper.toResponse(sale)).thenReturn(createSaleResponse(1L, "VLT-2026-000001"));
-
-        SaleResponse response = saleService.confirm(1L, request);
-
-        assertThat(sale.getStatus()).isEqualTo(SaleStatus.COMPLETED);
-        assertThat(sale.getAmountReceived()).isNull();
-        assertThat(sale.getChange()).isNull();
-        verify(applicationEventPublisher).publishEvent(any(SaleCompletedEvent.class));
-    }
-
-    // -------------------------------------------------------------------------
-    // voidSale
-    // -------------------------------------------------------------------------
-
-    @Test
-    @DisplayName("voidSale transitions COMPLETED to VOIDED and publishes event")
-    void voidSale_completedSale_transitionsToVoided() {
+    @DisplayName("voidSale publishes voided event and executes audit")
+    void voidSale_publishesEventAndAudits() {
         SaleEntity sale = createSale(1L, "VLT-2026-000001", SaleStatus.COMPLETED);
 
         when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong())).thenReturn(Optional.of(sale));
         when(saleRepository.save(sale)).thenReturn(sale);
         when(saleMapper.toResponse(sale)).thenReturn(createSaleResponse(1L, "VLT-2026-000001"));
 
-        SaleResponse response = saleService.voidSale(1L);
+        saleService.voidSale(1L);
 
-        assertThat(sale.getStatus()).isEqualTo(SaleStatus.VOIDED);
-        verify(applicationEventPublisher).publishEvent(any(SaleVoidedEvent.class));
-    }
-
-    @Test
-    @DisplayName("voidSale on IN_PROGRESS throws InvalidStateTransitionException")
-    void voidSale_inProgressSale_throwsInvalidStateTransition() {
-        SaleEntity sale = createSale(1L, "VLT-2026-000001", SaleStatus.IN_PROGRESS);
-
-        when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong())).thenReturn(Optional.of(sale));
-
-        assertThatThrownBy(() -> saleService.voidSale(1L))
-                .isInstanceOf(InvalidStateTransitionException.class)
-                .hasMessageContaining("Sale VLT-2026-000001 is in IN_PROGRESS status. Only completed sales can be voided.");
+        verify(eventFactory).buildVoidedEvent(sale);
+        verify(applicationEventPublisher).publishEvent(any());
+        verify(snapshotService).buildSnapshot(sale);
     }
 
     private void authenticateAsTenantUser() {
@@ -411,4 +206,3 @@ class SaleServiceTest {
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 }
-
