@@ -6,8 +6,6 @@ import com.veltro.inventory.model.PurchaseOrderStatus;
 import com.veltro.inventory.model.SupplierEntity;
 import com.veltro.inventory.model.ProductEntity;
 import com.veltro.inventory.exception.InvalidStateTransitionException;
-import com.veltro.inventory.state.PurchaseOrderPendingState;
-import com.veltro.inventory.state.PurchaseOrderState;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,7 +19,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /**
  * Unit tests for {@link PurchaseOrderPendingState} (B2-04 - State Pattern).
  *
- * <p>Tests that PENDING state allows item operations and voiding, but has placeholder for receivePartial.
+ * <p>
+ * Tests that PENDING state allows item operations and voiding, but has
+ * placeholder for receivePartial.
  */
 class PurchaseOrderPendingStateTest {
 
@@ -33,18 +33,18 @@ class PurchaseOrderPendingStateTest {
     @BeforeEach
     void setUp() {
         state = new PurchaseOrderPendingState();
-        
+
         // Create test supplier
         supplier = new SupplierEntity();
         supplier.setId(10L);
         supplier.setTaxId("12345678901");
         supplier.setCompanyName("Test Supplier");
-        
+
         // Create test product
         product = new ProductEntity();
         product.setId(100L);
         product.setName("Widget");
-        
+
         // Create test order
         order = new PurchaseOrderEntity();
         order.setId(1L);
@@ -94,7 +94,7 @@ class PurchaseOrderPendingStateTest {
         ProductEntity product2 = new ProductEntity();
         product2.setId(200L);
         product2.setName("Widget B");
-        
+
         PurchaseOrderDetailEntity detail1 = createDetail(product, 2, new BigDecimal("10.0000"));
         detail1.setId(5L);
         PurchaseOrderDetailEntity detail2 = createDetail(product2, 3, new BigDecimal("20.0000"));
@@ -121,8 +121,7 @@ class PurchaseOrderPendingStateTest {
     @DisplayName("receivePartial throws InvalidStateTransitionException (placeholder)")
     void receivePartial_pendingState_throwsInvalidStateTransition() {
         List<PurchaseOrderState.ReceivedItem> receivedItems = List.of(
-                new PurchaseOrderState.ReceivedItem(1L, 5)
-        );
+                new PurchaseOrderState.ReceivedItem(1L, 5));
 
         assertThatThrownBy(() -> state.receivePartial(order, receivedItems))
                 .isInstanceOf(InvalidStateTransitionException.class)
