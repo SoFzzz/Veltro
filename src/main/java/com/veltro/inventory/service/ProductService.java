@@ -10,6 +10,9 @@ import com.veltro.inventory.model.ProductEntity;
 import com.veltro.inventory.repository.CategoryRepository;
 import com.veltro.inventory.repository.ProductRepository;
 import com.veltro.inventory.repository.SaleDetailRepository;
+import com.veltro.inventory.repository.ProductEmbeddingRepository;
+import com.veltro.inventory.infrastructure.ai.ClipInferenceService;
+import com.veltro.inventory.model.IndexingStatus;
 import com.veltro.inventory.exception.DuplicateResourceException;
 import com.veltro.inventory.exception.InactiveResourceExistsException;
 import com.veltro.inventory.exception.InvalidPriceException;
@@ -23,6 +26,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 import org.springframework.web.multipart.MultipartFile;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.InputStream;
 
 /**
  * Application service for product management (B1-03).
@@ -40,6 +46,8 @@ public class ProductService {
     private final SaleDetailRepository saleDetailRepository;
     private final ProductMapper productMapper;
     private final InventoryService inventoryService;
+    private final ClipInferenceService clipInferenceService;
+    private final ProductEmbeddingRepository embeddingRepository;
 
     // -------------------------------------------------------------------------
     // Queries
@@ -121,13 +129,49 @@ public class ProductService {
 
     @Transactional
     public void uploadImages(Long id, java.util.List<MultipartFile> images) {
-        // Find product
         ProductEntity entity = requireActive(id);
         
-        // Save images/generate embedding logic would go here.
-        // For now, log the uploads.
-        for (MultipartFile image : images) {
-            log.info("Uploaded image for product id={}: {} ({} bytes)", id, image.getOriginalFilename(), image.getSize());
+        if (images.isEmpty()) {
+            return;
+        }
+
+        MultipartFile primaryImage = images.get(0);
+        log.info("Uploaded image for product id={}: {} ({} bytes)", id, primaryImage.getOriginalFilename(), primaryImage.getSize());
+
+        // Process embedding asynchronously or synchronously based on the setup.
+        // We will process it synchronously here, but in a real high-throughput system this should be async (JMS/RabbitMQ).
+        if (clipInferenceService.isModelLoaded()) {
+            try {
+                entity.setIndexingStatus(IndexingStatus.INDEXING_PENDING);
+                productRepository.save(entity);
+
+                try (InputStream is = primaryImage.getInputStream()) {
+                    BufferedImage bImage = ImageIO.read(is);
+                    if (bImage != null) {
+                        Optional<float[]> embeddingOpt = clipInferenceService.generateEmbedding(bImage);
+                        if (embeddingOpt.isPresent()) {
+                            // Insert into vector DB
+                            embeddingRepository.insertEmbedding(id, embeddingOpt.get(), clipInferenceService.getModelVersion());
+                            entity.setIndexingStatus(IndexingStatus.INDEXING_READY);
+                            entity.setLastIndexingError(null);
+                        } else {
+                            entity.setIndexingStatus(IndexingStatus.INDEXING_FAILED);
+                            entity.setLastIndexingError("Model inference returned empty");
+                        }
+                    } else {
+                        entity.setIndexingStatus(IndexingStatus.INDEXING_FAILED);
+                        entity.setLastIndexingError("Could not read image format");
+                    }
+                }
+            } catch (Exception e) {
+                log.error("Failed to generate embedding for product {}", id, e);
+                entity.setIndexingStatus(IndexingStatus.INDEXING_FAILED);
+                entity.setLastIndexingError(e.getMessage());
+            } finally {
+                productRepository.save(entity);
+            }
+        } else {
+            log.warn("CLIP Model not loaded, skipping semantic embedding generation for product {}", id);
         }
     }
 
