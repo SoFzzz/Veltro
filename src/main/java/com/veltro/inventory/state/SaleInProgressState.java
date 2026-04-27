@@ -21,6 +21,7 @@ public class SaleInProgressState implements SaleState {
 
     @Override
     public void addItem(SaleEntity sale, SaleDetailEntity detail) {
+        detail.setBusinessId(sale.getBusinessId());
         sale.getDetails().add(detail);
         detail.setSale(sale);
     }
@@ -28,7 +29,7 @@ public class SaleInProgressState implements SaleState {
     @Override
     public void modifyItem(SaleEntity sale, Long detailId, Integer newQuantity) {
         SaleDetailEntity detail = sale.getDetails().stream()
-                .filter(d -> d.getId().equals(detailId) && d.isActive())
+                .filter(d -> d.getId() != null && d.getId().equals(detailId) && d.isActive())
                 .findFirst()
                 .orElseThrow(() -> new NotFoundException("Sale detail not found with id: " + detailId));
         
@@ -39,7 +40,7 @@ public class SaleInProgressState implements SaleState {
     @Override
     public void removeItem(SaleEntity sale, Long detailId) {
         SaleDetailEntity detail = sale.getDetails().stream()
-                .filter(d -> d.getId().equals(detailId) && d.isActive())
+                .filter(d -> d.getId() != null && d.getId().equals(detailId) && d.isActive())
                 .findFirst()
                 .orElseThrow(() -> new NotFoundException("Sale detail not found with id: " + detailId));
         
