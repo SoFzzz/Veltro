@@ -1,6 +1,5 @@
 package com.veltro.inventory.controller;
 
-import com.veltro.inventory.controller.AuditController;
 import com.veltro.inventory.dto.audit.AuditFilterRequest;
 import com.veltro.inventory.dto.audit.AuditRecordResponse;
 import com.veltro.inventory.dto.common.PageResponse;
@@ -22,7 +21,6 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 /**
@@ -48,7 +46,8 @@ class AuditControllerTest {
         AuditRecordResponse response = createAuditResponse(1L, AuditEntityType.SALE, 100L, AuditAction.CONFIRM);
         PageImpl<AuditRecordResponse> page = new PageImpl<>(List.of(response), pageable, 1);
 
-        when(auditService.findAll(any(AuditFilterRequest.class), any(Pageable.class))).thenReturn(PageResponse.from(page));
+        when(auditService.findAll(any(AuditFilterRequest.class), any(Pageable.class)))
+                .thenReturn(PageResponse.from(page));
 
         // When
         AuditFilterRequest filter = AuditFilterRequest.empty();
@@ -68,7 +67,8 @@ class AuditControllerTest {
         AuditRecordResponse response = createAuditResponse(1L, AuditEntityType.SALE, 100L, AuditAction.CONFIRM);
         PageImpl<AuditRecordResponse> page = new PageImpl<>(List.of(response), pageable, 1);
 
-        when(auditService.findAll(any(AuditFilterRequest.class), any(Pageable.class))).thenReturn(PageResponse.from(page));
+        when(auditService.findAll(any(AuditFilterRequest.class), any(Pageable.class)))
+                .thenReturn(PageResponse.from(page));
 
         // When
         AuditFilterRequest filter = new AuditFilterRequest(AuditEntityType.SALE, null, null, null, null);
@@ -86,7 +86,8 @@ class AuditControllerTest {
         AuditRecordResponse response = createAuditResponse(1L, AuditEntityType.SALE, 100L, AuditAction.VOID);
         PageImpl<AuditRecordResponse> page = new PageImpl<>(List.of(response), pageable, 1);
 
-        when(auditService.findAll(any(AuditFilterRequest.class), any(Pageable.class))).thenReturn(PageResponse.from(page));
+        when(auditService.findAll(any(AuditFilterRequest.class), any(Pageable.class)))
+                .thenReturn(PageResponse.from(page));
 
         // When
         AuditFilterRequest filter = new AuditFilterRequest(null, AuditAction.VOID, null, null, null);
@@ -110,11 +111,11 @@ class AuditControllerTest {
                 "{\"after\":\"data\"}",
                 "john.doe",
                 "192.168.1.1",
-                Instant.now()
-        );
+                Instant.now());
         PageImpl<AuditRecordResponse> page = new PageImpl<>(List.of(response), pageable, 1);
 
-        when(auditService.findAll(any(AuditFilterRequest.class), any(Pageable.class))).thenReturn(PageResponse.from(page));
+        when(auditService.findAll(any(AuditFilterRequest.class), any(Pageable.class)))
+                .thenReturn(PageResponse.from(page));
 
         // When
         AuditFilterRequest filter = new AuditFilterRequest(null, null, "john.doe", null, null);
@@ -162,7 +163,8 @@ class AuditControllerTest {
     }
 
     // Helper method
-    private AuditRecordResponse createAuditResponse(Long id, AuditEntityType entityType, Long entityId, AuditAction action) {
+    private AuditRecordResponse createAuditResponse(Long id, AuditEntityType entityType, Long entityId,
+            AuditAction action) {
         return new AuditRecordResponse(
                 id,
                 entityType,
@@ -172,8 +174,6 @@ class AuditControllerTest {
                 "{\"status\":\"after\"}",
                 "testuser",
                 "192.168.1.1",
-                Instant.now()
-        );
+                Instant.now());
     }
 }
-
