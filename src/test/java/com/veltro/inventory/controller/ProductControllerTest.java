@@ -1,6 +1,5 @@
 package com.veltro.inventory.controller;
 
-import com.veltro.inventory.controller.ProductController;
 import com.veltro.inventory.dto.catalog.CreateProductRequest;
 import com.veltro.inventory.dto.common.PageResponse;
 import com.veltro.inventory.dto.catalog.ProductResponse;
@@ -42,7 +41,7 @@ class ProductControllerTest {
 
     @Mock
     private ProductService productService;
-    
+
     private ProductController controller;
 
     @BeforeEach
@@ -325,4 +324,3 @@ class ProductControllerTest {
         verify(productService).hardDelete(1L);
     }
 }
-
