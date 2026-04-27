@@ -11,7 +11,7 @@ import org.mapstruct.Mapping;
  * {@code movementType} is the string representation of the enum
  * (MapStruct maps enum 竊・String by default via {@code name()}).
  */
-@Mapper(componentModel = "spring")
+@Mapper(config = BaseMapperConfig.class)
 public interface InventoryMovementMapper {
 
     @Mapping(target = "inventoryId", source = "inventory.id")

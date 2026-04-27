@@ -1,30 +1,27 @@
 package com.veltro.inventory.service;
 
-import com.veltro.inventory.model.AlertEntity;
 import com.veltro.inventory.model.AlertSeverity;
 import com.veltro.inventory.model.AlertType;
 
-public class OutOfStockHandler implements AlertHandler {
-
-    private AlertHandler next;
+public class OutOfStockHandler extends AbstractAlertHandler {
 
     @Override
-    public void setNext(AlertHandler handler) {
-        this.next = handler;
+    protected boolean evaluate(StockAlertEvaluationContext context) {
+        return context.getCurrentStock() <= context.getCriticalStock();
     }
 
     @Override
-    public void handle(StockAlertEvaluationContext context) {
-        if (context.getCurrentStock() <= context.getCriticalStock()) {
-            AlertEntity alert = new AlertEntity();
-            alert.setType(AlertType.OUT_OF_STOCK);
-            alert.setSeverity(AlertSeverity.CRITICAL);
-            alert.setMessage("Product " + context.getProductName() + " is out of stock");
-            context.addAlert(alert);
-        }
-        if (next != null) {
-            next.handle(context);
-        }
+    protected AlertType getAlertType() {
+        return AlertType.OUT_OF_STOCK;
+    }
+
+    @Override
+    protected AlertSeverity getAlertSeverity() {
+        return AlertSeverity.CRITICAL;
+    }
+
+    @Override
+    protected String buildMessage(StockAlertEvaluationContext context) {
+        return "Product " + context.getProductName() + " is out of stock";
     }
 }
-

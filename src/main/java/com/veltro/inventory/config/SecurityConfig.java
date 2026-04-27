@@ -57,7 +57,7 @@ public class SecurityConfig {
     private final LoginRateLimitFilter loginRateLimitFilter;
     private final UserDetailsService userDetailsService;
 
-    @Value("${cors.allowed-origins:http://localhost:5173,https://localhost:5173}")
+    @Value("${cors.allowed-origins:http://localhost:5173,https://localhost:5173,http://127.0.0.1:5173,https://127.0.0.1:5173}")
     private String allowedOrigins;
 
     @Bean
@@ -108,7 +108,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(List.of("*"));
+        configuration.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setExposedHeaders(List.of("Authorization", "Content-Disposition"));

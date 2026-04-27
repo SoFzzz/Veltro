@@ -14,7 +14,7 @@ import org.mapstruct.MappingTarget;
  * {@code componentModel = "spring"} registers the generated implementation
  * as a Spring bean, injectable via {@code @RequiredArgsConstructor}.
  */
-@Mapper(componentModel = "spring")
+@Mapper(config = BaseMapperConfig.class)
 public interface CategoryMapper {
 
     /**

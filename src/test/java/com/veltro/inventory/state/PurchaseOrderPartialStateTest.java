@@ -78,7 +78,7 @@ class PurchaseOrderPartialStateTest {
 
         assertThatThrownBy(() -> state.receivePartial(order, receivedItems))
                 .isInstanceOf(InvalidStateTransitionException.class)
-                .hasMessageContaining("receivePartial not yet implemented");
+                .hasMessageContaining("Cannot receive items for purchase order in PARTIAL status");
     }
 
     @Test
@@ -88,6 +88,6 @@ class PurchaseOrderPartialStateTest {
 
         assertThatThrownBy(() -> state.receivePartial(order, emptyList))
                 .isInstanceOf(InvalidStateTransitionException.class)
-                .hasMessageContaining("receivePartial not yet implemented");
+                .hasMessageContaining("Cannot receive items for purchase order in PARTIAL status");
     }
 }

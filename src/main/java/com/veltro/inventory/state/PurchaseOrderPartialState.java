@@ -1,39 +1,17 @@
 package com.veltro.inventory.state;
 
-import com.veltro.inventory.model.PurchaseOrderDetailEntity;
 import com.veltro.inventory.model.PurchaseOrderEntity;
-import com.veltro.inventory.exception.InvalidStateTransitionException;
 import com.veltro.inventory.model.PurchaseOrderStatus;
-
-import java.util.List;
 
 /**
  * Partial state - some items received, others pending.
- * Only allows receiving more merchandise or voiding.
+ * Only allows voiding. Receiving more merchandise is not yet implemented.
  */
-public class PurchaseOrderPartialState implements PurchaseOrderState {
+public class PurchaseOrderPartialState extends AbstractTerminalPurchaseOrderState {
 
     @Override
-    public void addItem(PurchaseOrderEntity order, PurchaseOrderDetailEntity detail) {
-        throw new InvalidStateTransitionException(
-                "Cannot add items to purchase order in PARTIAL status. " +
-                "Order has already received some merchandise."
-        );
-    }
-
-    @Override
-    public void removeItem(PurchaseOrderEntity order, Long detailId) {
-        throw new InvalidStateTransitionException(
-                "Cannot remove items from purchase order in PARTIAL status. " +
-                "Order has already received some merchandise."
-        );
-    }
-
-    @Override
-    public void receivePartial(PurchaseOrderEntity order, List<ReceivedItem> receivedItems) {
-        // TODO: Implement logic in subsequent step - this requires more complex business logic
-        // For now, throw to indicate not implemented
-        throw new InvalidStateTransitionException("receivePartial not yet implemented");
+    protected String statusName() {
+        return "PARTIAL";
     }
 
     @Override

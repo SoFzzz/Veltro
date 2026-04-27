@@ -5,7 +5,7 @@ import com.veltro.inventory.model.AlertConfigurationEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring")
+@Mapper(config = BaseMapperConfig.class)
 public interface AlertConfigurationMapper {
 
     @Mapping(target = "productId", expression = "java(entity.getProduct() != null ? entity.getProduct().getId() : null)")

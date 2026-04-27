@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
  *
  * <p>Only active details are included in the response (AC-05).
  */
-@Mapper(componentModel = "spring")
+@Mapper(config = BaseMapperConfig.class)
 public abstract class SaleMapper {
 
     @Autowired

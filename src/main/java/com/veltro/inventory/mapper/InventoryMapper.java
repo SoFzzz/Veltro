@@ -8,7 +8,7 @@ import org.mapstruct.Mapping;
 /**
  * MapStruct mapper for {@link InventoryEntity} 竊・inventory DTOs.
  */
-@Mapper(componentModel = "spring")
+@Mapper(config = BaseMapperConfig.class)
 public interface InventoryMapper {
 
     /**

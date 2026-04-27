@@ -3,9 +3,8 @@ package com.veltro.inventory.service;
 import com.veltro.inventory.dto.report.ProfitabilityReport;
 import com.veltro.inventory.dto.report.ReportType;
 import com.veltro.inventory.model.SaleStatus;
+import com.veltro.inventory.repository.SaleRepository;
 import com.veltro.inventory.security.TenantContext;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,17 +28,17 @@ import java.util.stream.Collectors;
 @Service
 public class ReportService {
 
-    @PersistenceContext
-    private EntityManager entityManager;
-
+    private final SaleRepository saleRepository;
     private final Map<ReportType, ReportExporter> exporters;
 
     /**
      * Constructor injection of all exporters (Factory Method Pattern).
      *
+     * @param saleRepository repository for sales data
      * @param exporterList list of available exporters
      */
-    public ReportService(List<ReportExporter> exporterList) {
+    public ReportService(SaleRepository saleRepository, List<ReportExporter> exporterList) {
+        this.saleRepository = saleRepository;
         this.exporters = exporterList.stream()
                 .collect(Collectors.toMap(ReportExporter::getType, Function.identity()));
         log.info("ReportService initialized with {} exporters: {}",
@@ -62,61 +61,13 @@ public class ReportService {
         LocalDateTime start = startDate.atStartOfDay();
         LocalDateTime end = endDate.plusDays(1).atStartOfDay();
 
-        // Get total sales
-        BigDecimal totalSales = entityManager.createQuery(
-                        "SELECT COALESCE(SUM(s.total), 0) FROM SaleEntity s " +
-                                "WHERE s.status = :status AND s.completedAt BETWEEN :start AND :end " +
-                                "AND s.businessId = :businessId",
-                        BigDecimal.class)
-                .setParameter("status", SaleStatus.COMPLETED)
-                .setParameter("start", start)
-                .setParameter("end", end)
-                .setParameter("businessId", businessId)
-                .getSingleResult();
+        // Get total sales and counts via repository (Problem 2.4 fix)
+        BigDecimal totalSales = saleRepository.sumTotalByStatusAndDateRange(SaleStatus.COMPLETED, start, end, businessId);
+        long salesCount = saleRepository.countByStatusAndDateRange(SaleStatus.COMPLETED, start, end, businessId);
+        long itemsSold = saleRepository.sumItemsSoldByStatusAndDateRange(SaleStatus.COMPLETED, start, end, businessId);
 
-        // Count sales and items
-        long salesCount = entityManager.createQuery(
-                        "SELECT COUNT(s) FROM SaleEntity s " +
-                                "WHERE s.status = :status AND s.completedAt BETWEEN :start AND :end " +
-                                "AND s.businessId = :businessId",
-                        Long.class)
-                .setParameter("status", SaleStatus.COMPLETED)
-                .setParameter("start", start)
-                .setParameter("end", end)
-                .setParameter("businessId", businessId)
-                .getSingleResult();
-
-        Long itemsSold = entityManager.createQuery(
-                        "SELECT COALESCE(SUM(d.quantity), 0) FROM SaleDetailEntity d " +
-                                "JOIN d.sale s " +
-                                "WHERE s.status = :status AND s.completedAt BETWEEN :start AND :end " +
-                                "AND s.businessId = :businessId",
-                        Long.class)
-                .setParameter("status", SaleStatus.COMPLETED)
-                .setParameter("start", start)
-                .setParameter("end", end)
-                .setParameter("businessId", businessId)
-                .getSingleResult();
-
-        // Get product-level breakdown
-        // Note: SaleDetailEntity has no @ManyToOne to ProductEntity 窶・it stores productId
-        // as a plain Long column. We use a cross-entity join via WHERE clause instead.
-        @SuppressWarnings("unchecked")
-        List<Object[]> productResults = entityManager.createQuery(
-                        "SELECT p.id, p.name, p.sku, SUM(d.quantity), SUM(d.subtotal), p.costPrice " +
-                                "FROM SaleDetailEntity d " +
-                                "JOIN d.sale s, " +
-                                "ProductEntity p " +
-                                "WHERE d.productId = p.id " +
-                                "AND s.status = :status AND s.completedAt BETWEEN :start AND :end " +
-                                "AND s.businessId = :businessId " +
-                                "GROUP BY p.id, p.name, p.sku, p.costPrice " +
-                                "ORDER BY SUM(d.subtotal) DESC")
-                .setParameter("status", SaleStatus.COMPLETED)
-                .setParameter("start", start)
-                .setParameter("end", end)
-                .setParameter("businessId", businessId)
-                .getResultList();
+        // Get product-level breakdown via repository
+        List<Object[]> productResults = saleRepository.getProductProfitabilityBreakdown(SaleStatus.COMPLETED, start, end, businessId);
 
         BigDecimal totalCost = BigDecimal.ZERO;
         List<ProfitabilityReport.ProductProfitability> productBreakdown = new java.util.ArrayList<>();
@@ -185,32 +136,11 @@ public class ReportService {
         return exporter.export(report);
     }
 
-    /**
-     * Gets the content type for a report format.
-     *
-     * @param type the export format
-     * @return the MIME content type
-     */
     public String getContentType(ReportType type) {
-        ReportExporter exporter = exporters.get(type);
-        if (exporter == null) {
-            throw new IllegalArgumentException("Unsupported export type: " + type);
-        }
-        return exporter.getContentType();
+        return exporters.get(type).getContentType();
     }
 
-    /**
-     * Gets the file extension for a report format.
-     *
-     * @param type the export format
-     * @return the file extension
-     */
     public String getFileExtension(ReportType type) {
-        ReportExporter exporter = exporters.get(type);
-        if (exporter == null) {
-            throw new IllegalArgumentException("Unsupported export type: " + type);
-        }
-        return exporter.getFileExtension();
+        return exporters.get(type).getFileExtension();
     }
 }
-

@@ -18,8 +18,10 @@ import com.veltro.inventory.exception.InactiveResourceExistsException;
 import com.veltro.inventory.exception.InvalidPriceException;
 import com.veltro.inventory.exception.NotFoundException;
 import com.veltro.inventory.security.TenantContext;
+import com.veltro.inventory.event.ProductCreatedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,7 +47,7 @@ public class ProductService {
     private final CategoryRepository categoryRepository;
     private final SaleDetailRepository saleDetailRepository;
     private final ProductMapper productMapper;
-    private final InventoryService inventoryService;
+    private final ApplicationEventPublisher eventPublisher;
     private final ClipInferenceService clipInferenceService;
     private final ProductEmbeddingRepository embeddingRepository;
 
@@ -103,7 +105,7 @@ public class ProductService {
         resolveCategory(entity, request.categoryId());
 
         ProductEntity saved = productRepository.save(entity);
-        inventoryService.createForProduct(saved);
+        eventPublisher.publishEvent(new ProductCreatedEvent(saved.getId(), businessId));
         log.info("Product created: id={}, barcode={}", saved.getId(), saved.getBarcode());
         return productMapper.toResponse(saved);
     }

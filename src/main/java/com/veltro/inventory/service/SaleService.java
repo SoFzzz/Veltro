@@ -33,7 +33,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -56,6 +55,8 @@ public class SaleService {
     private final SaleMapper saleMapper;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final AuditCommandExecutor auditCommandExecutor;
+    private final SaleSnapshotService snapshotService;
+    private final SaleEventFactory eventFactory;
 
     // -------------------------------------------------------------------------
     // Queries
@@ -195,7 +196,7 @@ public class SaleService {
                 .orElseThrow(() -> new NotFoundException("Sale not found with id: " + saleId));
 
         // Capture state BEFORE confirmation for audit (B3-03)
-        final Map<String, Object> beforeSnapshot = buildSaleSnapshot(sale);
+        final Map<String, Object> beforeSnapshot = snapshotService.buildSnapshot(sale);
 
         // Validate cash payment (B2-01 requirement)
         if (request.paymentMethod() == PaymentMethod.CASH) {
@@ -216,7 +217,7 @@ public class SaleService {
         SaleEntity saved = saleRepository.save(sale);
 
         // Publish event for listeners (B2-02 will handle inventory deduction)
-        applicationEventPublisher.publishEvent(buildSaleCompletedEvent(saved));
+        applicationEventPublisher.publishEvent(eventFactory.buildCompletedEvent(saved));
 
         // Create forensic audit record (B3-03)
         auditCommandExecutor.execute(
@@ -225,7 +226,7 @@ public class SaleService {
                 AuditAction.CONFIRM,
                 () -> beforeSnapshot,
                 () -> saved,
-                (result) -> buildSaleSnapshot(saved),
+                (result) -> snapshotService.buildSnapshot(saved),
                 RequestAuditContext.empty()
         );
 
@@ -250,15 +251,15 @@ public class SaleService {
                 .orElseThrow(() -> new NotFoundException("Sale not found with id: " + saleId));
 
         // Capture state BEFORE voiding for audit (B3-03)
-        final Map<String, Object> beforeSnapshot = buildSaleSnapshot(sale);
+        final Map<String, Object> beforeSnapshot = snapshotService.buildSnapshot(sale);
 
         // State pattern handles validation (only COMPLETED can be voided)
         sale.voidSale();
 
         SaleEntity saved = saleRepository.save(sale);
 
-        // Publish event 遯ｶ繝ｻlistener in B2-02 will handle stock reversal
-        applicationEventPublisher.publishEvent(buildSaleVoidedEvent(saved));
+        // Publish event 窶・listener in B2-02 will handle stock reversal
+        applicationEventPublisher.publishEvent(eventFactory.buildVoidedEvent(saved));
 
         // Create forensic audit record (B3-03)
         auditCommandExecutor.execute(
@@ -267,7 +268,7 @@ public class SaleService {
                 AuditAction.VOID,
                 () -> beforeSnapshot,
                 () -> saved,
-                (result) -> buildSaleSnapshot(saved),
+                (result) -> snapshotService.buildSnapshot(saved),
                 RequestAuditContext.empty()
         );
 
@@ -287,81 +288,16 @@ public class SaleService {
     @Transactional
     public SaleResponse quickSale(QuickSaleRequest request) {
         // 1. Start the sale
-        Long userId = getCurrentUserId();
-        Long businessId = TenantContext.getBusinessId();
-        Long sequenceValue = saleRepository.getNextSaleSequenceValue();
-        String saleNumber = generateSaleNumber(sequenceValue);
-
-        SaleEntity sale = new SaleEntity();
-        sale.setSaleNumber(saleNumber);
-        sale.setStatus(SaleStatus.IN_PROGRESS);
-        sale.setCashierId(userId);
-        sale.setBusinessId(businessId);
-        sale.setSubtotal(BigDecimal.ZERO);
-        sale.setTotal(BigDecimal.ZERO);
-
-        SaleEntity saved = saleRepository.save(sale);
-        log.info("Quick sale started: {} by user {}", saleNumber, userId);
+        SaleResponse started = startSale();
+        Long saleId = started.id();
 
         // 2. Add all items
         for (QuickSaleRequest.Item item : request.items()) {
-            ProductEntity product = productRepository.findByIdAndActiveTrueAndBusinessId(item.productId(), businessId)
-                    .orElseThrow(() -> new NotFoundException("Product not found with id: " + item.productId()));
-
-            InventoryEntity inventory = inventoryRepository
-                    .findByProductIdAndActiveTrueAndBusinessId(item.productId(), businessId)
-                    .orElseThrow(() -> new NotFoundException("Inventory not found for product id: " + item.productId()));
-            int available = inventory.getCurrentStock();
-            if (available < item.quantity()) {
-                throw new InsufficientStockException(product.getName(), available, item.quantity());
-            }
-
-            SaleDetailEntity detail = new SaleDetailEntity();
-            detail.setProductId(product.getId());
-            detail.setProductName(product.getName());
-            detail.setQuantity(item.quantity());
-            detail.setUnitPrice(product.getSalePrice());
-            detail.calculateSubtotal();
-
-            saved.addItem(detail);
+            addItem(saleId, new AddItemRequest(item.productId(), item.quantity()));
         }
-        saved.recalculateTotals();
-        saved = saleRepository.save(saved);
 
         // 3. Confirm the sale
-        final Map<String, Object> beforeSnapshot = buildSaleSnapshot(saved);
-
-        if (request.paymentMethod() == PaymentMethod.CASH) {
-            BigDecimal amountReceived = request.amountReceived();
-            if (amountReceived == null) {
-                // Default: exact amount
-                amountReceived = saved.getTotal();
-            }
-            if (amountReceived.compareTo(saved.getTotal()) < 0) {
-                throw new InvalidPaymentException(
-                        "Amount received must be greater than or equal to total for cash payments");
-            }
-            saved.setAmountReceived(amountReceived);
-            saved.setChange(amountReceived.subtract(saved.getTotal()));
-        }
-
-        saved.confirm(request.paymentMethod());
-        final SaleEntity confirmedSale = saleRepository.save(saved);
-
-        applicationEventPublisher.publishEvent(buildSaleCompletedEvent(confirmedSale));
-
-        auditCommandExecutor.execute(
-                AuditEntityType.SALE,
-                confirmedSale.getId(),
-                AuditAction.CONFIRM,
-                () -> beforeSnapshot,
-                () -> confirmedSale,
-                (result) -> buildSaleSnapshot(confirmedSale),
-                RequestAuditContext.empty()
-        );
-
-        log.info("Quick sale {} confirmed with {} payment", confirmedSale.getSaleNumber(), request.paymentMethod());
-        return saleMapper.toResponse(confirmedSale);
+        return confirm(saleId, new ConfirmSaleRequest(request.paymentMethod(), request.amountReceived()));
     }
 
     // -------------------------------------------------------------------------
@@ -369,97 +305,11 @@ public class SaleService {
     // -------------------------------------------------------------------------
 
     private String generateSaleNumber(Long sequenceValue) {
-        int year = LocalDateTime.now().getYear();
-        return String.format("VLT-%d-%06d", year, sequenceValue);
+        return OrderNumberGenerator.generate("VLT", sequenceValue);
     }
 
     private Long getCurrentUserId() {
         return TenantContext.getUserId();
-    }
-
-    private SaleCompletedEvent buildSaleCompletedEvent(SaleEntity sale) {
-        List<SaleItemInfo> items = sale.getDetails().stream()
-                .filter(d -> d.isActive())
-                .map(d -> new SaleItemInfo(
-                        d.getProductId(),
-                        d.getProductName(),
-                        d.getQuantity(),
-                        d.getUnitPrice(),
-                        d.getSubtotal()
-                ))
-                .collect(Collectors.toList());
-
-        return new SaleCompletedEvent(
-                sale.getId(),
-                sale.getSaleNumber(),
-                sale.getCashierId(),
-                sale.getTotal(),
-                sale.getPaymentMethod(),
-                sale.getCompletedAt(),
-                items
-        );
-    }
-
-    private SaleVoidedEvent buildSaleVoidedEvent(SaleEntity sale) {
-        List<SaleItemInfo> items = sale.getDetails().stream()
-                .filter(d -> d.isActive())
-                .map(d -> new SaleItemInfo(
-                        d.getProductId(),
-                        d.getProductName(),
-                        d.getQuantity(),
-                        d.getUnitPrice(),
-                        d.getSubtotal()
-                ))
-                .collect(Collectors.toList());
-
-        String voidedBy = SecurityContextHolder.getContext().getAuthentication().getName();
-
-        return new SaleVoidedEvent(
-                sale.getId(),
-                sale.getSaleNumber(),
-                voidedBy,
-                LocalDateTime.now(),
-                sale.getTotal(),
-                items
-        );
-    }
-
-    /**
-     * Builds a snapshot map of sale state for forensic audit (B3-03).
-     *
-     * @param sale the sale entity to snapshot
-     * @return map containing sale state for audit record
-     */
-    private Map<String, Object> buildSaleSnapshot(SaleEntity sale) {
-        Map<String, Object> snapshot = new LinkedHashMap<>();
-        snapshot.put("id", sale.getId());
-        snapshot.put("saleNumber", sale.getSaleNumber());
-        snapshot.put("status", sale.getStatus() != null ? sale.getStatus().name() : null);
-        snapshot.put("cashierId", sale.getCashierId());
-        snapshot.put("subtotal", sale.getSubtotal());
-        snapshot.put("total", sale.getTotal());
-        snapshot.put("paymentMethod", sale.getPaymentMethod() != null ? sale.getPaymentMethod().name() : null);
-        snapshot.put("amountReceived", sale.getAmountReceived());
-        snapshot.put("change", sale.getChange());
-        snapshot.put("completedAt", sale.getCompletedAt() != null ? sale.getCompletedAt().toString() : null);
-
-        // Capture active details
-        List<Map<String, Object>> details = sale.getDetails().stream()
-                .filter(SaleDetailEntity::isActive)
-                .map(d -> {
-                    Map<String, Object> detailMap = new LinkedHashMap<>();
-                    detailMap.put("id", d.getId());
-                    detailMap.put("productId", d.getProductId());
-                    detailMap.put("productName", d.getProductName());
-                    detailMap.put("quantity", d.getQuantity());
-                    detailMap.put("unitPrice", d.getUnitPrice());
-                    detailMap.put("subtotal", d.getSubtotal());
-                    return detailMap;
-                })
-                .collect(Collectors.toList());
-        snapshot.put("details", details);
-
-        return snapshot;
     }
 }
 

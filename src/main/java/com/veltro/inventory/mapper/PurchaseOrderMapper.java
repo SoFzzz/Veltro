@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
  * <p>ADR-005: Monetary fields are converted to String with 4 decimal places.
  * <p>AC-05: Only active details are included in the response.
  */
-@Mapper(componentModel = "spring")
+@Mapper(config = BaseMapperConfig.class)
 public abstract class PurchaseOrderMapper {
 
     @Autowired

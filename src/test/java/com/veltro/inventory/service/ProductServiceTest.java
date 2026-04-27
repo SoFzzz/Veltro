@@ -8,7 +8,7 @@ import com.veltro.inventory.exception.DuplicateResourceException;
 import com.veltro.inventory.exception.InactiveResourceExistsException;
 import com.veltro.inventory.dto.catalog.ProductResponse;
 import com.veltro.inventory.mapper.ProductMapper;
-import com.veltro.inventory.service.InventoryService;
+import org.springframework.context.ApplicationEventPublisher;
 import com.veltro.inventory.model.ProductEntity;
 import com.veltro.inventory.model.IndexingStatus;
 import com.veltro.inventory.repository.CategoryRepository;
@@ -65,7 +65,7 @@ class ProductServiceTest {
     private ProductMapper productMapper;
 
     @Mock
-    private InventoryService inventoryService;
+    private ApplicationEventPublisher eventPublisher;
 
     @Mock
     private ClipInferenceService clipInferenceService;
@@ -79,7 +79,7 @@ class ProductServiceTest {
     @BeforeEach
     void setUp() {
         authenticateAsTenantUser();
-        productService = new ProductService(productRepository, categoryRepository, saleDetailRepository, productMapper, inventoryService, clipInferenceService, productEmbeddingRepository);
+        productService = new ProductService(productRepository, categoryRepository, saleDetailRepository, productMapper, eventPublisher, clipInferenceService, productEmbeddingRepository);
     }
 
     @AfterEach

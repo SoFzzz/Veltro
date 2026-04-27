@@ -48,8 +48,7 @@ class PurchaseOrderVoidedStateTest {
 
         assertThatThrownBy(() -> state.addItem(order, detail))
                 .isInstanceOf(InvalidStateTransitionException.class)
-                .hasMessageContaining("Cannot add items to purchase order in VOIDED status")
-                .hasMessageContaining("Order has been cancelled");
+                .hasMessageContaining("Cannot add items to purchase order in VOIDED status");
     }
 
     @Test
@@ -57,8 +56,7 @@ class PurchaseOrderVoidedStateTest {
     void removeItem_voidedState_throwsInvalidStateTransition() {
         assertThatThrownBy(() -> state.removeItem(order, 1L))
                 .isInstanceOf(InvalidStateTransitionException.class)
-                .hasMessageContaining("Cannot remove items from purchase order in VOIDED status")
-                .hasMessageContaining("Order has been cancelled");
+                .hasMessageContaining("Cannot remove items from purchase order in VOIDED status");
     }
 
     @Test
@@ -70,8 +68,7 @@ class PurchaseOrderVoidedStateTest {
 
         assertThatThrownBy(() -> state.receivePartial(order, receivedItems))
                 .isInstanceOf(InvalidStateTransitionException.class)
-                .hasMessageContaining("Cannot receive items for purchase order in VOIDED status")
-                .hasMessageContaining("Order has been cancelled");
+                .hasMessageContaining("Cannot receive items for purchase order in VOIDED status");
     }
 
     @Test
@@ -79,7 +76,7 @@ class PurchaseOrderVoidedStateTest {
     void voidOrder_voidedState_throwsInvalidStateTransition() {
         assertThatThrownBy(() -> state.voidOrder(order))
                 .isInstanceOf(InvalidStateTransitionException.class)
-                .hasMessageContaining("Purchase order is already in VOIDED status");
+                .hasMessageContaining("Cannot void purchase order in VOIDED status");
     }
 
     @Test
@@ -89,7 +86,6 @@ class PurchaseOrderVoidedStateTest {
 
         assertThatThrownBy(() -> state.receivePartial(order, emptyList))
                 .isInstanceOf(InvalidStateTransitionException.class)
-                .hasMessageContaining("Cannot receive items for purchase order in VOIDED status")
-                .hasMessageContaining("Order has been cancelled");
+                .hasMessageContaining("Cannot receive items for purchase order in VOIDED status");
     }
 }

@@ -18,7 +18,7 @@ import java.time.ZoneId;
  * <p>Monetary fields ({@code unitPrice}, {@code subtotal}) are converted from {@link BigDecimal}
  * to {@link String} with 4 decimal places (ADR-005).
  */
-@Mapper(componentModel = "spring")
+@Mapper(config = BaseMapperConfig.class)
 public interface SaleDetailMapper {
 
     @Mapping(target = "unitPrice", source = "unitPrice", qualifiedByName = "bigDecimalToString")

@@ -29,7 +29,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -52,6 +51,8 @@ public class PurchaseOrderService {
     private final PurchaseOrderMapper orderMapper;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final AuditCommandExecutor auditCommandExecutor;
+    private final PurchaseOrderSnapshotService snapshotService;
+    private final PurchaseOrderEventFactory eventFactory;
 
     // -------------------------------------------------------------------------
     // Queries
@@ -233,7 +234,7 @@ public class PurchaseOrderService {
                 .orElseThrow(() -> new NotFoundException("Purchase order not found with id: " + orderId));
 
         // Capture state BEFORE voiding for audit (B3-03)
-        final Map<String, Object> beforeSnapshot = buildOrderSnapshot(order);
+        final Map<String, Object> beforeSnapshot = snapshotService.buildSnapshot(order);
 
         // State Pattern delegation
         order.voidOrder();
@@ -247,7 +248,7 @@ public class PurchaseOrderService {
                 AuditAction.VOID,
                 () -> beforeSnapshot,
                 () -> updated,
-                (result) -> buildOrderSnapshot(updated),
+                (result) -> snapshotService.buildSnapshot(updated),
                 RequestAuditContext.empty()
         );
 
@@ -272,7 +273,7 @@ public class PurchaseOrderService {
                 .orElseThrow(() -> new NotFoundException("Purchase order not found with id: " + orderId));
 
         // Capture state BEFORE receiving for audit (B3-03)
-        final Map<String, Object> beforeSnapshot = buildOrderSnapshot(order);
+        final Map<String, Object> beforeSnapshot = snapshotService.buildSnapshot(order);
 
         // Mark all items as fully received
         List<PurchaseOrderDetailEntity> activeDetails = order.getDetails().stream()
@@ -288,7 +289,7 @@ public class PurchaseOrderService {
         PurchaseOrderEntity updated = orderRepository.save(order);
 
         // Publish event for inventory increment
-        publishOrderReceivedEvent(updated, activeDetails);
+        applicationEventPublisher.publishEvent(eventFactory.buildReceivedEvent(updated, activeDetails));
 
         // Create forensic audit record (B3-03)
         auditCommandExecutor.execute(
@@ -297,7 +298,7 @@ public class PurchaseOrderService {
                 AuditAction.RECEIVE,
                 () -> beforeSnapshot,
                 () -> updated,
-                (result) -> buildOrderSnapshot(updated),
+                (result) -> snapshotService.buildSnapshot(updated),
                 RequestAuditContext.empty()
         );
         
@@ -356,73 +357,7 @@ public class PurchaseOrderService {
      * Generates order number in format PO-YYYY-NNNNNN.
      */
     private String generateOrderNumber(Long sequenceValue) {
-        int currentYear = LocalDateTime.now().getYear();
-        return String.format("PO-%d-%06d", currentYear, sequenceValue);
-    }
-
-    /**
-     * Publishes OrderReceivedEvent for inventory increment.
-     */
-    private void publishOrderReceivedEvent(PurchaseOrderEntity order, List<PurchaseOrderDetailEntity> receivedDetails) {
-        List<ReceivedItemInfo> receivedItems = receivedDetails.stream()
-                .map(detail -> new ReceivedItemInfo(
-                        detail.getProduct().getId(),
-                        detail.getProduct().getName(),
-                        detail.getReceivedQuantity(),
-                        detail.getUnitCost(),
-                        detail.getUnitCost().multiply(BigDecimal.valueOf(detail.getReceivedQuantity()))
-                ))
-                .collect(Collectors.toList());
-
-        OrderReceivedEvent event = new OrderReceivedEvent(
-                order.getId(),
-                order.getOrderNumber(),
-                order.getSupplier().getId(),
-                order.getSupplier().getCompanyName(),
-                order.getTotal(),
-                LocalDateTime.now(),
-                SecurityContextHolder.getContext().getAuthentication() != null
-                        ? SecurityContextHolder.getContext().getAuthentication().getName() : "System",
-                receivedItems
-        );
-
-        applicationEventPublisher.publishEvent(event);
-        log.info("Published OrderReceivedEvent for order: {}", order.getOrderNumber());
-    }
-
-    /**
-     * Builds a snapshot map of purchase order state for forensic audit (B3-03).
-     *
-     * @param order the purchase order entity to snapshot
-     * @return map containing order state for audit record
-     */
-    private Map<String, Object> buildOrderSnapshot(PurchaseOrderEntity order) {
-        Map<String, Object> snapshot = new LinkedHashMap<>();
-        snapshot.put("id", order.getId());
-        snapshot.put("orderNumber", order.getOrderNumber());
-        snapshot.put("status", order.getStatus() != null ? order.getStatus().name() : null);
-        snapshot.put("supplierId", order.getSupplier() != null ? order.getSupplier().getId() : null);
-        snapshot.put("supplierName", order.getSupplier() != null ? order.getSupplier().getCompanyName() : null);
-        snapshot.put("total", order.getTotal());
-        snapshot.put("notes", order.getNotes());
-
-        // Capture active details
-        List<Map<String, Object>> details = order.getDetails().stream()
-                .filter(PurchaseOrderDetailEntity::isActive)
-                .map(d -> {
-                    Map<String, Object> detailMap = new LinkedHashMap<>();
-                    detailMap.put("id", d.getId());
-                    detailMap.put("productId", d.getProduct() != null ? d.getProduct().getId() : null);
-                    detailMap.put("productName", d.getProduct() != null ? d.getProduct().getName() : null);
-                    detailMap.put("requestedQuantity", d.getRequestedQuantity());
-                    detailMap.put("receivedQuantity", d.getReceivedQuantity());
-                    detailMap.put("unitCost", d.getUnitCost());
-                    return detailMap;
-                })
-                .collect(Collectors.toList());
-        snapshot.put("details", details);
-
-        return snapshot;
+        return OrderNumberGenerator.generate("PO", sequenceValue);
     }
 }
 
