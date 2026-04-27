@@ -18,17 +18,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.List;
 
-/**
- * JWT authentication filter (B1-02).
- *
- * Runs once per request. Extracts the {@code Authorization: Bearer <token>} header,
- * validates the token as an ACCESS token, and populates the {@link SecurityContextHolder}
- * with the authenticated principal and their granted authorities.
- *
- * If the header is absent or the token is invalid the filter simply continues the chain,
- * leaving the security context unauthenticated; downstream security rules then decide
- * whether to allow or reject the request (401).
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor
