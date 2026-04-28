@@ -5,6 +5,7 @@ import com.veltro.inventory.dto.catalog.ProductResponse;
 import com.veltro.inventory.dto.catalog.UpdateProductRequest;
 import com.veltro.inventory.dto.common.PageResponse;
 import com.veltro.inventory.service.ProductService;
+import lombok.extern.slf4j.Slf4j;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -35,6 +36,7 @@ import org.springframework.web.multipart.MultipartFile;
  *
  * AC-07: {@code GET /products} returns a {@link PageResponse} with pagination metadata.
  */
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/products")
 @RequiredArgsConstructor
@@ -74,12 +76,39 @@ public class ProductController {
     // POST / PUT endpoints 窶・ADMIN or WAREHOUSE only
     // -------------------------------------------------------------------------
 
-    @PostMapping
+    @PostMapping(consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyRole('ADMIN', 'WAREHOUSE')")
-    public ResponseEntity<ProductResponse> create(
-            @Valid @RequestBody CreateProductRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(productService.create(request));
+    public ResponseEntity<?> create(
+            @Valid @org.springframework.web.bind.annotation.RequestPart("product") CreateProductRequest request,
+            @org.springframework.web.bind.annotation.RequestPart(value = "image", required = false) MultipartFile image) {
+        
+        ProductResponse response;
+        try {
+            response = productService.create(request);
+        } catch (com.veltro.inventory.exception.DuplicateResourceException | com.veltro.inventory.exception.InactiveResourceExistsException e) {
+            Long existingId = null;
+            if (e instanceof com.veltro.inventory.exception.InactiveResourceExistsException) {
+                existingId = ((com.veltro.inventory.exception.InactiveResourceExistsException) e).getExistingResourceId();
+            } else {
+                try {
+                    existingId = productService.findByBarcode(request.barcode()).id();
+                } catch (Exception ignore) { }
+            }
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(java.util.Map.of(
+                    "message", "Ya existe un producto con este código de barras o SKU",
+                    "existingProductId", existingId != null ? existingId : -1L
+            ));
+        }
+        
+        if (image != null && !image.isEmpty()) {
+            try {
+                productService.uploadImages(response.id(), java.util.List.of(image));
+            } catch (Exception e) {
+                log.warn("Image upload failed for product {}: {}", response.id(), e.getMessage());
+            }
+        }
+        
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PutMapping("/{id}")

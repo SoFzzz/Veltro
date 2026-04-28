@@ -10,7 +10,6 @@ import com.veltro.inventory.model.ProductEntity;
 import com.veltro.inventory.repository.CategoryRepository;
 import com.veltro.inventory.repository.ProductRepository;
 import com.veltro.inventory.repository.SaleDetailRepository;
-import com.veltro.inventory.repository.ProductEmbeddingRepository;
 import com.veltro.inventory.infrastructure.ai.ClipInferenceService;
 import com.veltro.inventory.model.IndexingStatus;
 import com.veltro.inventory.exception.DuplicateResourceException;
@@ -25,6 +24,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.Optional;
 import org.springframework.web.multipart.MultipartFile;
@@ -49,7 +49,9 @@ public class ProductService {
     private final ProductMapper productMapper;
     private final ApplicationEventPublisher eventPublisher;
     private final ClipInferenceService clipInferenceService;
-    private final ProductEmbeddingRepository embeddingRepository;
+
+    @Value("${app.uploads-dir:./uploads}")
+    private String uploadsDirPath;
 
     // -------------------------------------------------------------------------
     // Queries
@@ -129,7 +131,6 @@ public class ProductService {
         return productMapper.toResponse(saved);
     }
 
-    @Transactional
     public void uploadImages(Long id, java.util.List<MultipartFile> images) {
         ProductEntity entity = requireActive(id);
         
@@ -140,20 +141,27 @@ public class ProductService {
         MultipartFile primaryImage = images.get(0);
         log.info("Uploaded image for product id={}: {} ({} bytes)", id, primaryImage.getOriginalFilename(), primaryImage.getSize());
 
-        // Process embedding asynchronously or synchronously based on the setup.
-        // We will process it synchronously here, but in a real high-throughput system this should be async (JMS/RabbitMQ).
-        if (clipInferenceService.isModelLoaded()) {
-            try {
+        try {
+            // 1. Guardar imagen en disco siempre
+            java.nio.file.Path uploadDir = java.nio.file.Paths.get(uploadsDirPath).toAbsolutePath().normalize();
+            java.nio.file.Files.createDirectories(uploadDir);
+            
+            String filename = "prod_" + id + "_" + System.currentTimeMillis() + ".jpg";
+            java.nio.file.Path filePath = uploadDir.resolve(filename);
+            primaryImage.transferTo(filePath.toFile());
+            log.info("Image saved to: {}", filePath.toAbsolutePath());
+
+            // 2. Si CLIP cargado -> generar embedding
+            if (clipInferenceService.isModelLoaded()) {
                 entity.setIndexingStatus(IndexingStatus.INDEXING_PENDING);
                 productRepository.save(entity);
 
-                try (InputStream is = primaryImage.getInputStream()) {
+                try (InputStream is = java.nio.file.Files.newInputStream(filePath)) {
                     BufferedImage bImage = ImageIO.read(is);
                     if (bImage != null) {
                         Optional<float[]> embeddingOpt = clipInferenceService.generateEmbedding(bImage);
                         if (embeddingOpt.isPresent()) {
-                            // Insert into vector DB
-                            embeddingRepository.insertEmbedding(id, embeddingOpt.get(), clipInferenceService.getModelVersion());
+                            entity.setEmbedding(formatEmbedding(embeddingOpt.get()));
                             entity.setIndexingStatus(IndexingStatus.INDEXING_READY);
                             entity.setLastIndexingError(null);
                         } else {
@@ -165,15 +173,18 @@ public class ProductService {
                         entity.setLastIndexingError("Could not read image format");
                     }
                 }
-            } catch (Exception e) {
-                log.error("Failed to generate embedding for product {}", id, e);
-                entity.setIndexingStatus(IndexingStatus.INDEXING_FAILED);
-                entity.setLastIndexingError(e.getMessage());
-            } finally {
-                productRepository.save(entity);
+            } else {
+                // 3. Si CLIP NO cargado -> marcar PENDING
+                entity.setIndexingStatus(IndexingStatus.INDEXING_PENDING);
+                log.warn("CLIP Model not loaded, image saved but skipping semantic embedding generation for product {}", id);
             }
-        } else {
-            log.warn("CLIP Model not loaded, skipping semantic embedding generation for product {}", id);
+        } catch (Exception e) {
+            log.error("Failed to process image upload for product {}", id, e);
+            entity.setIndexingStatus(IndexingStatus.INDEXING_FAILED);
+            entity.setLastIndexingError(e.getMessage());
+        } finally {
+            // 4. Nunca propagar excepción al controller
+            productRepository.save(entity);
         }
     }
 
@@ -237,6 +248,16 @@ public class ProductService {
     // -------------------------------------------------------------------------
     // Internal helpers
     // -------------------------------------------------------------------------
+
+    private String formatEmbedding(float[] embedding) {
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < embedding.length; i++) {
+            if (i > 0) sb.append(",");
+            sb.append(embedding[i]);
+        }
+        sb.append("]");
+        return sb.toString();
+    }
 
     /**
      * Enforces the domain constraint: salePrice must be >= costPrice.

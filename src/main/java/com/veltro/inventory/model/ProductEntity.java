@@ -84,4 +84,9 @@ public class ProductEntity extends AbstractAuditableEntity {
 
     @Column(name = "last_indexing_error", columnDefinition = "TEXT")
     private String lastIndexingError;
+
+    // Vector embedding for AI search. Mapped as String for native JDBC/pgvector compatibility.
+    @org.hibernate.annotations.ColumnTransformer(write = "?::vector")
+    @Column(name = "embedding", columnDefinition = "vector(512)")
+    private String embedding;
 }

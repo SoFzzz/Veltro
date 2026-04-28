@@ -14,7 +14,7 @@ spring:
 # Override jwt.secret per environment profile; never commit a real secret here.
 jwt:
   secret: ${JWT_SECRET:dev-only-secret-do-not-use-in-production-min-256bits!!}
-  access-token-expiration: 900        # 15 minutes in seconds
+  access-token-expiration: 3600       # 1 hour in seconds
   refresh-token-expiration: 604800    # 7 days in seconds
 
 # AI Vision API configuration (B3-01).
@@ -41,3 +41,6 @@ veltro:
       model-path: "models/clip-image-vit-32.onnx"
       model-checksum: ""
       version: "ViT-B/32-v1"
+
+app:
+  uploads-dir: ${UPLOADS_DIR:./uploads}
