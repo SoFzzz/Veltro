@@ -33,9 +33,8 @@ import java.util.Map;
 /**
  * REST controller for IAM endpoints (B1-02).
  *
- * All endpoints are under {@code /api/v1/auth}.
- * {@code /login} and {@code /refresh} are public (see SecurityConfig).
- * {@code /logout} and {@code /change-password} require a valid Bearer token.
+ * <p>Delegates authentication to {@link AuthenticationService}, business registration to
+ * {@link BusinessRegistrationService}, and worker management to {@link AuthService}.
  */
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -43,54 +42,44 @@ import java.util.Map;
 public class AuthController {
 
     private final AuthService authService;
+    private final AuthenticationService authenticationService;
+    private final BusinessRegistrationService businessRegistrationService;
 
     /**
      * Authenticates a user and returns an access + refresh token pair.
-     *
-     * @return HTTP 200 with {@link LoginResponse} on success.
-     *         HTTP 401 if credentials are invalid (thrown by AuthenticationManager).
      */
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
-        return ResponseEntity.ok(authService.login(request));
+        return ResponseEntity.ok(authenticationService.login(request));
     }
 
     /**
-     * Registers a new user with default role CASHIER.
-     *
-     * @return HTTP 200 with success message.
-     *         HTTP 400 if username already exists or validation fails.
+     * Registers a new business and its admin user.
      */
     @PostMapping("/register")
     public ResponseEntity<Map<String, Object>> register(@Valid @RequestBody RegisterRequest request) {
-        authService.register(request);
+        businessRegistrationService.register(request);
         return ResponseEntity.ok(Map.of(
                 "success", true,
-                "message", "User registered successfully."));
+                "message", "Business registered successfully."));
     }
 
     /**
      * Exchanges a valid refresh token for a new access token.
-     *
-     * @return HTTP 200 with a new {@link LoginResponse} containing the new access token.
-     *         HTTP 400 if the refresh token is missing or invalid.
      */
     @PostMapping("/refresh")
     public ResponseEntity<LoginResponse> refresh(@Valid @RequestBody RefreshRequest request) {
-        return ResponseEntity.ok(authService.refresh(request));
+        return ResponseEntity.ok(authenticationService.refresh(request));
     }
 
     /**
-     * Stateless logout 窶・the server has no session to invalidate.
-     * The client is responsible for discarding its tokens.
-     *
-     * @return HTTP 200 with a confirmation message.
+     * Stateless logout.
      */
     @PostMapping("/logout")
     public ResponseEntity<Map<String, Object>> logout(
             @AuthenticationPrincipal UserDetails userDetails) {
 
-        authService.logout(userDetails.getUsername());
+        authenticationService.logout(userDetails.getUsername());
         return ResponseEntity.ok(Map.of(
                 "success", true,
                 "message", "Logged out successfully. Please discard your tokens."));
@@ -98,16 +87,13 @@ public class AuthController {
 
     /**
      * Changes the authenticated user's password.
-     *
-     * @return HTTP 200 on success.
-     *         HTTP 400 if current password is wrong or validation fails.
      */
     @PutMapping("/change-password")
     public ResponseEntity<Map<String, Object>> changePassword(
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody ChangePasswordRequest request) {
 
-        authService.changePassword(userDetails.getUsername(), request);
+        authenticationService.changePassword(userDetails.getUsername(), request);
         return ResponseEntity.ok(Map.of(
                 "success", true,
                 "message", "Password changed successfully."));
@@ -115,9 +101,6 @@ public class AuthController {
 
     /**
      * Lists all active workers in the current admin's business.
-     *
-     * @return HTTP 200 with list of {@link WorkerResponse}.
-     *         HTTP 403 if caller is not ADMIN.
      */
     @GetMapping("/workers")
     @PreAuthorize("hasRole('ADMIN')")
@@ -127,11 +110,7 @@ public class AuthController {
     }
 
     /**
-     * Creates a worker (CASHIER or WAREHOUSE) within the current admin's business.
-     *
-     * @return HTTP 201 with worker details on success.
-     *         HTTP 400 if validation fails or username already taken in this business.
-     *         HTTP 403 if caller is not ADMIN.
+     * Creates a worker within the current admin's business.
      */
     @PostMapping("/workers")
     @PreAuthorize("hasRole('ADMIN')")
@@ -144,12 +123,7 @@ public class AuthController {
     }
 
     /**
-     * Deactivates (soft-deletes) a worker from the current admin's business.
-     *
-     * @return HTTP 200 with success message.
-     *         HTTP 400 if worker is an ADMIN or doesn't belong to the business.
-     *         HTTP 403 if caller is not ADMIN.
-     *         HTTP 404 if worker not found.
+     * Deactivates a worker from the current admin's business.
      */
     @DeleteMapping("/workers/{id}")
     @PreAuthorize("hasRole('ADMIN')")
@@ -163,12 +137,6 @@ public class AuthController {
 
     /**
      * Updates the role of a worker in the current admin's business.
-     * Only CASHIER 竊・WAREHOUSE transitions are allowed.
-     *
-     * @return HTTP 200 with updated {@link WorkerResponse}.
-     *         HTTP 400 if role is invalid or worker is an ADMIN.
-     *         HTTP 403 if caller is not ADMIN.
-     *         HTTP 404 if worker not found.
      */
     @PatchMapping("/workers/{id}/role")
     @PreAuthorize("hasRole('ADMIN')")
@@ -181,4 +149,3 @@ public class AuthController {
         return ResponseEntity.ok(updated);
     }
 }
-
