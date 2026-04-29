@@ -9,5 +9,6 @@ public enum AlertType {
     CRITICAL_STOCK,
     OVERSTOCK,
     EXPIRING,
-    REORDER
+    REORDER,
+    STOCK_MOVEMENT
 }
