@@ -12,7 +12,7 @@ public class OutOfStockHandler extends AbstractAlertHandler {
 
     @Override
     protected AlertType getAlertType() {
-        return AlertType.OUT_OF_STOCK;
+        return AlertType.CRITICAL_STOCK;
     }
 
     @Override
