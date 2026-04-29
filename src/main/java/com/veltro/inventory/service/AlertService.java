@@ -5,6 +5,7 @@ import com.veltro.inventory.dto.common.PageResponse;
 import com.veltro.inventory.mapper.AlertMapper;
 import com.veltro.inventory.model.AlertConfigurationEntity;
 import com.veltro.inventory.model.AlertEntity;
+import com.veltro.inventory.model.AlertSeverity;
 import com.veltro.inventory.model.AlertType;
 import com.veltro.inventory.repository.AlertConfigurationRepository;
 import com.veltro.inventory.repository.AlertRepository;
@@ -66,6 +67,9 @@ public class AlertService {
                 .collect(Collectors.toSet());
 
         for (AlertEntity alert : existing) {
+            if (alert.getType() == AlertType.STOCK_MOVEMENT) {
+                continue; // Do not auto-resolve event-based alerts
+            }
             if (!activeTypes.contains(alert.getType())) {
                 alert.setResolved(true);
                 alertRepository.save(alert);
@@ -82,8 +86,14 @@ public class AlertService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<AlertResponse> listActiveAlerts(Pageable pageable) {
+    public PageResponse<AlertResponse> listActiveAlerts(AlertSeverity severity, Pageable pageable) {
         Long businessId = TenantContext.getBusinessId();
+        if (severity != null) {
+            return PageResponse.from(
+                    alertRepository.findBySeverityAndResolvedFalseAndBusinessIdOrderByCreatedAtDesc(severity, businessId, pageable)
+                            .map(alertMapper::toResponse)
+            );
+        }
         return PageResponse.from(
                 alertRepository.findByResolvedFalseAndBusinessIdOrderBySeverityDescCreatedAtAsc(businessId, pageable)
                         .map(alertMapper::toResponse)
