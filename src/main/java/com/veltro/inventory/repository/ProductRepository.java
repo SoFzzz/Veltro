@@ -4,6 +4,7 @@ import com.veltro.inventory.model.ProductEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -43,4 +44,17 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Long> {
      * Used by AI product matching to enrich visual suggestions with existing catalog data.
      */
     List<ProductEntity> findTop10ByActiveTrueAndBusinessIdAndNameContainingIgnoreCase(Long businessId, String keyword);
+
+    /**
+     * Finds products similar to an embedding using pgvector cosine similarity.
+     * Queries the products table directly leveraging the HNSW partial index.
+     */
+    @Query(value = """
+        SELECT * FROM products
+        WHERE business_id = :businessId AND active = true
+        AND embedding <=> CAST(:embedding AS vector) < 0.45
+        ORDER BY embedding <=> CAST(:embedding AS vector)
+        LIMIT :limit
+        """, nativeQuery = true)
+    List<ProductEntity> findSimilarProducts(String embedding, Long businessId, int limit);
 }

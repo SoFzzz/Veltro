@@ -57,7 +57,7 @@ public class SecurityConfig {
     private final LoginRateLimitFilter loginRateLimitFilter;
     private final UserDetailsService userDetailsService;
 
-    @Value("${cors.allowed-origins:http://localhost:5173,https://localhost:5173,http://127.0.0.1:5173,https://127.0.0.1:5173}")
+    @Value("${cors.allowed-origins:http://localhost:5173,https://localhost:5173,http://127.0.0.1:5173,https://127.0.0.1:5173,http://localhost:5174,https://localhost:5174,http://127.0.0.1:5174,https://127.0.0.1:5174}")
     private String allowedOrigins;
 
     @Bean

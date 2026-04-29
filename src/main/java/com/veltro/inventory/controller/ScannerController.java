@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.http.HttpStatus;
-import com.veltro.inventory.repository.ProductEmbeddingRepository;
 import com.veltro.inventory.service.BatchIndexingService;
 import com.veltro.inventory.infrastructure.ai.ClipInferenceService;
 import java.awt.image.BufferedImage;
@@ -45,7 +44,7 @@ public class ScannerController {
     private final ProductRecognitionService scannerService;
     private final BatchIndexingService batchIndexingService;
     private final ClipInferenceService clipInferenceService;
-    private final ProductEmbeddingRepository embeddingRepository;
+    private final com.veltro.inventory.repository.ProductRepository productRepository;
 
     /**
      * Analyzes a product image using AI vision.
@@ -133,13 +132,13 @@ public class ScannerController {
      *
      * <p>POST /api/v1/scanner/semantic
      */
-    @PostMapping(value = "/semantic", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/detect", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyRole('ADMIN', 'CASHIER', 'WAREHOUSE')")
-    public ResponseEntity<ProductEmbeddingRepository.SemanticSearchResult> semanticSearch(
+    public ResponseEntity<java.util.List<Map<String, Object>>> detectSearch(
             @RequestParam("image") MultipartFile image
     ) {
         if (!clipInferenceService.isModelLoaded()) {
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
+            return ResponseEntity.ok(java.util.List.of());
         }
 
         try (InputStream is = image.getInputStream()) {
@@ -150,18 +149,44 @@ public class ScannerController {
 
             Optional<float[]> embeddingOpt = clipInferenceService.generateEmbedding(bImage);
             if (embeddingOpt.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+                return ResponseEntity.ok(java.util.List.of());
             }
 
-            Optional<ProductEmbeddingRepository.SemanticSearchResult> result = embeddingRepository.findMostSimilarProduct(embeddingOpt.get());
-            return result.map(ResponseEntity::ok)
-                    .orElse(ResponseEntity.notFound().build());
+            Long businessId = com.veltro.inventory.security.TenantContext.getBusinessId();
+            String embeddingString = formatEmbedding(embeddingOpt.get());
+            java.util.List<com.veltro.inventory.model.ProductEntity> result = productRepository.findSimilarProducts(embeddingString, businessId, 1);
+            
+            if (result.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            com.veltro.inventory.model.ProductEntity match = result.get(0);
+            
+            java.util.Map<String, Object> matchData = new java.util.HashMap<>();
+            matchData.put("id", match.getId());
+            matchData.put("name", match.getName());
+            matchData.put("salePrice", match.getSalePrice());
+            matchData.put("barcode", match.getBarcode());
+            matchData.put("sku", match.getSku());
+
+            return ResponseEntity.ok(java.util.List.of(Map.of(
+                "matches", java.util.List.of(matchData)
+            )));
 
         } catch (Exception e) {
-            log.error("Semantic search failed", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            log.error("Detect search failed", e);
+            return ResponseEntity.ok(java.util.List.of());
         }
     }
-}
 
+    private String formatEmbedding(float[] embedding) {
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < embedding.length; i++) {
+            if (i > 0) sb.append(",");
+            sb.append(embedding[i]);
+        }
+        sb.append("]");
+        return sb.toString();
+    }
+}
 
