@@ -13,7 +13,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 /**
- * MapStruct mapper for {@link ProductEntity} 竊・product DTOs.
+ * MapStruct mapper for {@link ProductEntity} to product DTOs.
  *
  * ADR-005: Monetary BigDecimal fields are converted to String with exactly
  * 4 decimal places to prevent precision loss in JSON serialization.
