@@ -3,6 +3,7 @@ package com.veltro.inventory.controller;
 import com.veltro.inventory.dto.inventory.AlertResponse;
 import com.veltro.inventory.dto.inventory.UpdateAlertConfigurationRequest;
 import com.veltro.inventory.dto.common.PageResponse;
+import com.veltro.inventory.model.AlertSeverity;
 import com.veltro.inventory.service.AlertFacadeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import java.util.Map;
 
 /**
  * Controller for managing system alerts and their configuration (B1-05).
@@ -27,14 +29,16 @@ public class AlertController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','WAREHOUSE')")
-    public PageResponse<AlertResponse> listAlerts(Pageable pageable) {
-        return alertFacade.listActiveAlerts(pageable);
+    public PageResponse<AlertResponse> listAlerts(
+            @RequestParam(required = false) AlertSeverity severity,
+            Pageable pageable) {
+        return alertFacade.listActiveAlerts(severity, pageable);
     }
 
     @GetMapping("/unread/count")
     @PreAuthorize("hasAnyRole('ADMIN','WAREHOUSE','CASHIER')")
-    public long unreadCount() {
-        return alertFacade.unreadCount();
+    public Map<String, Long> unreadCount() {
+        return Map.of("count", alertFacade.unreadCount());
     }
 
     @PutMapping("/{id}/read")
