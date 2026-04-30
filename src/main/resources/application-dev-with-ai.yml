@@ -23,6 +23,8 @@ spring:
     validate-on-migrate: true
     clean-on-validation-error: true
     clean-disabled: false
+    out-of-order: true
+    ignore-migration-patterns: "*:missing"
 
 logging:
   level:

@@ -9,6 +9,8 @@ import com.veltro.inventory.dto.auth.WorkerCreatedResponse;
 import com.veltro.inventory.dto.auth.WorkerResponse;
 import com.veltro.inventory.dto.auth.UpdateRoleRequest;
 import com.veltro.inventory.service.AuthService;
+import com.veltro.inventory.service.AuthenticationService;
+import com.veltro.inventory.service.BusinessRegistrationService;
 import com.veltro.inventory.security.TenantContext;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
