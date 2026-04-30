@@ -1,6 +1,7 @@
 package com.veltro.inventory.service;
 
 import com.veltro.inventory.dto.auth.RegisterRequest;
+import com.veltro.inventory.dto.auth.WorkerCreatedResponse;
 import com.veltro.inventory.dto.auth.WorkerResponse;
 import com.veltro.inventory.model.Role;
 import com.veltro.inventory.model.UserEntity;
@@ -34,7 +35,7 @@ public class WorkerManagementService {
      * Creates a worker account (CASHIER or WAREHOUSE) in the admin's business.
      */
     @Transactional
-    public UserEntity createWorker(Long adminBusinessId, RegisterRequest request) {
+    public WorkerCreatedResponse createWorker(Long adminBusinessId, RegisterRequest request) {
         Role role = parseWorkerRole(request.role());
         if (role == Role.ADMIN) {
             throw new IllegalArgumentException("Cannot create ADMIN workers. Use registration instead.");
@@ -58,7 +59,12 @@ public class WorkerManagementService {
         worker = userRepository.save(worker);
 
         log.info("Worker '{}' ({}) created in business {}", worker.getUsername(), role, adminBusinessId);
-        return worker;
+        return new WorkerCreatedResponse(
+                worker.getId(),
+                worker.getUsername(),
+                worker.getEmail(),
+                worker.getRole().name(),
+                worker.getCreatedAt());
     }
 
     /**

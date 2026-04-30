@@ -5,7 +5,7 @@ import com.veltro.inventory.dto.scanner.ProductSuggestionResponse;
 import com.veltro.inventory.service.ProductRecognitionService;
 import com.veltro.inventory.service.BatchIndexingService;
 import com.veltro.inventory.infrastructure.ai.ClipInferenceService;
-import com.veltro.inventory.repository.ProductEmbeddingRepository;
+import com.veltro.inventory.repository.ProductRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -46,13 +46,13 @@ class ScannerControllerTest {
     private ClipInferenceService clipInferenceService;
 
     @Mock
-    private ProductEmbeddingRepository productEmbeddingRepository;
+    private ProductRepository productRepository;
 
     private ScannerController scannerController;
 
     @BeforeEach
     void setUp() {
-        scannerController = new ScannerController(scannerService, batchIndexingService, clipInferenceService, productEmbeddingRepository);
+        scannerController = new ScannerController(scannerService, batchIndexingService, clipInferenceService, productRepository);
     }
 
     @Test

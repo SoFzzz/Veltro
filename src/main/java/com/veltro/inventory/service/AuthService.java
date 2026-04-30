@@ -7,7 +7,6 @@ import com.veltro.inventory.dto.auth.RefreshRequest;
 import com.veltro.inventory.dto.auth.RegisterRequest;
 import com.veltro.inventory.dto.auth.WorkerCreatedResponse;
 import com.veltro.inventory.dto.auth.WorkerResponse;
-import com.veltro.inventory.model.UserEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -49,7 +48,7 @@ public class AuthService {
         authenticationService.changePassword(username, request);
     }
 
-    public UserEntity createWorker(Long adminBusinessId, RegisterRequest request) {
+    public WorkerCreatedResponse createWorker(Long adminBusinessId, RegisterRequest request) {
         return workerManagementService.createWorker(adminBusinessId, request);
     }
 

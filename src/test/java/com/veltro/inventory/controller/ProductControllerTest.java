@@ -176,7 +176,7 @@ class ProductControllerTest {
                 "Widget A", "BARC-001", "WGT-001", "A widget",
                 new BigDecimal("5.0000"), new BigDecimal("9.9900"), 10L,
                 5, 10, 2);
-        ResponseEntity<ProductResponse> response = controller.create(request);
+        ResponseEntity<ProductResponse> response = (ResponseEntity<ProductResponse>) controller.create(request, null);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(response.getBody()).isNotNull();
@@ -194,7 +194,7 @@ class ProductControllerTest {
                 "Test Product", "TEST-001", "TST-001", "Test description",
                 new BigDecimal("10.00"), new BigDecimal("15.00"), 5L,
                 5, 10, 2);
-        controller.create(request);
+        controller.create(request, null);
 
         verify(productService).create(request);
     }
@@ -210,7 +210,7 @@ class ProductControllerTest {
                 new BigDecimal("10.00"), new BigDecimal("5.00"), 10L,
                 5, 10, 2);
 
-        assertThatThrownBy(() -> controller.create(request))
+        assertThatThrownBy(() -> controller.create(request, null))
                 .isInstanceOf(InvalidPriceException.class)
                 .hasMessage("Sale price must be greater than cost");
 

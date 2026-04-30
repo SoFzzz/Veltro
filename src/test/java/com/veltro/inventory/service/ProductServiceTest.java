@@ -14,7 +14,6 @@ import com.veltro.inventory.model.IndexingStatus;
 import com.veltro.inventory.repository.CategoryRepository;
 import com.veltro.inventory.repository.ProductRepository;
 import com.veltro.inventory.infrastructure.ai.ClipInferenceService;
-import com.veltro.inventory.repository.ProductEmbeddingRepository;
 import com.veltro.inventory.repository.SaleDetailRepository;
 import com.veltro.inventory.exception.InvalidPriceException;
 import com.veltro.inventory.exception.NotFoundException;
@@ -70,16 +69,13 @@ class ProductServiceTest {
     @Mock
     private ClipInferenceService clipInferenceService;
 
-    @Mock
-    private ProductEmbeddingRepository productEmbeddingRepository;
-
     private ProductService productService;
 
 
     @BeforeEach
     void setUp() {
         authenticateAsTenantUser();
-        productService = new ProductService(productRepository, categoryRepository, saleDetailRepository, productMapper, eventPublisher, clipInferenceService, productEmbeddingRepository);
+        productService = new ProductService(productRepository, categoryRepository, saleDetailRepository, productMapper, eventPublisher, clipInferenceService);
     }
 
     @AfterEach
