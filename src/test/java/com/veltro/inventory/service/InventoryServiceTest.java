@@ -15,6 +15,7 @@ import com.veltro.inventory.model.InventoryMovementEntity;
 import com.veltro.inventory.model.MovementType;
 import com.veltro.inventory.repository.InventoryMovementRepository;
 import com.veltro.inventory.repository.InventoryRepository;
+import com.veltro.inventory.repository.AlertRepository;
 import com.veltro.inventory.exception.InsufficientStockException;
 import com.veltro.inventory.exception.NotFoundException;
 import com.veltro.inventory.security.VeltroUserDetails;
@@ -72,12 +73,15 @@ class InventoryServiceTest {
     @Mock
     private AuditCommandExecutor auditCommandExecutor;
 
+    @Mock
+    private AlertRepository alertRepository;
+
     private InventoryService inventoryService;
 
     @BeforeEach
     void setUp() {
         authenticateAsTenantUser();
-        inventoryService = new InventoryService(inventoryRepository, movementRepository, inventoryMapper, movementMapper, eventPublisher, auditCommandExecutor);
+        inventoryService = new InventoryService(inventoryRepository, movementRepository, inventoryMapper, movementMapper, eventPublisher, auditCommandExecutor, alertRepository);
     }
 
     @AfterEach

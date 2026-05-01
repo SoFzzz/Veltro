@@ -5,6 +5,7 @@ import com.veltro.inventory.dto.inventory.AlertConfigurationResponse;
 import com.veltro.inventory.dto.inventory.AlertResponse;
 import com.veltro.inventory.dto.inventory.UpdateAlertConfigurationRequest;
 import com.veltro.inventory.service.AlertFacadeService;
+import com.veltro.inventory.model.AlertSeverity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -52,17 +53,17 @@ class AlertControllerTest {
                 "CRITICAL", "Out of stock", false, false, OffsetDateTime.now());
         
         PageImpl<AlertResponse> alertPage = new PageImpl<>(List.of(alert1, alert2), PageRequest.of(0, 20), 2);
-        when(alertFacade.listActiveAlerts(any(Pageable.class))).thenReturn(PageResponse.from(alertPage));
+        when(alertFacade.listActiveAlerts(eq(null), any(Pageable.class))).thenReturn(PageResponse.from(alertPage));
 
         // Act
-        var result = alertController.listAlerts(PageRequest.of(0, 20));
+        var result = alertController.listAlerts(null, PageRequest.of(0, 20));
 
         // Assert
         assertThat(result.content()).hasSize(2);
         assertThat(result.totalElements()).isEqualTo(2);
         assertThat(result.content().get(0).id()).isEqualTo(1L);
         assertThat(result.content().get(1).id()).isEqualTo(2L);
-        verify(alertFacade).listActiveAlerts(any(Pageable.class));
+        verify(alertFacade).listActiveAlerts(eq(null), any(Pageable.class));
     }
 
     @Test
@@ -72,7 +73,7 @@ class AlertControllerTest {
         when(alertFacade.unreadCount()).thenReturn(5L);
 
         // Act
-        long result = alertController.unreadCount();
+        long result = alertController.unreadCount().get("count");
 
         // Assert
         assertThat(result).isEqualTo(5L);
