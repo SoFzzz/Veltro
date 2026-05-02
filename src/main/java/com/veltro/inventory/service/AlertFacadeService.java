@@ -3,6 +3,7 @@ package com.veltro.inventory.service;
 import com.veltro.inventory.dto.inventory.AlertResponse;
 import com.veltro.inventory.dto.inventory.UpdateAlertConfigurationRequest;
 import com.veltro.inventory.dto.common.PageResponse;
+import com.veltro.inventory.model.AlertSeverity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -20,8 +21,8 @@ public class AlertFacadeService {
     private final AlertService alertService;
     private final AlertConfigurationService configurationService;
 
-    public PageResponse<AlertResponse> listActiveAlerts(Pageable pageable) {
-        return alertService.listActiveAlerts(pageable);
+    public PageResponse<AlertResponse> listActiveAlerts(AlertSeverity severity, Pageable pageable) {
+        return alertService.listActiveAlerts(severity, pageable);
     }
 
     public long unreadCount() {
