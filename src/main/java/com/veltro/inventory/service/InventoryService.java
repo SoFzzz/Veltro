@@ -45,6 +45,7 @@ public class InventoryService {
     private final InventoryMovementMapper movementMapper;
     private final ApplicationEventPublisher eventPublisher;
     private final AuditCommandExecutor auditCommandExecutor;
+    private final com.veltro.inventory.repository.AlertRepository alertRepository;
 
     @Transactional(readOnly = true)
     public PageResponse<InventoryResponse> findAll(Pageable pageable) {
@@ -203,6 +204,16 @@ public class InventoryService {
          movement.setReason(reason);
          movement.setBusinessId(businessId);
          movementRepository.save(movement);
+
+         // Generate INFO alert for the movement
+         com.veltro.inventory.model.AlertEntity alert = new com.veltro.inventory.model.AlertEntity();
+         alert.setProduct(inventory.getProduct());
+         alert.setType(com.veltro.inventory.model.AlertType.STOCK_MOVEMENT);
+         alert.setSeverity(com.veltro.inventory.model.AlertSeverity.INFO);
+         String action = type == MovementType.ENTRY ? "Llegada" : (type == MovementType.EXIT ? "Salida" : "Ajuste");
+         alert.setMessage(String.format("Registro de %s: %s (Cambio de %d a %d)", action, inventory.getProduct().getName(), previousStock, newStock));
+         alert.setBusinessId(businessId);
+         alertRepository.save(alert);
     }
 
     private void publishStockChanged(InventoryEntity inventory, int previousStock, int newStock, String reason) {
