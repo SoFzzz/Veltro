@@ -120,8 +120,9 @@ public class AuthController {
             @Valid @RequestBody RegisterRequest request) {
 
         Long businessId = TenantContext.getBusinessId();
+        com.veltro.inventory.model.UserEntity newWorker = authService.createWorker(businessId, request);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(authService.createWorker(businessId, request));
+                .body(new WorkerCreatedResponse(newWorker.getId(), newWorker.getUsername(), newWorker.getEmail(), newWorker.getRole().name(), newWorker.getCreatedAt()));
     }
 
     /**
