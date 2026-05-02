@@ -304,7 +304,7 @@ class AlertServiceTest {
         when(alertMapper.toResponse(alert2)).thenReturn(response2);
 
         // Act
-        PageResponse<AlertResponse> result = alertService.listActiveAlerts(pageable);
+        PageResponse<AlertResponse> result = alertService.listActiveAlerts(null, pageable);
 
         // Assert
         assertThat(result.content()).hasSize(2);
