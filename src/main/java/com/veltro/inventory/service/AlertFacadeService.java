@@ -33,8 +33,16 @@ public class AlertFacadeService {
         alertService.markAsRead(id);
     }
 
+    public void markAllAsRead() {
+        alertService.markAllAsRead();
+    }
+
     public void markAsResolved(Long id) {
         alertService.markAsResolved(id);
+    }
+
+    public void resolveAll() {
+        alertService.resolveAll();
     }
 
     public Object getConfiguration(Long productId) {
