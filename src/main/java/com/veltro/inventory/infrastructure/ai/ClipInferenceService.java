@@ -61,7 +61,8 @@ public class ClipInferenceService {
                 this.modelLoaded = true;
                 log.info("ONNX CLIP Model loaded successfully. Version: {}", config.getVersion());
             } else {
-                log.warn("ONNX CLIP Model not found at classpath:{}. Inference will not be available.", config.getModelPath());
+                log.warn("ONNX CLIP Model not found at classpath:{}. Inference will not be available.",
+                        config.getModelPath());
             }
         } catch (Exception e) {
             log.error("Failed to initialize ONNX Runtime session for CLIP", e);
@@ -75,12 +76,14 @@ public class ClipInferenceService {
         StringBuilder hexString = new StringBuilder();
         for (byte b : hash) {
             String hex = Integer.toHexString(0xff & b);
-            if (hex.length() == 1) hexString.append('0');
+            if (hex.length() == 1)
+                hexString.append('0');
             hexString.append(hex);
         }
         String actualChecksum = hexString.toString();
         if (!actualChecksum.equalsIgnoreCase(expectedChecksum)) {
-            throw new IllegalStateException("Model checksum validation failed. Expected: " + expectedChecksum + " Actual: " + actualChecksum);
+            throw new IllegalStateException(
+                    "Model checksum validation failed. Expected: " + expectedChecksum + " Actual: " + actualChecksum);
         }
     }
 
@@ -99,14 +102,14 @@ public class ClipInferenceService {
 
         try {
             float[] preprocessedData = preprocessor.preprocess(image);
-            
+
             // Create ONNX Tensor: shape is [1, 3, 224, 224]
-            long[] shape = new long[]{1, 3, 224, 224};
-            
+            long[] shape = new long[] { 1, 3, 224, 224 };
+
             try (OnnxTensor tensor = OnnxTensor.createTensor(env, java.nio.FloatBuffer.wrap(preprocessedData), shape)) {
                 // Determine input name dynamically
                 String inputName = session.getInputNames().iterator().next();
-                
+
                 try (OrtSession.Result results = session.run(Collections.singletonMap(inputName, tensor))) {
                     float[][] output = (float[][]) results.get(0).getValue();
                     float[] embedding = output[0];
@@ -126,7 +129,8 @@ public class ClipInferenceService {
             sum += v * v;
         }
         float magnitude = (float) Math.sqrt(sum);
-        if (magnitude == 0) return vector;
+        if (magnitude == 0)
+            return vector;
 
         float[] normalized = new float[vector.length];
         for (int i = 0; i < vector.length; i++) {
