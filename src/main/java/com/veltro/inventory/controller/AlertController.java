@@ -48,10 +48,24 @@ public class AlertController {
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
+    @PutMapping("/read-all")
+    @PreAuthorize("hasAnyRole('ADMIN','WAREHOUSE')")
+    public ResponseEntity<Void> markAllAsRead() {
+        alertFacade.markAllAsRead();
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
     @PutMapping("/{id}/resolve")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> resolve(@PathVariable Long id) {
         alertFacade.markAsResolved(id);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
+    @PutMapping("/resolve-all")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> resolveAll() {
+        alertFacade.resolveAll();
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
