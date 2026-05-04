@@ -4,6 +4,9 @@ import com.veltro.inventory.dto.catalog.CreateProductRequest;
 import com.veltro.inventory.dto.catalog.ProductResponse;
 import com.veltro.inventory.dto.catalog.UpdateProductRequest;
 import com.veltro.inventory.dto.common.PageResponse;
+import com.veltro.inventory.exception.DuplicateProductConflictException;
+import com.veltro.inventory.exception.DuplicateResourceException;
+import com.veltro.inventory.exception.InactiveResourceExistsException;
 import com.veltro.inventory.service.ProductService;
 import lombok.extern.slf4j.Slf4j;
 import jakarta.validation.Valid;
@@ -85,19 +88,16 @@ public class ProductController {
         ProductResponse response;
         try {
             response = productService.create(request);
-        } catch (com.veltro.inventory.exception.DuplicateResourceException | com.veltro.inventory.exception.InactiveResourceExistsException e) {
+        } catch (DuplicateResourceException | InactiveResourceExistsException e) {
             Long existingId = null;
-            if (e instanceof com.veltro.inventory.exception.InactiveResourceExistsException) {
-                existingId = ((com.veltro.inventory.exception.InactiveResourceExistsException) e).getExistingResourceId();
+            if (e instanceof InactiveResourceExistsException inactiveResource) {
+                existingId = inactiveResource.getExistingResourceId();
             } else {
                 try {
                     existingId = productService.findByBarcode(request.barcode()).id();
                 } catch (Exception ignore) { }
             }
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(java.util.Map.of(
-                    "message", "Ya existe un producto con este código de barras o SKU",
-                    "existingProductId", existingId != null ? existingId : -1L
-            ));
+            throw new DuplicateProductConflictException(existingId, e);
         }
         
         if (image != null && !image.isEmpty()) {
