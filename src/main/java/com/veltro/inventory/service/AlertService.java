@@ -110,12 +110,24 @@ public class AlertService {
     }
 
     @Transactional
+    public void markAllAsRead() {
+        Long businessId = TenantContext.getBusinessId();
+        alertRepository.markAllAsReadByBusinessId(businessId);
+    }
+
+    @Transactional
     public void markAsResolved(Long alertId) {
         Long businessId = TenantContext.getBusinessId();
         AlertEntity alert = alertRepository.findByIdAndActiveTrueAndBusinessId(alertId, businessId)
                 .orElseThrow(() -> new IllegalArgumentException("Alert not found"));
         alert.setResolved(true);
         alertRepository.save(alert);
+    }
+
+    @Transactional
+    public void resolveAll() {
+        Long businessId = TenantContext.getBusinessId();
+        alertRepository.resolveAllByBusinessId(businessId);
     }
 
     @Transactional(readOnly = true)
