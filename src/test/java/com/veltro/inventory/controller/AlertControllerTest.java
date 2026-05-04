@@ -95,6 +95,17 @@ class AlertControllerTest {
     }
 
     @Test
+    @DisplayName("markAllAsRead calls service and returns 204 status")
+    void markAllAsRead_callsService() {
+        // Act
+        var response = alertController.markAllAsRead();
+
+        // Assert
+        assertThat(response.getStatusCode().value()).isEqualTo(204);
+        verify(alertFacade).markAllAsRead();
+    }
+
+    @Test
     @DisplayName("resolve calls service and returns 204 status")
     void resolve_callsService() {
         // Arrange
@@ -106,6 +117,17 @@ class AlertControllerTest {
         // Assert
         assertThat(response.getStatusCode().value()).isEqualTo(204);
         verify(alertFacade).markAsResolved(alertId);
+    }
+
+    @Test
+    @DisplayName("resolveAll calls service and returns 204 status")
+    void resolveAll_callsService() {
+        // Act
+        var response = alertController.resolveAll();
+
+        // Assert
+        assertThat(response.getStatusCode().value()).isEqualTo(204);
+        verify(alertFacade).resolveAll();
     }
 
     @Test
