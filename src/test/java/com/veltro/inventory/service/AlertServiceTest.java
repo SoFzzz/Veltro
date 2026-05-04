@@ -336,6 +336,19 @@ class AlertServiceTest {
     }
 
     @Test
+    @DisplayName("markAllAsRead updates only unread unresolved alerts for current tenant")
+    void markAllAsRead_updatesCurrentTenantAlerts() {
+        // Arrange
+        when(alertRepository.markAllAsReadByBusinessId(eq(BUSINESS_ID))).thenReturn(3);
+
+        // Act
+        alertService.markAllAsRead();
+
+        // Assert
+        verify(alertRepository).markAllAsReadByBusinessId(BUSINESS_ID);
+    }
+
+    @Test
     @DisplayName("markAsResolved sets resolved flag to true")
     void markAsResolved_existingAlert_setsResolvedFlag() {
         // Arrange
@@ -355,6 +368,19 @@ class AlertServiceTest {
         AlertEntity savedAlert = alertCaptor.getValue();
         assertThat(savedAlert.isResolved()).isTrue();
         assertThat(savedAlert.getId()).isEqualTo(alertId);
+    }
+
+    @Test
+    @DisplayName("resolveAll updates unresolved alerts for current tenant")
+    void resolveAll_updatesCurrentTenantAlerts() {
+        // Arrange
+        when(alertRepository.resolveAllByBusinessId(eq(BUSINESS_ID))).thenReturn(4);
+
+        // Act
+        alertService.resolveAll();
+
+        // Assert
+        verify(alertRepository).resolveAllByBusinessId(BUSINESS_ID);
     }
 
     @Test
