@@ -17,7 +17,6 @@ WORKDIR /app
 
 COPY --from=build /app/target/*.jar app.jar
 
-# NOTA: Eliminamos EXPOSE 8080 porque Heroku asigna el puerto dinámicamente
-
-# Modificamos el ENTRYPOINT para pasarle el puerto de Heroku a Spring Boot
-ENTRYPOINT ["java", "-Dserver.port=${PORT}", "-jar", "app.jar"]
+# NOTE: EXPOSE 8080 is omitted because the runtime platform assigns ports dynamically.
+# Use exec through sh so Java receives signals as PID 1 and supports port fallback.
+ENTRYPOINT ["sh", "-c", "exec java -Dserver.port=${PORT:-${SERVER_PORT:-8080}} -jar app.jar"]
