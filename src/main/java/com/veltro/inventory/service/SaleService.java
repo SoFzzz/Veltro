@@ -23,11 +23,10 @@ import com.veltro.inventory.repository.SaleRepository;
 import com.veltro.inventory.exception.InvalidPaymentException;
 import com.veltro.inventory.exception.InsufficientStockException;
 import com.veltro.inventory.exception.NotFoundException;
-import com.veltro.inventory.security.TenantContext;
+import com.veltro.inventory.security.TenantProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -57,6 +56,7 @@ public class SaleService {
     private final AuditCommandExecutor auditCommandExecutor;
     private final SaleSnapshotService snapshotService;
     private final SaleEventFactory eventFactory;
+    private final TenantProvider tenantProvider;
 
     // -------------------------------------------------------------------------
     // Queries
@@ -64,7 +64,7 @@ public class SaleService {
 
     @Transactional(readOnly = true)
     public SaleResponse findById(Long saleId) {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         SaleEntity sale = saleRepository.findByIdAndActiveTrueAndBusinessId(saleId, businessId)
                 .orElseThrow(() -> new NotFoundException("Sale not found with id: " + saleId));
         return saleMapper.toResponse(sale);
@@ -82,7 +82,7 @@ public class SaleService {
     @Transactional
     public SaleResponse startSale() {
         Long userId = getCurrentUserId();
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         Long sequenceValue = saleRepository.getNextSaleSequenceValue();
         String saleNumber = generateSaleNumber(sequenceValue);
 
@@ -108,7 +108,7 @@ public class SaleService {
      */
     @Transactional
     public SaleResponse addItem(Long saleId, AddItemRequest request) {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         SaleEntity sale = saleRepository.findByIdAndActiveTrueAndBusinessId(saleId, businessId)
                 .orElseThrow(() -> new NotFoundException("Sale not found with id: " + saleId));
 
@@ -142,7 +142,7 @@ public class SaleService {
      */
     @Transactional
     public SaleResponse modifyItem(Long saleId, Long detailId, ModifyItemRequest request) {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         SaleEntity sale = saleRepository.findByIdAndActiveTrueAndBusinessId(saleId, businessId)
                 .orElseThrow(() -> new NotFoundException("Sale not found with id: " + saleId));
 
@@ -164,7 +164,7 @@ public class SaleService {
      */
     @Transactional
     public SaleResponse removeItem(Long saleId, Long detailId) {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         SaleEntity sale = saleRepository.findByIdAndActiveTrueAndBusinessId(saleId, businessId)
                 .orElseThrow(() -> new NotFoundException("Sale not found with id: " + saleId));
 
@@ -191,7 +191,7 @@ public class SaleService {
      */
     @Transactional
     public SaleResponse confirm(Long saleId, ConfirmSaleRequest request) {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         SaleEntity sale = saleRepository.findByIdAndActiveTrueAndBusinessId(saleId, businessId)
                 .orElseThrow(() -> new NotFoundException("Sale not found with id: " + saleId));
 
@@ -246,7 +246,7 @@ public class SaleService {
      */
     @Transactional
     public SaleResponse voidSale(Long saleId) {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         SaleEntity sale = saleRepository.findByIdAndActiveTrueAndBusinessId(saleId, businessId)
                 .orElseThrow(() -> new NotFoundException("Sale not found with id: " + saleId));
 
@@ -258,7 +258,7 @@ public class SaleService {
 
         SaleEntity saved = saleRepository.save(sale);
 
-        // Publish event 窶・listener in B2-02 will handle stock reversal
+        // Publish event: listener in B2-02 handles stock reversal.
         applicationEventPublisher.publishEvent(eventFactory.buildVoidedEvent(saved));
 
         // Create forensic audit record (B3-03)
@@ -309,7 +309,7 @@ public class SaleService {
     }
 
     private Long getCurrentUserId() {
-        return TenantContext.getUserId();
+        return tenantProvider.getUserId();
     }
 }
 
