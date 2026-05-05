@@ -12,7 +12,7 @@ public class OutOfStockHandler extends AbstractAlertHandler {
 
     @Override
     protected AlertType getAlertType() {
-        return AlertType.CRITICAL_STOCK;
+        return AlertType.OUT_OF_STOCK;
     }
 
     @Override
@@ -22,6 +22,6 @@ public class OutOfStockHandler extends AbstractAlertHandler {
 
     @Override
     protected String buildMessage(StockAlertEvaluationContext context) {
-        return "Product " + context.getProductName() + " is out of stock";
+        return "Product " + context.getProductName() + " is at critical stock level";
     }
 }
