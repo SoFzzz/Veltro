@@ -5,7 +5,10 @@ import com.veltro.inventory.dto.common.PageResponse;
 import com.veltro.inventory.dto.catalog.ProductResponse;
 import com.veltro.inventory.dto.catalog.UpdateProductRequest;
 import com.veltro.inventory.service.ProductService;
+import com.veltro.inventory.exception.DuplicateProductConflictException;
+import com.veltro.inventory.exception.DuplicateResourceException;
 import com.veltro.inventory.exception.InvalidPriceException;
+import com.veltro.inventory.exception.InactiveResourceExistsException;
 import com.veltro.inventory.exception.NotFoundException;
 import com.veltro.inventory.model.IndexingStatus;
 import org.junit.jupiter.api.BeforeEach;
@@ -215,6 +218,39 @@ class ProductControllerTest {
                 .hasMessage("Sale price must be greater than cost");
 
         verify(productService).create(any(CreateProductRequest.class));
+    }
+
+    @Test
+    @DisplayName("POST /products throws DuplicateProductConflictException for duplicate resource")
+    void create_duplicateResource_throwsDuplicateProductConflictException() {
+        CreateProductRequest request = new CreateProductRequest(
+                "Widget A", "BARC-001", "WGT-001", "A widget",
+                new BigDecimal("5.0000"), new BigDecimal("9.9900"), 10L,
+                5, 10, 2);
+        when(productService.create(any(CreateProductRequest.class)))
+                .thenThrow(new DuplicateResourceException("duplicate"));
+        when(productService.findByBarcode("BARC-001")).thenReturn(stubProduct());
+
+        assertThatThrownBy(() -> controller.create(request, null))
+                .isInstanceOf(DuplicateProductConflictException.class)
+                .extracting("existingProductId")
+                .isEqualTo(1L);
+    }
+
+    @Test
+    @DisplayName("POST /products throws DuplicateProductConflictException with existing id for inactive resource")
+    void create_inactiveResource_throwsDuplicateProductConflictException() {
+        CreateProductRequest request = new CreateProductRequest(
+                "Widget A", "BARC-001", "WGT-001", "A widget",
+                new BigDecimal("5.0000"), new BigDecimal("9.9900"), 10L,
+                5, 10, 2);
+        when(productService.create(any(CreateProductRequest.class)))
+                .thenThrow(new InactiveResourceExistsException("product", "barcode", "BARC-001", 99L));
+
+        assertThatThrownBy(() -> controller.create(request, null))
+                .isInstanceOf(DuplicateProductConflictException.class)
+                .extracting("existingProductId")
+                .isEqualTo(99L);
     }
 
     // -------------------------------------------------------------------------
