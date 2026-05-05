@@ -1,10 +1,12 @@
 package com.veltro.inventory.exception;
 
 import com.veltro.inventory.dto.common.ErrorResponse;
+import com.veltro.inventory.dto.common.DuplicateProductErrorResponse;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.OptimisticLockException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.MessageSource;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,8 +21,11 @@ import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.context.support.StaticMessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 /**
@@ -32,6 +37,23 @@ import java.util.stream.Collectors;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    private static final String PRODUCT_CONFLICT_MESSAGE_KEY = "product.conflict.message";
+    private static final String DEFAULT_PRODUCT_CONFLICT_MESSAGE = "Ya existe un producto con este código de barras o SKU";
+
+    private final MessageSource messageSource;
+
+    public GlobalExceptionHandler() {
+        StaticMessageSource fallbackMessageSource = new StaticMessageSource();
+        fallbackMessageSource.addMessage(PRODUCT_CONFLICT_MESSAGE_KEY, Locale.forLanguageTag("es"),
+                DEFAULT_PRODUCT_CONFLICT_MESSAGE);
+        fallbackMessageSource.addMessage(PRODUCT_CONFLICT_MESSAGE_KEY, Locale.ENGLISH,
+                DEFAULT_PRODUCT_CONFLICT_MESSAGE);
+        this.messageSource = fallbackMessageSource;
+    }
+
+    public GlobalExceptionHandler(MessageSource messageSource) {
+        this.messageSource = messageSource;
+    }
 
     // -------------------------------------------------------------------------
     // 409 Conflict — optimistic locking / concurrency conflicts (ADR-002)
@@ -109,6 +131,25 @@ public class GlobalExceptionHandler {
                         ex.getMessage(),
                         HttpStatus.CONFLICT,
                         request.getRequestURI()));
+    }
+
+    @ExceptionHandler(DuplicateProductConflictException.class)
+    public ResponseEntity<DuplicateProductErrorResponse> handleDuplicateProductConflict(
+            DuplicateProductConflictException ex, HttpServletRequest request) {
+        log.warn("Duplicate product conflict on {}: {}", request.getRequestURI(), ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(new DuplicateProductErrorResponse(
+                        resolveDuplicateProductMessage(),
+                        ex.getExistingProductId()));
+    }
+
+    private String resolveDuplicateProductMessage() {
+        return messageSource.getMessage(
+                PRODUCT_CONFLICT_MESSAGE_KEY,
+                null,
+                DEFAULT_PRODUCT_CONFLICT_MESSAGE,
+                LocaleContextHolder.getLocale());
     }
 
     /**
