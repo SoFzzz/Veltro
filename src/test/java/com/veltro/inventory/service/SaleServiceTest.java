@@ -8,6 +8,7 @@ import com.veltro.inventory.dto.pos.ModifyItemRequest;
 import com.veltro.inventory.dto.pos.SaleResponse;
 import com.veltro.inventory.event.SaleCompletedEvent;
 import com.veltro.inventory.event.SaleVoidedEvent;
+import com.veltro.inventory.event.SaleItemInfo;
 import com.veltro.inventory.mapper.SaleMapper;
 import com.veltro.inventory.model.ProductEntity;
 import com.veltro.inventory.repository.ProductRepository;
@@ -20,6 +21,7 @@ import com.veltro.inventory.repository.SaleRepository;
 import com.veltro.inventory.exception.InvalidPaymentException;
 import com.veltro.inventory.exception.InvalidStateTransitionException;
 import com.veltro.inventory.exception.NotFoundException;
+import com.veltro.inventory.security.TenantProvider;
 import com.veltro.inventory.security.VeltroUserDetails;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,6 +36,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -77,6 +80,9 @@ class SaleServiceTest {
     @Mock
     private SaleEventFactory eventFactory;
 
+    @Mock
+    private TenantProvider tenantProvider;
+
     private SaleService saleService;
 
     @BeforeEach
@@ -89,7 +95,9 @@ class SaleServiceTest {
                 applicationEventPublisher,
                 auditCommandExecutor,
                 snapshotService,
-                eventFactory);
+                eventFactory,
+                tenantProvider);
+        when(tenantProvider.getBusinessId()).thenReturn(BUSINESS_ID);
         authenticateAsTenantUser();
     }
 
@@ -142,6 +150,7 @@ class SaleServiceTest {
     @Test
     @DisplayName("startSale creates IN_PROGRESS sale with generated number")
     void startSale_createsInProgressSale() {
+        when(tenantProvider.getUserId()).thenReturn(USER_ID);
         when(saleRepository.getNextSaleSequenceValue()).thenReturn(123L);
         SaleEntity savedSale = createSale(1L, "VLT-2026-000123", SaleStatus.IN_PROGRESS);
         when(saleRepository.save(any(SaleEntity.class))).thenReturn(savedSale);
@@ -169,11 +178,15 @@ class SaleServiceTest {
         when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong())).thenReturn(Optional.of(sale));
         when(saleRepository.save(sale)).thenReturn(sale);
         when(saleMapper.toResponse(sale)).thenReturn(createSaleResponse(1L, "VLT-2026-000001"));
+        SaleCompletedEvent completedEvent = new SaleCompletedEvent(
+                1L, "VLT-2026-000001", 100L, sale.getTotal(), PaymentMethod.CASH, LocalDateTime.now(), List.of()
+        );
+        when(eventFactory.buildCompletedEvent(sale)).thenReturn(completedEvent);
 
         saleService.confirm(1L, request);
 
         verify(eventFactory).buildCompletedEvent(sale);
-        verify(applicationEventPublisher).publishEvent(any());
+        verify(applicationEventPublisher).publishEvent(completedEvent);
         verify(snapshotService).buildSnapshot(sale);
     }
 
@@ -185,11 +198,15 @@ class SaleServiceTest {
         when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong())).thenReturn(Optional.of(sale));
         when(saleRepository.save(sale)).thenReturn(sale);
         when(saleMapper.toResponse(sale)).thenReturn(createSaleResponse(1L, "VLT-2026-000001"));
+        SaleVoidedEvent voidedEvent = new SaleVoidedEvent(
+                1L, "VLT-2026-000001", "testuser", LocalDateTime.now(), sale.getTotal(), List.of()
+        );
+        when(eventFactory.buildVoidedEvent(sale)).thenReturn(voidedEvent);
 
         saleService.voidSale(1L);
 
         verify(eventFactory).buildVoidedEvent(sale);
-        verify(applicationEventPublisher).publishEvent(any());
+        verify(applicationEventPublisher).publishEvent(voidedEvent);
         verify(snapshotService).buildSnapshot(sale);
     }
 
