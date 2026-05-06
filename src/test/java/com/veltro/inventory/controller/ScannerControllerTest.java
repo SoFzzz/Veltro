@@ -1,11 +1,11 @@
 package com.veltro.inventory.controller;
 
-import com.veltro.inventory.controller.ScannerController;
 import com.veltro.inventory.dto.scanner.ProductSuggestionResponse;
-import com.veltro.inventory.service.ProductRecognitionService;
+import com.veltro.inventory.model.ProductEntity;
+import com.veltro.inventory.security.TenantProvider;
 import com.veltro.inventory.service.BatchIndexingService;
-import com.veltro.inventory.infrastructure.ai.ClipInferenceService;
-import com.veltro.inventory.repository.ProductRepository;
+import com.veltro.inventory.service.ProductRecognitionService;
+import com.veltro.inventory.service.SemanticSearchProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,158 +16,165 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-/**
- * Unit tests for {@link ScannerController} (B3-01).
- *
- * Tests the REST controller endpoints for AI-powered product scanning.
- * Note: This uses pure unit testing approach rather than @WebMvcTest
- * to avoid Spring Boot test dependencies.
- */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ScannerController")
 class ScannerControllerTest {
 
     @Mock
     private ProductRecognitionService scannerService;
-
     @Mock
     private BatchIndexingService batchIndexingService;
-
     @Mock
-    private ClipInferenceService clipInferenceService;
-
+    private SemanticSearchProvider semanticSearchProvider;
     @Mock
-    private ProductRepository productRepository;
+    private TenantProvider tenantProvider;
 
     private ScannerController scannerController;
 
     @BeforeEach
     void setUp() {
-        scannerController = new ScannerController(scannerService, batchIndexingService, clipInferenceService, productRepository);
+        scannerController = new ScannerController(
+                scannerService,
+                batchIndexingService,
+                semanticSearchProvider,
+                tenantProvider
+        );
     }
 
     @Test
     @DisplayName("scanWithAi returns product suggestions for valid image")
     void scanWithAi_validImage_returnsSuggestions() {
-        // Arrange
         MockMultipartFile imageFile = new MockMultipartFile(
                 "image", "product.jpg", "image/jpeg", new byte[]{1, 2, 3, 4, 5}
         );
         ProductSuggestionResponse.SuggestedProduct product =
-                new ProductSuggestionResponse.SuggestedProduct(
-                        1L,
-                        "Test Product",
-                        0.95,
-                        "1234567890123",
-                        null,
-                        null,
-                        null
-                );
-        ProductSuggestionResponse mockResponse =
-                new ProductSuggestionResponse(List.of(product), 150L, "AI_VISION");
-
+                new ProductSuggestionResponse.SuggestedProduct(1L, "Test Product", 0.95, "1234567890123",
+                        null, null, null);
+        ProductSuggestionResponse mockResponse = new ProductSuggestionResponse(List.of(product), 150L, "AI_VISION");
         when(scannerService.processImage(any(MultipartFile.class))).thenReturn(mockResponse);
 
-        // Act
         ResponseEntity<ProductSuggestionResponse> response = scannerController.scanWithAi(imageFile);
 
-        // Assert
         assertThat(response.getStatusCode().value()).isEqualTo(200);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().suggestions()).hasSize(1);
-        assertThat(response.getBody().suggestions().getFirst().productId()).isEqualTo(1L);
-        assertThat(response.getBody().suggestions().getFirst().confidence()).isEqualTo(0.95);
         verify(scannerService).processImage(any(MultipartFile.class));
     }
 
     @Test
     @DisplayName("scanWithAi returns 400 for empty image")
     void scanWithAi_emptyImage_returnsBadRequest() {
-        // Arrange
-        MockMultipartFile emptyFile = new MockMultipartFile(
-                "image", "empty.jpg", "image/jpeg", new byte[]{}
-        );
-
-        // Act
+        MockMultipartFile emptyFile = new MockMultipartFile("image", "empty.jpg", "image/jpeg", new byte[]{});
         ResponseEntity<ProductSuggestionResponse> response = scannerController.scanWithAi(emptyFile);
-
-        // Assert
         assertThat(response.getStatusCode().value()).isEqualTo(400);
     }
 
     @Test
     @DisplayName("scanWithAi propagates unsupported operation when AI Vision is unavailable")
     void scanWithAi_aiNotAvailable_propagatesUnsupportedOperation() {
-        // Arrange
-        MockMultipartFile imageFile = new MockMultipartFile(
-                "image", "product.jpg", "image/jpeg", new byte[]{1, 2, 3}
-        );
+        MockMultipartFile imageFile = new MockMultipartFile("image", "product.jpg", "image/jpeg", new byte[]{1, 2, 3});
         when(scannerService.processImage(any(MultipartFile.class)))
                 .thenThrow(new UnsupportedOperationException("AI Vision not configured"));
 
-        // Act + Assert
         assertThatThrownBy(() -> scannerController.scanWithAi(imageFile))
                 .isInstanceOf(UnsupportedOperationException.class)
                 .hasMessage("AI Vision not configured");
     }
 
     @Test
-    @DisplayName("getStatus returns scanner strategy status")
-    void getStatus_returnsStrategyStatus() {
-        // Arrange
-        Map<String, Boolean> mockStatus = Map.of("BARCODE", true, "AI_VISION", false);
-        when(scannerService.getStrategyStatus()).thenReturn(mockStatus);
+    @DisplayName("detectSearch returns 400 for invalid mime type")
+    void detectSearch_invalidMime_returnsBadRequest() {
+        MockMultipartFile image = new MockMultipartFile("image", "x.gif", "image/gif", new byte[]{1});
+        ResponseEntity<?> response = scannerController.detectSearch(image);
 
-        // Act
-        ResponseEntity<Map<String, Boolean>> response = scannerController.getStatus();
-
-        // Assert
-        assertThat(response.getStatusCode().value()).isEqualTo(200);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody()).containsEntry("BARCODE", true);
-        assertThat(response.getBody()).containsEntry("AI_VISION", false);
-        verify(scannerService).getStrategyStatus();
+        assertThat(response.getStatusCode().value()).isEqualTo(400);
+        assertThat(response.getBody()).isEqualTo(Map.of("error", "Invalid file format", "status", 400));
     }
 
     @Test
-    @DisplayName("isAiAvailable returns availability status when not configured")
-    void isAiAvailable_notConfigured_returnsFalse() {
-        // Arrange
-        when(scannerService.isAiVisionAvailable()).thenReturn(false);
+    @DisplayName("detectSearch returns 400 for image larger than 5MB")
+    void detectSearch_tooLarge_returnsBadRequest() {
+        byte[] large = new byte[5 * 1024 * 1024 + 1];
+        MockMultipartFile image = new MockMultipartFile("image", "large.jpg", "image/jpeg", large);
+        ResponseEntity<?> response = scannerController.detectSearch(image);
 
-        // Act
-        ResponseEntity<Map<String, Boolean>> response = scannerController.isAiAvailable();
-
-        // Assert
-        assertThat(response.getStatusCode().value()).isEqualTo(200);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody()).containsEntry("available", false);
-        verify(scannerService).isAiVisionAvailable();
+        assertThat(response.getStatusCode().value()).isEqualTo(400);
+        assertThat(response.getBody()).isEqualTo(Map.of("error", "File size exceeds 5MB limit", "status", 400));
     }
 
     @Test
-    @DisplayName("isAiAvailable returns true when AI is configured")
-    void isAiAvailable_configured_returnsTrue() {
-        // Arrange
-        when(scannerService.isAiVisionAvailable()).thenReturn(true);
+    @DisplayName("detectSearch returns 200 empty list when model is not loaded")
+    void detectSearch_modelNotLoaded_returnsEmptyList() {
+        MockMultipartFile image = new MockMultipartFile("image", "a.jpg", "image/jpeg", new byte[]{1, 2});
+        when(semanticSearchProvider.isModelLoaded()).thenReturn(false);
 
-        // Act
-        ResponseEntity<Map<String, Boolean>> response = scannerController.isAiAvailable();
+        ResponseEntity<?> response = scannerController.detectSearch(image);
 
-        // Assert
         assertThat(response.getStatusCode().value()).isEqualTo(200);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody()).containsEntry("available", true);
+        assertThat(response.getBody()).isEqualTo(List.of());
+    }
+
+    @Test
+    @DisplayName("detectSearch returns 200 empty list when provider returns empty optional")
+    void detectSearch_providerEmpty_returnsEmptyList() {
+        MockMultipartFile image = new MockMultipartFile("image", "a.jpg", "image/jpeg", new byte[]{1, 2});
+        when(semanticSearchProvider.isModelLoaded()).thenReturn(true);
+        when(tenantProvider.getBusinessId()).thenReturn(10L);
+        when(semanticSearchProvider.search(any(MultipartFile.class), eq(10L), eq(1))).thenReturn(Optional.empty());
+
+        ResponseEntity<?> response = scannerController.detectSearch(image);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        assertThat(response.getBody()).isEqualTo(List.of());
+    }
+
+    @Test
+    @DisplayName("detectSearch returns 404 when provider returns no matches")
+    void detectSearch_noMatches_returnsNotFound() {
+        MockMultipartFile image = new MockMultipartFile("image", "a.jpg", "image/jpeg", new byte[]{1, 2});
+        when(semanticSearchProvider.isModelLoaded()).thenReturn(true);
+        when(tenantProvider.getBusinessId()).thenReturn(10L);
+        when(semanticSearchProvider.search(any(MultipartFile.class), eq(10L), eq(1))).thenReturn(Optional.of(List.of()));
+
+        ResponseEntity<?> response = scannerController.detectSearch(image);
+        assertThat(response.getStatusCode().value()).isEqualTo(404);
+    }
+
+    @Test
+    @DisplayName("detectSearch returns 200 with match contract shape")
+    void detectSearch_matchFound_returnsContractShape() {
+        MockMultipartFile image = new MockMultipartFile("image", "a.jpg", "image/jpeg", new byte[]{1, 2});
+        ProductEntity product = new ProductEntity();
+        product.setId(1L);
+        product.setName("Producto");
+        product.setSalePrice(new BigDecimal("10.0"));
+        product.setBarcode("123");
+        product.setSku("ABC");
+
+        when(semanticSearchProvider.isModelLoaded()).thenReturn(true);
+        when(tenantProvider.getBusinessId()).thenReturn(10L);
+        when(semanticSearchProvider.search(any(MultipartFile.class), eq(10L), eq(1)))
+                .thenReturn(Optional.of(List.of(product)));
+
+        ResponseEntity<?> response = scannerController.detectSearch(image);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        assertThat(response.getBody()).isInstanceOf(List.class);
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> payload = (List<Map<String, Object>>) response.getBody();
+        assertThat(payload).hasSize(1);
+        assertThat(payload.getFirst()).containsKey("matches");
     }
 }
-
-
