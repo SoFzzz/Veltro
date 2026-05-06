@@ -18,6 +18,7 @@ import com.veltro.inventory.model.SupplierEntity;
 import com.veltro.inventory.repository.PurchaseOrderRepository;
 import com.veltro.inventory.repository.SupplierRepository;
 import com.veltro.inventory.exception.NotFoundException;
+import com.veltro.inventory.security.TenantProvider;
 import com.veltro.inventory.security.VeltroUserDetails;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -82,6 +83,9 @@ class PurchaseOrderServiceTest {
 
     @Mock
     private PurchaseOrderEventFactory eventFactory;
+
+    @Mock
+    private TenantProvider tenantProvider;
     
     private PurchaseOrderService orderService;
     
@@ -104,7 +108,9 @@ class PurchaseOrderServiceTest {
                 applicationEventPublisher, 
                 auditCommandExecutor,
                 snapshotService,
-                eventFactory);
+                eventFactory,
+                tenantProvider);
+        when(tenantProvider.getBusinessId()).thenReturn(BUSINESS_ID);
 
         authenticateAsTenantUser();
 
@@ -186,12 +192,18 @@ class PurchaseOrderServiceTest {
         when(orderRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong())).thenReturn(Optional.of(orderEntity));
         when(orderRepository.save(any(PurchaseOrderEntity.class))).thenReturn(orderEntity);
         when(orderMapper.toResponse(orderEntity)).thenReturn(orderResponse);
+        when(eventFactory.buildReceivedEvent(any(), any())).thenReturn(
+                new OrderReceivedEvent(
+                        1L, "PO-2026-000001", 1L, "Test Supplier Corp",
+                        new BigDecimal("127.50"), LocalDateTime.now(), "testuser", List.of()
+                )
+        );
 
         orderService.markAsReceived(1L);
 
-        verify(snapshotService, times(2)).buildSnapshot(any());
+        verify(snapshotService, times(1)).buildSnapshot(any());
         verify(eventFactory).buildReceivedEvent(any(), any());
-        verify(applicationEventPublisher).publishEvent(any());
+        verify(applicationEventPublisher).publishEvent(any(OrderReceivedEvent.class));
         verify(auditCommandExecutor).execute(any(), any(), any(), any(), any(), any(), any());
     }
 
@@ -204,7 +216,7 @@ class PurchaseOrderServiceTest {
 
         orderService.voidOrder(1L);
 
-        verify(snapshotService, times(2)).buildSnapshot(any());
+        verify(snapshotService, times(1)).buildSnapshot(any());
         verify(auditCommandExecutor).execute(any(), any(), any(), any(), any(), any(), any());
     }
 
