@@ -16,11 +16,11 @@ import java.util.List;
  * frontend POS page which submits the entire sale in one shot.
  */
 public record QuickSaleRequest(
-        @NotEmpty(message = "At least one item is required")
+        @NotEmpty(message = "{validation.sale.quick.items.notempty}")
         @Valid
         List<Item> items,
 
-        @NotNull(message = "Payment method is required")
+        @NotNull(message = "{validation.sale.paymentmethod.required}")
         PaymentMethod paymentMethod,
 
         BigDecimal amountReceived,  // nullable, validated in service for CASH
@@ -28,11 +28,11 @@ public record QuickSaleRequest(
         String notes
 ) {
     public record Item(
-            @NotNull(message = "Product ID is required")
+            @NotNull(message = "{validation.sale.item.product.required}")
             Long productId,
 
-            @NotNull(message = "Quantity is required")
-            @Positive(message = "Quantity must be greater than 0")
+            @NotNull(message = "{validation.sale.item.quantity.required}")
+            @Positive(message = "{validation.sale.item.quantity.positive}")
             Integer quantity
     ) {
     }
