@@ -11,11 +11,11 @@ import jakarta.validation.constraints.Size;
  * A reason is required to maintain an auditable trail of every adjustment.
  */
 public record StockAdjustmentRequest(
-        @Min(value = 0, message = "New stock must be zero or greater")
+        @Min(value = 0, message = "{validation.inventory.adjustment.newstock.min}")
         int newStock,
 
-        @NotBlank(message = "Reason is required for stock adjustments")
-        @Size(max = 500, message = "Reason must not exceed 500 characters")
+        @NotBlank(message = "{validation.inventory.adjustment.reason.notblank}")
+        @Size(max = 500, message = "{validation.inventory.reason.size}")
         String reason
 ) {
 }
