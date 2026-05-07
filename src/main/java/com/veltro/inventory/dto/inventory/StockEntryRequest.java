@@ -9,10 +9,10 @@ import jakarta.validation.constraints.Size;
  * {@code quantity} must be at least 1 窶・the DB also enforces {@code quantity > 0}.
  */
 public record StockEntryRequest(
-        @Min(value = 1, message = "Entry quantity must be at least 1")
+        @Min(value = 1, message = "{validation.inventory.entry.quantity.min}")
         int quantity,
 
-        @Size(max = 500, message = "Reason must not exceed 500 characters")
+        @Size(max = 500, message = "{validation.inventory.reason.size}")
         String reason
 ) {
 }
