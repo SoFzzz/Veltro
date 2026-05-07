@@ -11,10 +11,10 @@ import jakarta.validation.constraints.Size;
  * {@link com.veltro.inventory.exception.InsufficientStockException} (HTTP 422) if not (AC-04).
  */
 public record StockExitRequest(
-        @Min(value = 1, message = "Exit quantity must be at least 1")
+        @Min(value = 1, message = "{validation.inventory.exit.quantity.min}")
         int quantity,
 
-        @Size(max = 500, message = "Reason must not exceed 500 characters")
+        @Size(max = 500, message = "{validation.inventory.reason.size}")
         String reason
 ) {
 }
