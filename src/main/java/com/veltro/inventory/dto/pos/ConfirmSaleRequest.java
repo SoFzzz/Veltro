@@ -17,7 +17,7 @@ import java.math.BigDecimal;
  * </ul>
  */
 public record ConfirmSaleRequest(
-        @NotNull(message = "Payment method is required")
+        @NotNull(message = "{validation.sale.paymentmethod.required}")
         PaymentMethod paymentMethod,
 
         BigDecimal amountReceived  // nullable, validated in service for CASH
