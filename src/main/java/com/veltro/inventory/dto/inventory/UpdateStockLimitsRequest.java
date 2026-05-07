@@ -10,10 +10,10 @@ import jakarta.validation.constraints.Min;
  * as that constraint is not encoded in the SDD spec for B1-04.
  */
 public record UpdateStockLimitsRequest(
-        @Min(value = 0, message = "Minimum stock must be zero or greater")
+        @Min(value = 0, message = "{validation.inventory.limits.minstock.min}")
         int minStock,
 
-        @Min(value = 0, message = "Maximum stock must be zero or greater")
+        @Min(value = 0, message = "{validation.inventory.limits.maxstock.min}")
         int maxStock
 ) {
 }
