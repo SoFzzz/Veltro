@@ -12,15 +12,15 @@ import java.math.BigDecimal;
  * <p>Renamed from AddItemRequest to avoid naming conflict with POS module.
  */
 public record AddOrderItemRequest(
-        @NotNull(message = "Product ID is required")
+        @NotNull(message = "{validation.purchase.item.product.required}")
         Long productId,
 
-        @NotNull(message = "Requested quantity is required")
-        @Positive(message = "Requested quantity must be greater than 0")
+        @NotNull(message = "{validation.purchase.item.quantity.required}")
+        @Positive(message = "{validation.purchase.item.quantity.positive}")
         Integer requestedQuantity,
 
-        @NotNull(message = "Unit cost is required")
-        @DecimalMin(value = "0.0001", message = "Unit cost must be greater than zero")
+        @NotNull(message = "{validation.purchase.item.unitcost.required}")
+        @DecimalMin(value = "0.0001", message = "{validation.purchase.item.unitcost.min}")
         BigDecimal unitCost
 ) {
 }
