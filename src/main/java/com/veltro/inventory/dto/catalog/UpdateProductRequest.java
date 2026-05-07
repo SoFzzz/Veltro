@@ -13,36 +13,36 @@ import java.math.BigDecimal;
  */
 public record UpdateProductRequest(
 
-        @NotBlank(message = "Product name must not be blank")
-        @Size(max = 200, message = "Product name must not exceed 200 characters")
+        @NotBlank(message = "{validation.product.name.notblank}")
+        @Size(max = 200, message = "{validation.product.name.size}")
         String name,
 
-        @Size(max = 100, message = "Barcode must not exceed 100 characters")
+        @Size(max = 100, message = "{validation.product.barcode.size}")
         String barcode,
 
-        @Size(max = 100, message = "SKU must not exceed 100 characters")
+        @Size(max = 100, message = "{validation.product.sku.size}")
         String sku,
 
         String description,
 
-        @NotNull(message = "Cost price is required")
-        @DecimalMin(value = "0.0001", message = "Cost price must be greater than zero")
+        @NotNull(message = "{validation.product.costprice.required}")
+        @DecimalMin(value = "0.0001", message = "{validation.product.costprice.min}")
         BigDecimal costPrice,
 
-        @NotNull(message = "Sale price is required")
-        @DecimalMin(value = "0.0001", message = "Sale price must be greater than zero")
+        @NotNull(message = "{validation.product.saleprice.required}")
+        @DecimalMin(value = "0.0001", message = "{validation.product.saleprice.min}")
         BigDecimal salePrice,
 
         Long categoryId,
 
         // Stock alert thresholds (P4 - Inventory Alerts)
-        @Min(value = 0, message = "Min stock info must be non-negative")
+        @Min(value = 0, message = "{validation.product.minstockinfo.min}")
         Integer minStockInfo,
 
-        @Min(value = 0, message = "Min stock warning must be non-negative")
+        @Min(value = 0, message = "{validation.product.minstockwarning.min}")
         Integer minStockWarning,
 
-        @Min(value = 0, message = "Min stock critical must be non-negative")
+        @Min(value = 0, message = "{validation.product.minstockcritical.min}")
         Integer minStockCritical
 ) {
 }
