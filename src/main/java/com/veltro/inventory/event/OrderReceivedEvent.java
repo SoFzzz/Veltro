@@ -12,6 +12,7 @@ import java.util.List;
  * transitioning the order to RECEIVED status.
  */
 public record OrderReceivedEvent(
+        Long businessId,
         Long orderId,
         String orderNumber,
         Long supplierId,
