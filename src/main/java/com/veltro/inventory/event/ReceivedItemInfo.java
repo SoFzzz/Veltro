@@ -9,8 +9,8 @@ import java.math.BigDecimal;
  * for downstream listeners that will increment inventory stock.
  */
 public record ReceivedItemInfo(
+        Long detailId,
         Long productId,
-        String productName,
         Integer receivedQuantity,
         BigDecimal unitCost,
         BigDecimal subtotal
