@@ -7,20 +7,20 @@ import jakarta.validation.constraints.Size;
  * Request DTO for updating an existing supplier (B2-04).
  */
 public record UpdateSupplierRequest(
-        @Size(max = 200, message = "Supplier name must not exceed 200 characters")
+        @Size(max = 200, message = "{validation.supplier.name.size}")
         String name,
 
-        @Email(message = "Invalid email format")
-        @Size(max = 200, message = "Email must not exceed 200 characters")
+        @Email(message = "{validation.supplier.email.format}")
+        @Size(max = 200, message = "{validation.supplier.email.size}")
         String email,
 
-        @Size(max = 20, message = "Phone must not exceed 20 characters")
+        @Size(max = 20, message = "{validation.supplier.phone.size}")
         String phone,
 
-        @Size(max = 500, message = "Address must not exceed 500 characters")
+        @Size(max = 500, message = "{validation.supplier.address.size}")
         String address,
 
-        @Size(max = 500, message = "Notes must not exceed 500 characters")
+        @Size(max = 500, message = "{validation.supplier.notes.size}")
         String notes
 ) {
 }
