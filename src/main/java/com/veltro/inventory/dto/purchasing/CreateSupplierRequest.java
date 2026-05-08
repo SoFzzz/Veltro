@@ -8,25 +8,25 @@ import jakarta.validation.constraints.Size;
  * Request DTO for creating a new supplier (B2-04).
  */
 public record CreateSupplierRequest(
-        @NotBlank(message = "Supplier name must not be blank")
-        @Size(max = 200, message = "Supplier name must not exceed 200 characters")
+        @NotBlank(message = "{validation.supplier.name.notblank}")
+        @Size(max = 200, message = "{validation.supplier.name.size}")
         String name,
 
-        @NotBlank(message = "Tax ID is required")
-        @Size(max = 50, message = "Tax ID must not exceed 50 characters")
+        @NotBlank(message = "{validation.supplier.taxid.notblank}")
+        @Size(max = 50, message = "{validation.supplier.taxid.size}")
         String taxId,
 
-        @Email(message = "Invalid email format")
-        @Size(max = 200, message = "Email must not exceed 200 characters")
+        @Email(message = "{validation.supplier.email.format}")
+        @Size(max = 200, message = "{validation.supplier.email.size}")
         String email,
 
-        @Size(max = 20, message = "Phone must not exceed 20 characters")
+        @Size(max = 20, message = "{validation.supplier.phone.size}")
         String phone,
 
-        @Size(max = 500, message = "Address must not exceed 500 characters")
+        @Size(max = 500, message = "{validation.supplier.address.size}")
         String address,
 
-        @Size(max = 500, message = "Notes must not exceed 500 characters")
+        @Size(max = 500, message = "{validation.supplier.notes.size}")
         String notes
 ) {
 }
