@@ -14,6 +14,7 @@ import java.util.List;
  * method publishes this event after successfully transitioning the sale to VOIDED status.
  */
 public record SaleVoidedEvent(
+        Long businessId,
         Long saleId,
         String saleNumber,
         String voidedBy,
