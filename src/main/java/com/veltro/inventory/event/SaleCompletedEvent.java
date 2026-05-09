@@ -15,6 +15,7 @@ import java.util.List;
  * publishes this event after successfully transitioning the sale to COMPLETED status.
  */
 public record SaleCompletedEvent(
+        Long businessId,
         Long saleId,
         String saleNumber,
         Long cashierId,
