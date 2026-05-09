@@ -1,11 +1,12 @@
 package com.veltro.inventory.listener;
 
-import com.veltro.inventory.dto.inventory.StockExitRequest;
 import com.veltro.inventory.event.SaleCompletedEvent;
 import com.veltro.inventory.event.SaleItemInfo;
+import com.veltro.inventory.service.AlertService;
 import com.veltro.inventory.service.InventoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -15,6 +16,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @RequiredArgsConstructor
 public class DeductStockSaleListener {
     private final InventoryService inventoryService;
+    private final AlertService alertService;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onSaleCompleted(SaleCompletedEvent event) {
@@ -23,11 +25,23 @@ public class DeductStockSaleListener {
             return;
         }
         for (SaleItemInfo item : event.items()) {
-            inventoryService.recordExit(
-                    item.productId(),
-                    new StockExitRequest(item.quantity(), "Sale " + event.saleNumber())
-            );
-            log.info("Deducted {} units of product {} for sale {}", item.quantity(), item.productId(), event.saleNumber());
+            try {
+                inventoryService.recordExit(
+                        item.productId(),
+                        item.quantity(),
+                        "Sale " + event.saleNumber(),
+                        event.businessId(),
+                        "SALE_OUT",
+                        item.detailId());
+                log.info("Deducted {} units of product {} for sale {}", item.quantity(), item.productId(), event.saleNumber());
+            } catch (DataIntegrityViolationException duplicateMovement) {
+                log.warn("Duplicate movement ignored: sourceType=SALE_OUT, sourceId={}", item.detailId());
+            } catch (RuntimeException ex) {
+                log.error("Failed to deduct stock for product {} in sale {}", item.productId(), event.saleNumber(), ex);
+                alertService.persistSystemError(
+                        event.businessId(),
+                        "Stock deduction failed for product " + item.productId() + " in sale " + event.saleNumber());
+            }
         }
     }
 }
