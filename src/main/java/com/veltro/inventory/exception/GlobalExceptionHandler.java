@@ -21,11 +21,9 @@ import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.context.support.StaticMessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.util.Locale;
 import java.util.stream.Collectors;
 
 /**
@@ -38,18 +36,9 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     private static final String PRODUCT_CONFLICT_MESSAGE_KEY = "product.conflict.message";
-    private static final String DEFAULT_PRODUCT_CONFLICT_MESSAGE = "Ya existe un producto con este código de barras o SKU";
+    private static final String PRODUCT_ALREADY_ACTIVE_KEY = "product.already_active";
 
     private final MessageSource messageSource;
-
-    public GlobalExceptionHandler() {
-        StaticMessageSource fallbackMessageSource = new StaticMessageSource();
-        fallbackMessageSource.addMessage(PRODUCT_CONFLICT_MESSAGE_KEY, Locale.forLanguageTag("es"),
-                DEFAULT_PRODUCT_CONFLICT_MESSAGE);
-        fallbackMessageSource.addMessage(PRODUCT_CONFLICT_MESSAGE_KEY, Locale.ENGLISH,
-                DEFAULT_PRODUCT_CONFLICT_MESSAGE);
-        this.messageSource = fallbackMessageSource;
-    }
 
     public GlobalExceptionHandler(MessageSource messageSource) {
         this.messageSource = messageSource;
@@ -148,7 +137,6 @@ public class GlobalExceptionHandler {
         return messageSource.getMessage(
                 PRODUCT_CONFLICT_MESSAGE_KEY,
                 null,
-                DEFAULT_PRODUCT_CONFLICT_MESSAGE,
                 LocaleContextHolder.getLocale());
     }
 
@@ -203,13 +191,17 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleInvalidStateTransition(
             InvalidStateTransitionException ex, HttpServletRequest request) {
 
-        log.warn("Invalid state transition on {}: {}", request.getRequestURI(), ex.getMessage());
+        String localizedMessage = ex.getMessageKey() != null
+                ? messageSource.getMessage(ex.getMessageKey(), ex.getMessageArgs(), LocaleContextHolder.getLocale())
+                : ex.getMessage();
+
+        log.warn("Invalid state transition on {}: {}", request.getRequestURI(), localizedMessage);
 
         return ResponseEntity
                 .status(HttpStatus.UNPROCESSABLE_CONTENT)
                 .body(ErrorResponse.of(
                         "INVALID_STATE_TRANSITION",
-                        ex.getMessage(),
+                        localizedMessage,
                         HttpStatus.UNPROCESSABLE_CONTENT,
                         request.getRequestURI()));
     }
@@ -283,6 +275,30 @@ public class GlobalExceptionHandler {
                         "INVALID_PAYMENT",
                         ex.getMessage(),
                         HttpStatus.UNPROCESSABLE_CONTENT,
+                        request.getRequestURI()));
+    }
+
+    @ExceptionHandler(ProductAlreadyActiveException.class)
+    public ResponseEntity<ErrorResponse> handleProductAlreadyActive(
+            ProductAlreadyActiveException ex, HttpServletRequest request) {
+        String localized = messageSource.getMessage(PRODUCT_ALREADY_ACTIVE_KEY, null, LocaleContextHolder.getLocale());
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ErrorResponse.of(
+                        "PRODUCT_ALREADY_ACTIVE",
+                        localized,
+                        HttpStatus.CONFLICT,
+                        request.getRequestURI()));
+    }
+
+    @ExceptionHandler(InvalidMediaFormatException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidMediaFormat(
+            InvalidMediaFormatException ex, HttpServletRequest request) {
+        String localized = messageSource.getMessage(ex.getMessageKey(), ex.getMessageArgs(), LocaleContextHolder.getLocale());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponse.of(
+                        "INVALID_MEDIA_FORMAT",
+                        localized,
+                        HttpStatus.BAD_REQUEST,
                         request.getRequestURI()));
     }
 
