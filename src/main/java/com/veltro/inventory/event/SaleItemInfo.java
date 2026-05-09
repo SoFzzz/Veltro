@@ -9,8 +9,8 @@ import java.math.BigDecimal;
  * product and quantity details for downstream listeners (B2-02).
  */
 public record SaleItemInfo(
+        Long detailId,
         Long productId,
-        String productName,
         Integer quantity,
         BigDecimal unitPrice,
         BigDecimal subtotal
