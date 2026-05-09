@@ -5,7 +5,6 @@ import com.veltro.inventory.model.PurchaseOrderEntity;
 import com.veltro.inventory.model.PurchaseOrderStatus;
 import com.veltro.inventory.model.SupplierEntity;
 import com.veltro.inventory.model.ProductEntity;
-import com.veltro.inventory.exception.InvalidStateTransitionException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,14 +13,12 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Unit tests for {@link PurchaseOrderPendingState} (B2-04 - State Pattern).
  *
  * <p>
- * Tests that PENDING state allows item operations and voiding, but has
- * placeholder for receivePartial.
+ * Tests that PENDING state allows item operations, receiving and voiding.
  */
 class PurchaseOrderPendingStateTest {
 
@@ -118,14 +115,12 @@ class PurchaseOrderPendingStateTest {
     }
 
     @Test
-    @DisplayName("receivePartial throws InvalidStateTransitionException (placeholder)")
-    void receivePartial_pendingState_throwsInvalidStateTransition() {
+    @DisplayName("receivePartial is allowed in pending state")
+    void receivePartial_pendingState_isAllowed() {
         List<PurchaseOrderState.ReceivedItem> receivedItems = List.of(
                 new PurchaseOrderState.ReceivedItem(1L, 5));
 
-        assertThatThrownBy(() -> state.receivePartial(order, receivedItems))
-                .isInstanceOf(InvalidStateTransitionException.class)
-                .hasMessageContaining("receivePartial not yet implemented");
+        state.receivePartial(order, receivedItems);
     }
 
     // -------------------------------------------------------------------------
