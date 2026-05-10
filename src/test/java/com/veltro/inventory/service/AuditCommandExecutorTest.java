@@ -5,6 +5,7 @@ import com.veltro.inventory.model.AuditAction;
 import com.veltro.inventory.model.AuditEntityType;
 import com.veltro.inventory.model.AuditRecordEntity;
 import com.veltro.inventory.repository.AuditRecordRepository;
+import com.veltro.inventory.security.TenantProvider;
 import com.veltro.inventory.security.VeltroUserDetails;
 import com.veltro.inventory.service.AuditCommandExecutor;
 import com.veltro.inventory.service.RequestAuditContext;
@@ -40,11 +41,14 @@ class AuditCommandExecutorTest {
     @Mock
     private ObjectMapper objectMapper;
 
+    @Mock
+    private TenantProvider tenantProvider;
+
     private AuditCommandExecutor executor;
 
     @BeforeEach
     void setUp() {
-        executor = new AuditCommandExecutor(auditRepository, objectMapper);
+        executor = new AuditCommandExecutor(auditRepository, objectMapper, tenantProvider);
     }
 
     @AfterEach
@@ -63,6 +67,7 @@ class AuditCommandExecutorTest {
                 userId, businessId);
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities()));
+        lenient().when(tenantProvider.getBusinessId()).thenReturn(businessId);
     }
 
     @Test
