@@ -18,6 +18,7 @@ import com.veltro.inventory.repository.InventoryRepository;
 import com.veltro.inventory.repository.AlertRepository;
 import com.veltro.inventory.exception.InsufficientStockException;
 import com.veltro.inventory.exception.NotFoundException;
+import com.veltro.inventory.security.TenantProvider;
 import com.veltro.inventory.security.VeltroUserDetails;
 import com.veltro.inventory.service.InventoryService;
 import org.junit.jupiter.api.AfterEach;
@@ -29,11 +30,13 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.MessageSource;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -42,6 +45,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.lenient;
 
 /**
  * Unit tests for {@link InventoryService} (B1-04).
@@ -75,13 +79,21 @@ class InventoryServiceTest {
 
     @Mock
     private AlertRepository alertRepository;
+    @Mock
+    private MessageSource messageSource;
+    @Mock
+    private TenantProvider tenantProvider;
 
     private InventoryService inventoryService;
 
     @BeforeEach
     void setUp() {
         authenticateAsTenantUser();
-        inventoryService = new InventoryService(inventoryRepository, movementRepository, inventoryMapper, movementMapper, eventPublisher, auditCommandExecutor, alertRepository);
+        lenient().when(tenantProvider.getBusinessId()).thenReturn(BUSINESS_ID);
+        lenient().when(messageSource.getMessage(eq("alert.movement.entry"), any(), any(Locale.class))).thenReturn("Registro de Llegada");
+        lenient().when(messageSource.getMessage(eq("alert.movement.exit"), any(), any(Locale.class))).thenReturn("Registro de Salida");
+        lenient().when(messageSource.getMessage(eq("alert.movement.adjustment"), any(), any(Locale.class))).thenReturn("Registro de Ajuste");
+        inventoryService = new InventoryService(inventoryRepository, movementRepository, inventoryMapper, movementMapper, eventPublisher, auditCommandExecutor, alertRepository, messageSource, tenantProvider);
     }
 
     @AfterEach
