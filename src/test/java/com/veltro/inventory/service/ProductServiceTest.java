@@ -17,6 +17,7 @@ import com.veltro.inventory.infrastructure.ai.ClipInferenceService;
 import com.veltro.inventory.repository.SaleDetailRepository;
 import com.veltro.inventory.exception.InvalidPriceException;
 import com.veltro.inventory.exception.NotFoundException;
+import com.veltro.inventory.security.TenantProvider;
 import com.veltro.inventory.security.VeltroUserDetails;
 import com.veltro.inventory.service.ProductService;
 import org.junit.jupiter.api.AfterEach;
@@ -68,6 +69,8 @@ class ProductServiceTest {
 
     @Mock
     private ClipInferenceService clipInferenceService;
+    @Mock
+    private TenantProvider tenantProvider;
 
     private ProductService productService;
 
@@ -75,7 +78,8 @@ class ProductServiceTest {
     @BeforeEach
     void setUp() {
         authenticateAsTenantUser();
-        productService = new ProductService(productRepository, categoryRepository, saleDetailRepository, productMapper, eventPublisher, clipInferenceService);
+        when(tenantProvider.getBusinessId()).thenReturn(BUSINESS_ID);
+        productService = new ProductService(productRepository, categoryRepository, saleDetailRepository, productMapper, eventPublisher, clipInferenceService, tenantProvider);
     }
 
     @AfterEach
