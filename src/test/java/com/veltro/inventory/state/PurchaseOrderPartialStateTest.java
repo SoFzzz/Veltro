@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /**
  * Unit tests for {@link PurchaseOrderPartialState} (B2-04 - State Pattern).
  *
- * <p>Tests that PARTIAL state only allows voiding and has placeholder for receivePartial.
+ * <p>Tests that PARTIAL state allows receiving and voiding.
  * Adding/removing items is not allowed.
  */
 class PurchaseOrderPartialStateTest {
@@ -50,7 +50,7 @@ class PurchaseOrderPartialStateTest {
 
         assertThatThrownBy(() -> state.addItem(order, detail))
                 .isInstanceOf(InvalidStateTransitionException.class)
-                .hasMessageContaining("Cannot add items to purchase order in PARTIAL status");
+                .hasMessageContaining("error.state.po.add_item_denied");
     }
 
     @Test
@@ -58,7 +58,7 @@ class PurchaseOrderPartialStateTest {
     void removeItem_partialState_throwsInvalidStateTransition() {
         assertThatThrownBy(() -> state.removeItem(order, 1L))
                 .isInstanceOf(InvalidStateTransitionException.class)
-                .hasMessageContaining("Cannot remove items from purchase order in PARTIAL status");
+                .hasMessageContaining("error.state.po.remove_item_denied");
     }
 
     @Test
@@ -70,24 +70,20 @@ class PurchaseOrderPartialStateTest {
     }
 
     @Test
-    @DisplayName("receivePartial throws InvalidStateTransitionException (placeholder)")
-    void receivePartial_partialState_throwsInvalidStateTransition() {
+    @DisplayName("receivePartial is allowed in partial state")
+    void receivePartial_partialState_isAllowed() {
         List<PurchaseOrderState.ReceivedItem> receivedItems = List.of(
                 new PurchaseOrderState.ReceivedItem(1L, 3)
         );
 
-        assertThatThrownBy(() -> state.receivePartial(order, receivedItems))
-                .isInstanceOf(InvalidStateTransitionException.class)
-                .hasMessageContaining("Cannot receive items for purchase order in PARTIAL status");
+        state.receivePartial(order, receivedItems);
     }
 
     @Test
-    @DisplayName("receivePartial with empty list throws InvalidStateTransitionException")
-    void receivePartial_emptyList_throwsInvalidStateTransition() {
+    @DisplayName("receivePartial with empty list is allowed")
+    void receivePartial_emptyList_isAllowed() {
         List<PurchaseOrderState.ReceivedItem> emptyList = List.of();
 
-        assertThatThrownBy(() -> state.receivePartial(order, emptyList))
-                .isInstanceOf(InvalidStateTransitionException.class)
-                .hasMessageContaining("Cannot receive items for purchase order in PARTIAL status");
+        state.receivePartial(order, emptyList);
     }
 }
