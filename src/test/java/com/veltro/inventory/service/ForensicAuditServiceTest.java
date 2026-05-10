@@ -8,6 +8,7 @@ import com.veltro.inventory.model.AuditAction;
 import com.veltro.inventory.model.AuditEntityType;
 import com.veltro.inventory.model.AuditRecordEntity;
 import com.veltro.inventory.repository.AuditRecordRepository;
+import com.veltro.inventory.security.TenantProvider;
 import com.veltro.inventory.exception.NotFoundException;
 import com.veltro.inventory.service.ForensicAuditService;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,6 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -49,12 +51,16 @@ class ForensicAuditServiceTest {
     @Mock
     private AuditRecordMapper mapper;
 
+    @Mock
+    private TenantProvider tenantProvider;
+
     private ForensicAuditService auditService;
 
     @BeforeEach
     void setUp() {
         authenticateAsTenantUser();
-        auditService = new ForensicAuditService(auditRepository, mapper);
+        lenient().when(tenantProvider.getBusinessId()).thenReturn(BUSINESS_ID);
+        auditService = new ForensicAuditService(auditRepository, mapper, tenantProvider);
     }
 
     @org.junit.jupiter.api.AfterEach
