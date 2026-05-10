@@ -2,6 +2,7 @@ package com.veltro.inventory.service;
 
 import com.veltro.inventory.dto.dashboard.DashboardResponse;
 import com.veltro.inventory.model.AlertType;
+import com.veltro.inventory.security.TenantProvider;
 import com.veltro.inventory.security.VeltroUserDetails;
 import com.veltro.inventory.service.DashboardQueryRepository;
 import com.veltro.inventory.service.DashboardService;
@@ -41,12 +42,16 @@ class DashboardServiceTest {
     @Mock
     private DashboardQueryRepository dashboardQueryRepository;
 
+    @Mock
+    private TenantProvider tenantProvider;
+
     private DashboardService dashboardService;
 
     @BeforeEach
     void setUp() {
         authenticateAsTenantUser();
-        dashboardService = new DashboardService(dashboardQueryRepository);
+        when(tenantProvider.getBusinessId()).thenReturn(BUSINESS_ID);
+        dashboardService = new DashboardService(dashboardQueryRepository, tenantProvider);
     }
 
     @AfterEach
