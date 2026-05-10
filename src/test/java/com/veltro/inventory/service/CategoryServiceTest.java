@@ -7,6 +7,7 @@ import com.veltro.inventory.exception.InactiveResourceExistsException;
 import com.veltro.inventory.mapper.CategoryMapper;
 import com.veltro.inventory.model.CategoryEntity;
 import com.veltro.inventory.repository.CategoryRepository;
+import com.veltro.inventory.security.TenantProvider;
 import com.veltro.inventory.security.VeltroUserDetails;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,12 +41,16 @@ class CategoryServiceTest {
     @Mock
     private CategoryMapper categoryMapper;
 
+    @Mock
+    private TenantProvider tenantProvider;
+
     private CategoryService categoryService;
 
     @BeforeEach
     void setUp() {
         authenticateAsTenantUser();
-        categoryService = new CategoryService(categoryRepository, categoryMapper);
+        when(tenantProvider.getBusinessId()).thenReturn(BUSINESS_ID);
+        categoryService = new CategoryService(categoryRepository, categoryMapper, tenantProvider);
     }
 
     @AfterEach
