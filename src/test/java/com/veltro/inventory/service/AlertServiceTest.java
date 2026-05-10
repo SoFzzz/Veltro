@@ -6,6 +6,7 @@ import com.veltro.inventory.service.AlertHandler;
 import com.veltro.inventory.service.StockAlertEvaluationContext;
 import com.veltro.inventory.dto.common.PageResponse;
 import com.veltro.inventory.dto.inventory.AlertResponse;
+import com.veltro.inventory.exception.NotFoundException;
 import com.veltro.inventory.mapper.AlertMapper;
 import com.veltro.inventory.model.ProductEntity;
 import com.veltro.inventory.model.AlertConfigurationEntity;
@@ -16,6 +17,7 @@ import com.veltro.inventory.model.InventoryEntity;
 import com.veltro.inventory.repository.AlertConfigurationRepository;
 import com.veltro.inventory.repository.AlertRepository;
 import com.veltro.inventory.repository.InventoryRepository;
+import com.veltro.inventory.security.TenantProvider;
 import com.veltro.inventory.security.VeltroUserDetails;
 import com.veltro.inventory.service.AlertService;
 import org.junit.jupiter.api.AfterEach;
@@ -66,13 +68,16 @@ class AlertServiceTest {
 
     @Mock
     private AlertHandler alertHandlerChain;
+    @Mock
+    private TenantProvider tenantProvider;
 
     private AlertService alertService;
 
     @BeforeEach
     void setUp() {
         authenticateAsTenantUser();
-        alertService = new AlertService(alertRepository, configurationRepository, inventoryRepository, alertMapper, alertHandlerChain);
+        when(tenantProvider.getBusinessId()).thenReturn(BUSINESS_ID);
+        alertService = new AlertService(alertRepository, configurationRepository, inventoryRepository, alertMapper, alertHandlerChain, tenantProvider);
     }
 
     @AfterEach
@@ -267,7 +272,7 @@ class AlertServiceTest {
     }
 
     @Test
-        @DisplayName("evaluateStock throws IllegalStateException when inventory not found")
+        @DisplayName("evaluateStock throws NotFoundException when inventory not found")
     void evaluateStock_inventoryNotFound_throwsException() {
         // Arrange
         Long productId = 99L;
@@ -276,8 +281,8 @@ class AlertServiceTest {
 
         // Act & Assert
         assertThatThrownBy(() -> alertService.evaluateStock(productId))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("Inventory not found for product 99");
+                .isInstanceOf(NotFoundException.class)
+                .hasMessageContaining("Inventory not found for product id: 99");
     }
 
     // -------------------------------------------------------------------------
