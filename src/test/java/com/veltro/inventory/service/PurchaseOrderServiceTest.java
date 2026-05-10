@@ -189,11 +189,12 @@ class PurchaseOrderServiceTest {
     @Test
     @DisplayName("Should mark order as received, publish event and audit")
     void shouldMarkOrderAsReceivedAndPublishEvent() {
-        when(orderRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong())).thenReturn(Optional.of(orderEntity));
+        when(orderRepository.findWithDetailsByIdAndActiveTrueAndBusinessId(eq(1L), anyLong())).thenReturn(Optional.of(orderEntity));
         when(orderRepository.save(any(PurchaseOrderEntity.class))).thenReturn(orderEntity);
         when(orderMapper.toResponse(orderEntity)).thenReturn(orderResponse);
         when(eventFactory.buildReceivedEvent(any(), any())).thenReturn(
                 new OrderReceivedEvent(
+                        BUSINESS_ID,
                         1L, "PO-2026-000001", 1L, "Test Supplier Corp",
                         new BigDecimal("127.50"), LocalDateTime.now(), "testuser", List.of()
                 )
