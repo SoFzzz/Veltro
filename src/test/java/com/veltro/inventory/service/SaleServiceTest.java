@@ -179,7 +179,7 @@ class SaleServiceTest {
         when(saleRepository.save(sale)).thenReturn(sale);
         when(saleMapper.toResponse(sale)).thenReturn(createSaleResponse(1L, "VLT-2026-000001"));
         SaleCompletedEvent completedEvent = new SaleCompletedEvent(
-                1L, "VLT-2026-000001", 100L, sale.getTotal(), PaymentMethod.CASH, LocalDateTime.now(), List.of()
+                BUSINESS_ID, 1L, "VLT-2026-000001", 100L, sale.getTotal(), PaymentMethod.CASH, LocalDateTime.now(), List.of()
         );
         when(eventFactory.buildCompletedEvent(sale)).thenReturn(completedEvent);
 
@@ -199,7 +199,7 @@ class SaleServiceTest {
         when(saleRepository.save(sale)).thenReturn(sale);
         when(saleMapper.toResponse(sale)).thenReturn(createSaleResponse(1L, "VLT-2026-000001"));
         SaleVoidedEvent voidedEvent = new SaleVoidedEvent(
-                1L, "VLT-2026-000001", "testuser", LocalDateTime.now(), sale.getTotal(), List.of()
+                BUSINESS_ID, 1L, "VLT-2026-000001", "testuser", LocalDateTime.now(), sale.getTotal(), List.of()
         );
         when(eventFactory.buildVoidedEvent(sale)).thenReturn(voidedEvent);
 
