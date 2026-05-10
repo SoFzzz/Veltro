@@ -9,6 +9,7 @@ import com.veltro.inventory.model.SupplierEntity;
 import com.veltro.inventory.repository.SupplierRepository;
 import com.veltro.inventory.exception.DuplicateResourceException;
 import com.veltro.inventory.exception.NotFoundException;
+import com.veltro.inventory.security.TenantProvider;
 import com.veltro.inventory.security.VeltroUserDetails;
 import com.veltro.inventory.service.SupplierService;
 import org.junit.jupiter.api.AfterEach;
@@ -50,6 +51,9 @@ class SupplierServiceTest {
     
     @Mock
     private SupplierMapper supplierMapper;
+
+    @Mock
+    private TenantProvider tenantProvider;
     
     private SupplierService supplierService;
     
@@ -61,7 +65,8 @@ class SupplierServiceTest {
     @BeforeEach
     void setUp() {
         // Manual service instantiation
-        supplierService = new SupplierService(supplierRepository, supplierMapper);
+        supplierService = new SupplierService(supplierRepository, supplierMapper, tenantProvider);
+        when(tenantProvider.getBusinessId()).thenReturn(BUSINESS_ID);
         authenticateAsTenantUser();
         
         supplierEntity = new SupplierEntity();
