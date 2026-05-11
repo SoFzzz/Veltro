@@ -9,11 +9,16 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.MessageSource;
+import org.springframework.context.NoSuchMessageException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -24,11 +29,24 @@ class GlobalExceptionHandlerBusinessTest {
 
     @Mock
     private HttpServletRequest request;
+    @Mock
+    private MessageSource messageSource;
 
     @BeforeEach
     void setUp() {
-        handler = new GlobalExceptionHandler();
+        handler = new GlobalExceptionHandler(messageSource);
         when(request.getRequestURI()).thenReturn("/api/v1/test");
+    }
+
+    @Test
+    @DisplayName("DuplicateProductConflictException fails fast when i18n key is missing")
+    void handleDuplicateProductConflict_throwsWhenMessageKeyMissing() {
+        when(messageSource.getMessage(eq("product.conflict.message"), eq(null), any()))
+                .thenThrow(new NoSuchMessageException("product.conflict.message"));
+
+        assertThatThrownBy(() -> handler.handleDuplicateProductConflict(
+                new DuplicateProductConflictException(123L, new RuntimeException("duplicate")), request))
+                .isInstanceOf(NoSuchMessageException.class);
     }
 
     @Test
@@ -61,6 +79,23 @@ class GlobalExceptionHandlerBusinessTest {
         assertThat(response.getBody().status()).isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT.value());
         assertThat(response.getBody().path()).isEqualTo("/api/v1/test");
         assertThat(response.getBody().timestamp()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("InvalidStateTransitionException resolves i18n key when available")
+    void handleInvalidStateTransition_resolvesI18nMessage() {
+        InvalidStateTransitionException ex = new InvalidStateTransitionException(
+                "error.state.po.receive_denied",
+                new Object[]{"RECEIVED"});
+        when(messageSource.getMessage(eq("error.state.po.receive_denied"), any(), any()))
+                .thenReturn("No se puede recibir mercadería para la orden de compra en estado RECEIVED.");
+
+        ResponseEntity<ErrorResponse> response = handler.handleInvalidStateTransition(ex, request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().message())
+                .isEqualTo("No se puede recibir mercadería para la orden de compra en estado RECEIVED.");
     }
 
     @Test
