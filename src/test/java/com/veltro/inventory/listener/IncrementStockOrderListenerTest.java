@@ -44,11 +44,12 @@ class IncrementStockOrderListenerTest {
         listener = new IncrementStockOrderListener(inventoryService);
         
         List<ReceivedItemInfo> items = List.of(
-                new ReceivedItemInfo(1L, "Product A", 10, new BigDecimal("15.50"), new BigDecimal("155.00")),
-                new ReceivedItemInfo(2L, "Product B", 5, new BigDecimal("25.00"), new BigDecimal("125.00"))
+                new ReceivedItemInfo(101L, 1L, 10, new BigDecimal("15.50"), new BigDecimal("155.00")),
+                new ReceivedItemInfo(102L, 2L, 5, new BigDecimal("25.00"), new BigDecimal("125.00"))
         );
 
         event = new OrderReceivedEvent(
+                77L,
                 100L,
                 "PO-2026-000001",
                 50L,
@@ -69,11 +70,17 @@ class IncrementStockOrderListenerTest {
         // Then
         verify(inventoryService, times(1)).recordEntry(
                 eq(1L),
-                eq(new StockEntryRequest(10, "Purchase Order PO-2026-000001"))
+                eq(new StockEntryRequest(10, "Purchase Order PO-2026-000001")),
+                eq(77L),
+                eq("PURCHASE_IN"),
+                eq(101L)
         );
         verify(inventoryService, times(1)).recordEntry(
                 eq(2L),
-                eq(new StockEntryRequest(5, "Purchase Order PO-2026-000001"))
+                eq(new StockEntryRequest(5, "Purchase Order PO-2026-000001")),
+                eq(77L),
+                eq("PURCHASE_IN"),
+                eq(102L)
         );
     }
 
@@ -82,6 +89,7 @@ class IncrementStockOrderListenerTest {
     void shouldHandleEmptyItemsList() {
         // Given
         OrderReceivedEvent emptyEvent = new OrderReceivedEvent(
+                77L,
                 100L, "PO-2026-000002", 50L, "Test Supplier", BigDecimal.ZERO,
                 LocalDateTime.now(), "System", Collections.emptyList()
         );
@@ -90,7 +98,7 @@ class IncrementStockOrderListenerTest {
         listener.onOrderReceived(emptyEvent);
 
         // Then
-        verify(inventoryService, never()).recordEntry(any(), any());
+        verify(inventoryService, never()).recordEntry(any(), any(), any(), any(), any());
     }
 
     @Test
@@ -98,6 +106,7 @@ class IncrementStockOrderListenerTest {
     void shouldHandleNullItemsList() {
         // Given
         OrderReceivedEvent nullEvent = new OrderReceivedEvent(
+                77L,
                 100L, "PO-2026-000003", 50L, "Test Supplier", BigDecimal.ZERO,
                 LocalDateTime.now(), "System", null
         );
@@ -106,7 +115,7 @@ class IncrementStockOrderListenerTest {
         listener.onOrderReceived(nullEvent);
 
         // Then
-        verify(inventoryService, never()).recordEntry(any(), any());
+        verify(inventoryService, never()).recordEntry(any(), any(), any(), any(), any());
     }
 
     @Test
