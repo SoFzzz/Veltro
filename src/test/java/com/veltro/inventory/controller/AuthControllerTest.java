@@ -5,6 +5,7 @@ import com.veltro.inventory.dto.auth.LoginRequest;
 import com.veltro.inventory.dto.auth.LoginResponse;
 import com.veltro.inventory.dto.auth.RefreshRequest;
 import com.veltro.inventory.dto.auth.RegisterRequest;
+import com.veltro.inventory.security.TenantProvider;
 import com.veltro.inventory.service.AuthService;
 import com.veltro.inventory.service.AuthenticationService;
 import com.veltro.inventory.service.BusinessRegistrationService;
@@ -44,12 +45,15 @@ class AuthControllerTest {
 
     @Mock
     private BusinessRegistrationService businessRegistrationService;
+
+    @Mock
+    private TenantProvider tenantProvider;
     
     private AuthController controller;
 
     @BeforeEach
     void setUp() {
-        controller = new AuthController(authService, authenticationService, businessRegistrationService);
+        controller = new AuthController(authService, authenticationService, businessRegistrationService, tenantProvider);
     }
 
     private static LoginResponse stubResponse() {
