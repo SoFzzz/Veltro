@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -30,10 +31,12 @@ class GlobalExceptionHandlerAuthTest {
 
     @Mock
     private HttpServletRequest request;
+    @Mock
+    private MessageSource messageSource;
 
     @BeforeEach
     void setUp() {
-        handler = new GlobalExceptionHandler();
+        handler = new GlobalExceptionHandler(messageSource);
         when(request.getRequestURI()).thenReturn("/api/v1/auth/login");
     }
 
