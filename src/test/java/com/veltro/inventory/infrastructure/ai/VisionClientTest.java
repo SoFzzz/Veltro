@@ -3,14 +3,13 @@ package com.veltro.inventory.infrastructure.ai;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.veltro.inventory.dto.scanner.ProductSuggestionResponse;
 import com.veltro.inventory.model.ProductEntity;
-import com.veltro.inventory.security.TenantContext;
+import com.veltro.inventory.security.TenantProvider;
 import com.veltro.inventory.service.ProductMatchingService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.client.RestTemplate;
@@ -43,14 +42,18 @@ class VisionClientTest {
     @Mock
     private ProductMatchingService productMatchingService;
 
+    @Mock
+    private TenantProvider tenantProvider;
+
     private VisionClient client;
 
     @BeforeEach
     void setUp() {
-        client = new VisionClient(visionApiConfig, restTemplate, new ObjectMapper(), productMatchingService);
+        client = new VisionClient(visionApiConfig, restTemplate, new ObjectMapper(), productMatchingService, tenantProvider);
 
         lenient().when(visionApiConfig.isConfigured()).thenReturn(false);
         lenient().when(visionApiConfig.getMaxImageSizeMb()).thenReturn(10);
+        lenient().when(tenantProvider.getBusinessId()).thenReturn(3L);
         lenient().when(productMatchingService.findMatch(any(), any())).thenReturn(Optional.empty());
     }
 
@@ -237,19 +240,15 @@ class VisionClientTest {
                 "image", "sprite.jpg", "image/jpeg", new byte[]{1, 2, 3}
         );
 
-        try (MockedStatic<TenantContext> tenantContext = org.mockito.Mockito.mockStatic(TenantContext.class)) {
-            tenantContext.when(TenantContext::getBusinessId).thenReturn(3L);
+        ProductSuggestionResponse response = client.analyzeProductImage(image);
 
-            ProductSuggestionResponse response = client.analyzeProductImage(image);
-
-            assertThat(response.suggestions()).hasSize(1);
-            assertThat(response.suggestions().get(0).productId()).isEqualTo(10L);
-            assertThat(response.suggestions().get(0).productName()).isEqualTo("Sprite Sabor Lima Limon");
-            assertThat(response.suggestions().get(0).barcode()).isEqualTo("750123");
-            assertThat(response.suggestions().get(0).suggestedName()).isNull();
-            assertThat(response.suggestions().get(0).suggestedBarcode()).isNull();
-            assertThat(response.suggestions().get(0).suggestedPrice()).isNull();
-        }
+        assertThat(response.suggestions()).hasSize(1);
+        assertThat(response.suggestions().get(0).productId()).isEqualTo(10L);
+        assertThat(response.suggestions().get(0).productName()).isEqualTo("Sprite Sabor Lima Limon");
+        assertThat(response.suggestions().get(0).barcode()).isEqualTo("750123");
+        assertThat(response.suggestions().get(0).suggestedName()).isNull();
+        assertThat(response.suggestions().get(0).suggestedBarcode()).isNull();
+        assertThat(response.suggestions().get(0).suggestedPrice()).isNull();
     }
 
     @Test
@@ -284,19 +283,15 @@ class VisionClientTest {
                 "image", "sprite.jpg", "image/jpeg", new byte[]{1, 2, 3}
         );
 
-        try (MockedStatic<TenantContext> tenantContext = org.mockito.Mockito.mockStatic(TenantContext.class)) {
-            tenantContext.when(TenantContext::getBusinessId).thenReturn(3L);
+        ProductSuggestionResponse response = client.analyzeProductImage(image);
 
-            ProductSuggestionResponse response = client.analyzeProductImage(image);
-
-            assertThat(response.suggestions()).hasSize(1);
-            assertThat(response.suggestions().get(0).productId()).isNull();
-            assertThat(response.suggestions().get(0).barcode()).isNull();
-            assertThat(response.suggestions().get(0).productName()).isEqualTo("Sprite Sabor Lima Limon");
-            assertThat(response.suggestions().get(0).suggestedName()).isEqualTo("Sprite Sabor Lima Limon");
-            assertThat(response.suggestions().get(0).suggestedBarcode()).isEqualTo("750123999");
-            assertThat(response.suggestions().get(0).suggestedPrice()).isEqualByComparingTo("4.5");
-        }
+        assertThat(response.suggestions()).hasSize(1);
+        assertThat(response.suggestions().get(0).productId()).isNull();
+        assertThat(response.suggestions().get(0).barcode()).isNull();
+        assertThat(response.suggestions().get(0).productName()).isEqualTo("Sprite Sabor Lima Limon");
+        assertThat(response.suggestions().get(0).suggestedName()).isEqualTo("Sprite Sabor Lima Limon");
+        assertThat(response.suggestions().get(0).suggestedBarcode()).isEqualTo("750123999");
+        assertThat(response.suggestions().get(0).suggestedPrice()).isEqualByComparingTo("4.5");
     }
 
     @Test
@@ -331,17 +326,13 @@ class VisionClientTest {
                 "image", "cookies.jpg", "image/jpeg", new byte[]{1, 2, 3}
         );
 
-        try (MockedStatic<TenantContext> tenantContext = org.mockito.Mockito.mockStatic(TenantContext.class)) {
-            tenantContext.when(TenantContext::getBusinessId).thenReturn(3L);
+        ProductSuggestionResponse response = client.analyzeProductImage(image);
 
-            ProductSuggestionResponse response = client.analyzeProductImage(image);
-
-            assertThat(response.suggestions()).hasSize(1);
-            assertThat(response.suggestions().get(0).productId()).isNull();
-            assertThat(response.suggestions().get(0).suggestedName()).isEqualTo("Galletas Chocolate");
-            assertThat(response.suggestions().get(0).suggestedBarcode()).isNull();
-            assertThat(response.suggestions().get(0).suggestedPrice()).isNull();
-        }
+        assertThat(response.suggestions()).hasSize(1);
+        assertThat(response.suggestions().get(0).productId()).isNull();
+        assertThat(response.suggestions().get(0).suggestedName()).isEqualTo("Galletas Chocolate");
+        assertThat(response.suggestions().get(0).suggestedBarcode()).isNull();
+        assertThat(response.suggestions().get(0).suggestedPrice()).isNull();
     }
 }
 
