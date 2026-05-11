@@ -1,11 +1,11 @@
 package com.veltro.inventory.listener;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 
-import com.veltro.inventory.event.StockChangedEvent;
+import com.veltro.inventory.event.StockMovementEvent;
 import com.veltro.inventory.listener.EvaluateStockAlertsListener;
+import com.veltro.inventory.model.MovementType;
 import com.veltro.inventory.service.AlertService;
 import java.time.OffsetDateTime;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,21 +37,19 @@ class EvaluateStockAlertsListenerTest {
     @Test
     @DisplayName("invokes alert service when product id present")
     void invokesAlertService() {
-        StockChangedEvent event = new StockChangedEvent(10L, "Test", 5, 7, "reason", OffsetDateTime.now());
+        StockMovementEvent event = new StockMovementEvent(1L, 10L, 20L, MovementType.ENTRY, 5, 7, OffsetDateTime.now());
 
         listener.onStockChanged(event);
 
-        verify(alertService).evaluateStock(10L);
+        verify(alertService).evaluateStock(10L, 1L);
     }
 
     @Test
-    @DisplayName("propagates exceptions from alert service")
-    void propagatesExceptions() {
-        StockChangedEvent event = new StockChangedEvent(5L, "Test", 5, 3, "reason", OffsetDateTime.now());
-        doThrow(new IllegalStateException("boom")).when(alertService).evaluateStock(5L);
+    @DisplayName("does not propagate exceptions from alert service")
+    void doesNotPropagateExceptions() {
+        StockMovementEvent event = new StockMovementEvent(2L, 5L, 30L, MovementType.EXIT, 5, 3, OffsetDateTime.now());
+        doThrow(new IllegalStateException("boom")).when(alertService).evaluateStock(5L, 2L);
 
-        assertThatThrownBy(() -> listener.onStockChanged(event))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessage("boom");
+        listener.onStockChanged(event);
     }
 }
