@@ -63,7 +63,7 @@ class LoginRateLimitFilterTest {
 
         ErrorResponse payload = objectMapper.readValue(blockedResponse.getContentAsByteArray(), ErrorResponse.class);
         assertThat(payload.code()).isEqualTo("RATE_LIMIT_EXCEEDED");
-        assertThat(payload.message()).isEqualTo("Too many login attempts. Please try again in a minute.");
+        assertThat(payload.message()).isEqualTo("Demasiados intentos de inicio de sesión. Por favor, intente de nuevo en un minuto.");
         assertThat(payload.status()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS.value());
         assertThat(payload.path()).isEqualTo("/api/v1/auth/login");
         assertThat(payload.timestamp()).isNotNull();
