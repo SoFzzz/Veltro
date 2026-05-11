@@ -11,12 +11,16 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.MessageSource;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.util.Locale;
+
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -27,14 +31,18 @@ class ProductControllerContractMockMvcTest {
 
     @Mock
     private ProductService productService;
+    @Mock
+    private MessageSource messageSource;
 
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
         ProductController controller = new ProductController(productService);
+        when(messageSource.getMessage(eq("product.conflict.message"), eq(null), any(Locale.class)))
+                .thenReturn("Ya existe un producto con este código de barras o SKU");
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
-                .setControllerAdvice(new GlobalExceptionHandler())
+                .setControllerAdvice(new GlobalExceptionHandler(messageSource))
                 .build();
     }
 
