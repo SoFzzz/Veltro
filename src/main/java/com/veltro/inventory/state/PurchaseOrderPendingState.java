@@ -2,7 +2,6 @@ package com.veltro.inventory.state;
 
 import com.veltro.inventory.model.PurchaseOrderDetailEntity;
 import com.veltro.inventory.model.PurchaseOrderEntity;
-import com.veltro.inventory.exception.InvalidStateTransitionException;
 import com.veltro.inventory.model.PurchaseOrderStatus;
 
 import java.util.List;
@@ -33,9 +32,7 @@ public class PurchaseOrderPendingState implements PurchaseOrderState {
 
     @Override
     public void receivePartial(PurchaseOrderEntity order, List<ReceivedItem> receivedItems) {
-        // TODO: Implement logic in subsequent step - this requires more complex business logic
-        // For now, throw to indicate not implemented
-        throw new InvalidStateTransitionException("receivePartial not yet implemented");
+        // Validation gate only. Quantity math is handled in PurchaseOrderService.
     }
 
     @Override
