@@ -19,25 +19,21 @@ public abstract class AbstractTerminalPurchaseOrderState implements PurchaseOrde
 
     @Override
     public void addItem(PurchaseOrderEntity order, PurchaseOrderDetailEntity detail) {
-        throw new InvalidStateTransitionException(
-                "Cannot add items to purchase order in " + statusName() + " status.");
+        throw new InvalidStateTransitionException("error.state.po.add_item_denied", new Object[]{statusName()});
     }
 
     @Override
     public void removeItem(PurchaseOrderEntity order, Long detailId) {
-        throw new InvalidStateTransitionException(
-                "Cannot remove items from purchase order in " + statusName() + " status.");
+        throw new InvalidStateTransitionException("error.state.po.remove_item_denied", new Object[]{statusName()});
     }
 
     @Override
     public void receivePartial(PurchaseOrderEntity order, List<ReceivedItem> receivedItems) {
-        throw new InvalidStateTransitionException(
-                "Cannot receive items for purchase order in " + statusName() + " status.");
+        throw new InvalidStateTransitionException("error.state.po.receive_denied", new Object[]{statusName()});
     }
 
     @Override
     public void voidOrder(PurchaseOrderEntity order) {
-        throw new InvalidStateTransitionException(
-                "Cannot void purchase order in " + statusName() + " status.");
+        throw new InvalidStateTransitionException("error.state.po.void_denied", new Object[]{statusName()});
     }
 }
