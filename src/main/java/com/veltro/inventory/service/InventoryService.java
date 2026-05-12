@@ -7,7 +7,7 @@ import com.veltro.inventory.dto.inventory.StockEntryRequest;
 import com.veltro.inventory.dto.inventory.StockExitRequest;
 import com.veltro.inventory.dto.inventory.UpdateStockLimitsRequest;
 import com.veltro.inventory.dto.common.PageResponse;
-import com.veltro.inventory.event.StockChangedEvent;
+import com.veltro.inventory.event.StockMovementEvent;
 import com.veltro.inventory.mapper.InventoryMapper;
 import com.veltro.inventory.mapper.InventoryMovementMapper;
 import com.veltro.inventory.model.AuditAction;
@@ -21,12 +21,15 @@ import com.veltro.inventory.repository.InventoryRepository;
 import com.veltro.inventory.exception.InsufficientStockException;
 import com.veltro.inventory.exception.MaxStockExceededException;
 import com.veltro.inventory.exception.NotFoundException;
-import com.veltro.inventory.security.TenantContext;
+import com.veltro.inventory.security.TenantProvider;
 import java.time.OffsetDateTime;
 import java.util.Map;
+import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,10 +49,12 @@ public class InventoryService {
     private final ApplicationEventPublisher eventPublisher;
     private final AuditCommandExecutor auditCommandExecutor;
     private final com.veltro.inventory.repository.AlertRepository alertRepository;
+    private final MessageSource messageSource;
+    private final TenantProvider tenantProvider;
 
     @Transactional(readOnly = true)
     public PageResponse<InventoryResponse> findAll(Pageable pageable) {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         return PageResponse.from(
                 inventoryRepository.findAllByActiveTrueAndBusinessId(businessId, pageable)
                         .map(inventoryMapper::toResponse)
@@ -58,13 +63,13 @@ public class InventoryService {
 
     @Transactional(readOnly = true)
     public InventoryResponse findByProductId(Long productId) {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         return inventoryMapper.toResponse(requireByProductId(productId, businessId));
     }
 
     @Transactional(readOnly = true)
     public PageResponse<InventoryMovementResponse> getMovements(Long productId, Pageable pageable) {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         InventoryEntity inventory = requireByProductId(productId, businessId);
         return PageResponse.from(
                 movementRepository.findByInventoryIdAndBusinessId(inventory.getId(), businessId, pageable)
@@ -74,54 +79,71 @@ public class InventoryService {
 
     @Transactional
     public InventoryResponse recordEntry(Long productId, StockEntryRequest request) {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
+        return recordEntry(productId, request.quantity(), request.reason(), businessId, null, null);
+    }
+
+    @Transactional
+    public InventoryResponse recordEntry(Long productId, StockEntryRequest request, Long businessId, String sourceType, Long sourceId) {
+        return recordEntry(productId, request.quantity(), request.reason(), businessId, sourceType, sourceId);
+    }
+
+    @Transactional
+    public InventoryResponse recordEntry(Long productId, int quantity, String reason, Long businessId,
+                                         String sourceType, Long sourceId) {
         InventoryEntity inventory = requireByProductId(productId, businessId);
         int previousStock = inventory.getCurrentStock();
-        int newStock = previousStock + request.quantity();
+        int newStock = previousStock + quantity;
 
         // BUG-11: Validate max stock limit (only if maxStock is configured > 0)
         int maxStock = inventory.getMaxStock();
         if (maxStock > 0 && newStock > maxStock) {
             throw new MaxStockExceededException(
-                    inventory.getProduct().getName(), previousStock, request.quantity(), maxStock);
+                    inventory.getProduct().getName(), previousStock, quantity, maxStock);
         }
 
         inventory.setCurrentStock(newStock);
         InventoryEntity saved = inventoryRepository.save(inventory);
-        persistMovement(saved, MovementType.ENTRY, request.quantity(), previousStock, newStock, request.reason());
-        publishStockChanged(saved, previousStock, newStock, request.reason());
+        persistMovement(saved, MovementType.ENTRY, quantity, previousStock, newStock, reason, businessId,
+                sourceType, sourceId);
 
         log.info("Stock ENTRY: productId={}, qty={}, stock {} -> {}",
-                productId, request.quantity(), previousStock, newStock);
+                productId, quantity, previousStock, newStock);
         return inventoryMapper.toResponse(saved);
     }
 
     @Transactional
     public InventoryResponse recordExit(Long productId, StockExitRequest request) {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
+        return recordExit(productId, request.quantity(), request.reason(), businessId, null, null);
+    }
+
+    @Transactional
+    public InventoryResponse recordExit(Long productId, int quantity, String reason, Long businessId,
+                                        String sourceType, Long sourceId) {
         InventoryEntity inventory = requireByProductId(productId, businessId);
         int previousStock = inventory.getCurrentStock();
 
-        if (previousStock - request.quantity() < 0) {
+        if (previousStock - quantity < 0) {
             throw new InsufficientStockException(
-                    inventory.getProduct().getName(), previousStock, request.quantity());
+                    inventory.getProduct().getName(), previousStock, quantity);
         }
 
-        int newStock = previousStock - request.quantity();
+        int newStock = previousStock - quantity;
         inventory.setCurrentStock(newStock);
         InventoryEntity saved = inventoryRepository.save(inventory);
-        persistMovement(saved, MovementType.EXIT, request.quantity(), previousStock, newStock, request.reason());
-        publishStockChanged(saved, previousStock, newStock, request.reason());
+        persistMovement(saved, MovementType.EXIT, quantity, previousStock, newStock, reason, businessId,
+                sourceType, sourceId);
 
         log.info("Stock EXIT: productId={}, qty={}, stock {} -> {}",
-                productId, request.quantity(), previousStock, newStock);
+                productId, quantity, previousStock, newStock);
         return inventoryMapper.toResponse(saved);
     }
 
     /**
      * Records an inventory adjustment with forensic audit logging (B3-03).
      *
-     * <p>Captures before/after state for audit trail and publishes StockChangedEvent
+     * <p>Captures before/after state for audit trail and publishes StockMovementEvent
      * for downstream alert evaluation.
      *
      * @param productId the product ID
@@ -130,7 +152,7 @@ public class InventoryService {
      */
     @Transactional
     public InventoryResponse recordAdjustment(Long productId, StockAdjustmentRequest request) {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         InventoryEntity inventory = requireByProductId(productId, businessId);
         int previousStock = inventory.getCurrentStock();
         int newStock = request.newStock();
@@ -142,8 +164,8 @@ public class InventoryService {
 
         inventory.setCurrentStock(newStock);
         InventoryEntity saved = inventoryRepository.save(inventory);
-        persistMovement(saved, MovementType.ADJUSTMENT, quantityForRecord, previousStock, newStock, request.reason());
-        publishStockChanged(saved, previousStock, newStock, request.reason());
+        persistMovement(saved, MovementType.ADJUSTMENT, quantityForRecord, previousStock, newStock, request.reason(), businessId,
+                null, null);
 
         // Create forensic audit record (B3-03)
         auditCommandExecutor.execute(
@@ -163,7 +185,7 @@ public class InventoryService {
 
     @Transactional
     public InventoryResponse updateLimits(Long productId, UpdateStockLimitsRequest request) {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         InventoryEntity inventory = requireByProductId(productId, businessId);
         inventory.setMinStock(request.minStock());
         inventory.setMaxStock(request.maxStock());
@@ -193,8 +215,8 @@ public class InventoryService {
     }
 
     private void persistMovement(InventoryEntity inventory, MovementType type,
-                                 int quantity, int previousStock, int newStock, String reason) {
-         Long businessId = TenantContext.getBusinessId();
+                                 int quantity, int previousStock, int newStock, String reason, Long businessId,
+                                 String sourceType, Long sourceId) {
          InventoryMovementEntity movement = new InventoryMovementEntity();
          movement.setInventory(inventory);
          movement.setMovementType(type);
@@ -203,26 +225,40 @@ public class InventoryService {
          movement.setNewStock(newStock);
          movement.setReason(reason);
          movement.setBusinessId(businessId);
-         movementRepository.save(movement);
+         movement.setSourceType(sourceType);
+         movement.setSourceId(sourceId);
+         InventoryMovementEntity savedMovement = movementRepository.save(movement);
 
          // Generate INFO alert for the movement
          com.veltro.inventory.model.AlertEntity alert = new com.veltro.inventory.model.AlertEntity();
          alert.setProduct(inventory.getProduct());
          alert.setType(com.veltro.inventory.model.AlertType.STOCK_MOVEMENT);
          alert.setSeverity(com.veltro.inventory.model.AlertSeverity.INFO);
-         String action = type == MovementType.ENTRY ? "Llegada" : (type == MovementType.EXIT ? "Salida" : "Ajuste");
-         alert.setMessage(String.format("Registro de %s: %s (Cambio de %d a %d)", action, inventory.getProduct().getName(), previousStock, newStock));
+         alert.setMessage(resolveMovementMessage(type, inventory.getProduct().getName(), previousStock, newStock));
          alert.setBusinessId(businessId);
+         alert.setMovementId(savedMovement.getId());
          alertRepository.save(alert);
+         publishStockMovement(savedMovement, previousStock, newStock, businessId);
     }
 
-    private void publishStockChanged(InventoryEntity inventory, int previousStock, int newStock, String reason) {
-        StockChangedEvent event = new StockChangedEvent(
-                inventory.getProduct().getId(),
-                inventory.getProduct().getName(),
+    private String resolveMovementMessage(MovementType movementType, String productName, int previousStock, int newStock) {
+        String key = switch (movementType) {
+            case ENTRY -> "alert.movement.entry";
+            case EXIT -> "alert.movement.exit";
+            case ADJUSTMENT -> "alert.movement.adjustment";
+        };
+        Locale locale = LocaleContextHolder.getLocale();
+        return messageSource.getMessage(key, new Object[]{productName, previousStock, newStock}, locale);
+    }
+
+    private void publishStockMovement(InventoryMovementEntity movement, int previousStock, int newStock, Long businessId) {
+        StockMovementEvent event = new StockMovementEvent(
+                businessId,
+                movement.getInventory().getProduct().getId(),
+                movement.getId(),
+                movement.getMovementType(),
                 previousStock,
                 newStock,
-                reason,
                 OffsetDateTime.now());
         eventPublisher.publishEvent(event);
     }
