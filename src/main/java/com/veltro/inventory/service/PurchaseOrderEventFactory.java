@@ -21,8 +21,8 @@ public class PurchaseOrderEventFactory {
     public OrderReceivedEvent buildReceivedEvent(PurchaseOrderEntity order, List<PurchaseOrderDetailEntity> receivedDetails) {
         List<ReceivedItemInfo> receivedItems = receivedDetails.stream()
                 .map(detail -> new ReceivedItemInfo(
+                        detail.getId(),
                         detail.getProduct().getId(),
-                        detail.getProduct().getName(),
                         detail.getReceivedQuantity(),
                         detail.getUnitCost(),
                         detail.getUnitCost().multiply(BigDecimal.valueOf(detail.getReceivedQuantity()))
@@ -33,6 +33,7 @@ public class PurchaseOrderEventFactory {
                 ? SecurityContextHolder.getContext().getAuthentication().getName() : "System";
 
         return new OrderReceivedEvent(
+                order.getBusinessId(),
                 order.getId(),
                 order.getOrderNumber(),
                 order.getSupplier().getId(),
