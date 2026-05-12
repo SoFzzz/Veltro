@@ -27,6 +27,7 @@ public class SaleEventFactory {
         List<SaleItemInfo> items = mapDetails(sale);
 
         return new SaleCompletedEvent(
+                sale.getBusinessId(),
                 sale.getId(),
                 sale.getSaleNumber(),
                 sale.getCashierId(),
@@ -45,6 +46,7 @@ public class SaleEventFactory {
         String voidedBy = SecurityContextHolder.getContext().getAuthentication().getName();
 
         return new SaleVoidedEvent(
+                sale.getBusinessId(),
                 sale.getId(),
                 sale.getSaleNumber(),
                 voidedBy,
@@ -58,8 +60,8 @@ public class SaleEventFactory {
         return sale.getDetails().stream()
                 .filter(d -> d.isActive())
                 .map(d -> new SaleItemInfo(
+                        d.getId(),
                         d.getProductId(),
-                        d.getProductName(),
                         d.getQuantity(),
                         d.getUnitPrice(),
                         d.getSubtotal()
