@@ -8,7 +8,7 @@ import com.veltro.inventory.model.SupplierEntity;
 import com.veltro.inventory.repository.SupplierRepository;
 import com.veltro.inventory.exception.DuplicateResourceException;
 import com.veltro.inventory.exception.NotFoundException;
-import com.veltro.inventory.security.TenantContext;
+import com.veltro.inventory.security.TenantProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,6 +28,7 @@ public class SupplierService {
 
     private final SupplierRepository supplierRepository;
     private final SupplierMapper supplierMapper;
+    private final TenantProvider tenantProvider;
 
     // -------------------------------------------------------------------------
     // Queries
@@ -40,7 +41,7 @@ public class SupplierService {
      */
     @Transactional(readOnly = true)
     public List<SupplierResponse> findAll() {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         return supplierRepository.findAllByActiveTrueAndBusinessIdOrderByIdAsc(businessId)
                 .stream()
                 .map(supplierMapper::toResponse)
@@ -56,7 +57,7 @@ public class SupplierService {
      */
     @Transactional(readOnly = true)
     public SupplierResponse findById(Long id) {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         SupplierEntity supplier = supplierRepository.findByIdAndActiveTrueAndBusinessId(id, businessId)
                 .orElseThrow(() -> new NotFoundException("Supplier not found with id: " + id));
         
@@ -73,7 +74,7 @@ public class SupplierService {
      */
     @Transactional(readOnly = true)
     public SupplierResponse findByTaxId(String taxId) {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         SupplierEntity supplier = supplierRepository.findByTaxIdAndActiveTrueAndBusinessId(taxId, businessId)
                 .orElseThrow(() -> new NotFoundException("Supplier not found with tax ID: " + taxId));
         
@@ -93,7 +94,7 @@ public class SupplierService {
      */
     @Transactional
     public SupplierResponse create(CreateSupplierRequest request) {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
 
         // Validate tax ID uniqueness
         if (supplierRepository.existsByTaxIdAndActiveTrueAndIdNotAndBusinessId(request.taxId(), null, businessId)) {
@@ -118,7 +119,7 @@ public class SupplierService {
      */
     @Transactional
     public SupplierResponse update(Long id, UpdateSupplierRequest request) {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         SupplierEntity supplier = supplierRepository.findByIdAndActiveTrueAndBusinessId(id, businessId)
                 .orElseThrow(() -> new NotFoundException("Supplier not found with id: " + id));
 
@@ -137,7 +138,7 @@ public class SupplierService {
      */
     @Transactional
     public void delete(Long id) {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         SupplierEntity supplier = supplierRepository.findByIdAndActiveTrueAndBusinessId(id, businessId)
                 .orElseThrow(() -> new NotFoundException("Supplier not found with id: " + id));
 
@@ -156,7 +157,7 @@ public class SupplierService {
      */
     @Transactional
     public SupplierResponse activate(Long id) {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         SupplierEntity supplier = supplierRepository.findByIdAndActiveFalseAndBusinessId(id, businessId)
                 .orElseThrow(() -> new NotFoundException("Inactive supplier not found with id: " + id));
 
@@ -181,7 +182,7 @@ public class SupplierService {
      */
     @Transactional
     public SupplierResponse deactivate(Long id) {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         SupplierEntity supplier = supplierRepository.findByIdAndActiveTrueAndBusinessId(id, businessId)
                 .orElseThrow(() -> new NotFoundException("Active supplier not found with id: " + id));
 
@@ -192,4 +193,5 @@ public class SupplierService {
         return supplierMapper.toResponse(deactivated);
     }
 }
+
 
