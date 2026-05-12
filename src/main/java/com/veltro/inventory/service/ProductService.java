@@ -15,8 +15,10 @@ import com.veltro.inventory.model.IndexingStatus;
 import com.veltro.inventory.exception.DuplicateResourceException;
 import com.veltro.inventory.exception.InactiveResourceExistsException;
 import com.veltro.inventory.exception.InvalidPriceException;
+import com.veltro.inventory.exception.InvalidMediaFormatException;
 import com.veltro.inventory.exception.NotFoundException;
-import com.veltro.inventory.security.TenantContext;
+import com.veltro.inventory.exception.ProductAlreadyActiveException;
+import com.veltro.inventory.security.TenantProvider;
 import com.veltro.inventory.event.ProductCreatedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,10 +29,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.util.Optional;
+import java.util.Set;
 import org.springframework.web.multipart.MultipartFile;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.InputStream;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 /**
  * Application service for product management (B1-03).
@@ -49,9 +54,14 @@ public class ProductService {
     private final ProductMapper productMapper;
     private final ApplicationEventPublisher eventPublisher;
     private final ClipInferenceService clipInferenceService;
+    private final TenantProvider tenantProvider;
 
     @Value("${app.uploads-dir:./uploads}")
     private String uploadsDirPath;
+    @Value("${spring.servlet.multipart.max-file-size:5MB}")
+    private String maxFileSize;
+    @Value("${app.media.allowed-types:image/jpeg,image/png,image/webp}")
+    private String allowedMediaTypes;
 
     // -------------------------------------------------------------------------
     // Queries
@@ -62,7 +72,7 @@ public class ProductService {
      */
     @Transactional(readOnly = true)
     public PageResponse<ProductResponse> findAll(Pageable pageable) {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         return PageResponse.from(
                 productRepository.findAllByActiveTrueAndBusinessId(businessId, pageable)
                         .map(productMapper::toResponse)
@@ -80,7 +90,7 @@ public class ProductService {
      */
     @Transactional(readOnly = true)
     public ProductResponse findByBarcode(String barcode) {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         ProductEntity entity = productRepository.findByBarcodeAndActiveTrueAndBusinessId(barcode, businessId)
                 .orElseThrow(() -> new NotFoundException(
                         "Product not found with barcode: " + barcode));
@@ -93,7 +103,7 @@ public class ProductService {
 
     @Transactional
     public ProductResponse create(CreateProductRequest request) {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         validatePrice(request.costPrice(), request.salePrice());
 
         // BUG-15: Check for existing product with same barcode or SKU (active or inactive)
@@ -114,7 +124,7 @@ public class ProductService {
 
     @Transactional
     public ProductResponse update(Long id, UpdateProductRequest request) {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         validatePrice(request.costPrice(), request.salePrice());
 
         checkForDuplicateBarcode(request.barcode(), businessId, id);
@@ -139,10 +149,11 @@ public class ProductService {
         }
 
         MultipartFile primaryImage = images.get(0);
+        validateMedia(primaryImage);
         log.info("Uploaded image for product id={}: {} ({} bytes)", id, primaryImage.getOriginalFilename(), primaryImage.getSize());
 
         try {
-            // 1. Guardar imagen en disco siempre
+            // 1. Persist image on disk
             java.nio.file.Path uploadDir = java.nio.file.Paths.get(uploadsDirPath).toAbsolutePath().normalize();
             java.nio.file.Files.createDirectories(uploadDir);
             
@@ -206,12 +217,12 @@ public class ProductService {
      */
     @Transactional
     public ProductResponse reactivate(Long id) {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         ProductEntity entity = productRepository.findByIdAndBusinessId(id, businessId)
                 .orElseThrow(() -> new NotFoundException("Product not found with id: " + id));
 
         if (entity.isActive()) {
-            throw new IllegalArgumentException("Product with id " + id + " is already active.");
+            throw new ProductAlreadyActiveException(id);
         }
 
         entity.setActive(true);
@@ -230,7 +241,7 @@ public class ProductService {
      */
     @Transactional
     public void hardDelete(Long id) {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         if (!productRepository.existsByIdAndBusinessId(id, businessId)) {
             throw new NotFoundException("Product not found with id: " + id);
         }
@@ -271,13 +282,13 @@ public class ProductService {
     }
 
     private ProductEntity requireActive(Long id) {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         return productRepository.findByIdAndActiveTrueAndBusinessId(id, businessId)
                 .orElseThrow(() -> new NotFoundException("Product not found with id: " + id));
     }
 
     private void resolveCategory(ProductEntity entity, Long categoryId) {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         if (categoryId != null) {
             CategoryEntity category = categoryRepository.findByIdAndActiveTrueAndBusinessId(categoryId, businessId)
                     .orElseThrow(() -> new NotFoundException("Category not found with id: " + categoryId));
@@ -331,6 +342,38 @@ public class ProductService {
                 throw new InactiveResourceExistsException("product", "SKU", sku, product.getId());
             }
         }
+    }
+
+    private void validateMedia(MultipartFile file) {
+        Set<String> allowedTypes = Arrays.stream(allowedMediaTypes.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isBlank())
+                .collect(Collectors.toSet());
+
+        String contentType = file.getContentType();
+        if (contentType == null || !allowedTypes.contains(contentType)) {
+            throw new InvalidMediaFormatException("error.media.invalid_format", String.join(", ", allowedTypes));
+        }
+
+        long maxBytes = parseMaxFileSizeToBytes(maxFileSize);
+        if (file.getSize() > maxBytes) {
+            String maxMegaBytes = String.valueOf(Math.max(1L, maxBytes / (1024L * 1024L)));
+            throw new InvalidMediaFormatException("error.media.size_exceeded", maxMegaBytes);
+        }
+    }
+
+    private long parseMaxFileSizeToBytes(String size) {
+        String normalized = size.trim().toUpperCase();
+        if (normalized.endsWith("MB")) {
+            return Long.parseLong(normalized.substring(0, normalized.length() - 2).trim()) * 1024L * 1024L;
+        }
+        if (normalized.endsWith("KB")) {
+            return Long.parseLong(normalized.substring(0, normalized.length() - 2).trim()) * 1024L;
+        }
+        if (normalized.endsWith("B")) {
+            return Long.parseLong(normalized.substring(0, normalized.length() - 1).trim());
+        }
+        return Long.parseLong(normalized);
     }
 }
 
