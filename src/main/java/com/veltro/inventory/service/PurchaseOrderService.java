@@ -8,6 +8,7 @@ import com.veltro.inventory.event.ReceivedItemInfo;
 import com.veltro.inventory.mapper.PurchaseOrderMapper;
 import com.veltro.inventory.model.AuditAction;
 import com.veltro.inventory.model.AuditEntityType;
+import com.veltro.inventory.exception.InvalidStateTransitionException;
 import com.veltro.inventory.model.ProductEntity;
 import com.veltro.inventory.repository.ProductRepository;
 import com.veltro.inventory.model.UserEntity;
@@ -269,27 +270,35 @@ public class PurchaseOrderService {
     @Transactional
     public PurchaseOrderResponse markAsReceived(Long orderId) {
         Long businessId = tenantProvider.getBusinessId();
-        PurchaseOrderEntity order = orderRepository.findByIdAndActiveTrueAndBusinessId(orderId, businessId)
+        PurchaseOrderEntity order = orderRepository.findWithDetailsByIdAndActiveTrueAndBusinessId(orderId, businessId)
                 .orElseThrow(() -> new NotFoundException("Purchase order not found with id: " + orderId));
 
         // Capture state BEFORE receiving for audit (B3-03)
         final Map<String, Object> beforeSnapshot = snapshotService.buildSnapshot(order);
 
-        // Mark all items as fully received
         List<PurchaseOrderDetailEntity> activeDetails = order.getDetails().stream()
                 .filter(d -> d.isActive())
                 .collect(Collectors.toList());
 
-        for (PurchaseOrderDetailEntity detail : activeDetails) {
-            detail.setReceivedQuantity(detail.getRequestedQuantity());
+        List<PurchaseOrderDetailEntity> deltaDetails = activeDetails.stream()
+                .filter(detail -> detail.getReceivedQuantity() < detail.getRequestedQuantity())
+                .collect(Collectors.toList());
+
+        for (PurchaseOrderDetailEntity detail : deltaDetails) {
+            int remainingQuantity = detail.getRequestedQuantity() - detail.getReceivedQuantity();
+            if (remainingQuantity < 0) {
+                throw new InvalidStateTransitionException("error.state.po.receive_over",
+                        new Object[]{detail.getId()});
+            }
+            detail.setReceivedQuantity(detail.getReceivedQuantity() + remainingQuantity);
         }
 
-        // State transition to RECEIVED
-        order.setStatus(PurchaseOrderStatus.RECEIVED);
+        order.setStatus(order.isFullyReceived() ? PurchaseOrderStatus.RECEIVED : PurchaseOrderStatus.PARTIAL);
         PurchaseOrderEntity updated = orderRepository.save(order);
 
-        // Publish event for inventory increment
-        applicationEventPublisher.publishEvent(eventFactory.buildReceivedEvent(updated, activeDetails));
+        if (!deltaDetails.isEmpty()) {
+            applicationEventPublisher.publishEvent(eventFactory.buildReceivedEvent(updated, deltaDetails));
+        }
 
         // Create forensic audit record (B3-03)
         auditCommandExecutor.execute(
@@ -302,7 +311,7 @@ public class PurchaseOrderService {
                 RequestAuditContext.empty()
         );
         
-        log.info("Marked purchase order {} as fully received", order.getOrderNumber());
+        log.info("Processed merchandise reception for purchase order {}", order.getOrderNumber());
         return orderMapper.toResponse(updated);
     }
 
