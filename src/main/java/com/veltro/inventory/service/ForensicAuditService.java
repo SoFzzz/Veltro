@@ -7,7 +7,7 @@ import com.veltro.inventory.mapper.AuditRecordMapper;
 import com.veltro.inventory.model.AuditEntityType;
 import com.veltro.inventory.repository.AuditRecordRepository;
 import com.veltro.inventory.exception.NotFoundException;
-import com.veltro.inventory.security.TenantContext;
+import com.veltro.inventory.security.TenantProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
@@ -32,6 +32,7 @@ public class ForensicAuditService {
 
     private final AuditRecordRepository auditRepository;
     private final AuditRecordMapper mapper;
+    private final TenantProvider tenantProvider;
 
     /**
      * Finds all audit records with optional filters and pagination.
@@ -46,7 +47,7 @@ public class ForensicAuditService {
     public PageResponse<AuditRecordResponse> findAll(AuditFilterRequest filter, Pageable pageable) {
         log.debug("Finding audit records with filters: {}", filter);
 
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
 
         var page = auditRepository.findByFiltersAndBusinessId(
                 filter.entityType(),
@@ -96,7 +97,7 @@ public class ForensicAuditService {
 
         log.debug("Finding audit records for {} with ID {}", entityType, entityId);
 
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
 
         List<AuditRecordResponse> records = auditRepository
                 .findByEntityTypeAndEntityIdAndBusinessIdOrderByCreatedAtDesc(entityType, entityId, businessId)
@@ -109,4 +110,5 @@ public class ForensicAuditService {
         return records;
     }
 }
+
 
