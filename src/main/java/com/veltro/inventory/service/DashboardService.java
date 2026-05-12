@@ -2,7 +2,7 @@ package com.veltro.inventory.service;
 
 import com.veltro.inventory.dto.dashboard.DashboardResponse;
 import com.veltro.inventory.model.AlertType;
-import com.veltro.inventory.security.TenantContext;
+import com.veltro.inventory.security.TenantProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,6 +31,7 @@ import java.util.List;
 public class DashboardService {
 
     private final DashboardQueryRepository dashboardQueryRepository;
+    private final TenantProvider tenantProvider;
 
     /**
      * Retrieves dashboard KPIs (Facade Pattern).
@@ -41,7 +42,7 @@ public class DashboardService {
     public DashboardResponse getDashboard() {
         log.info("Generating dashboard KPIs");
 
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
 
         LocalDate today = LocalDate.now();
         LocalDateTime startOfDay = today.atStartOfDay();
@@ -98,4 +99,5 @@ public class DashboardService {
         return response;
     }
 }
+
 
