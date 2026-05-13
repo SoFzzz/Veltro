@@ -2,6 +2,7 @@ package com.veltro.inventory.service;
 
 import com.veltro.inventory.dto.inventory.AlertResponse;
 import com.veltro.inventory.dto.common.PageResponse;
+import com.veltro.inventory.exception.NotFoundException;
 import com.veltro.inventory.mapper.AlertMapper;
 import com.veltro.inventory.model.AlertConfigurationEntity;
 import com.veltro.inventory.model.AlertEntity;
@@ -10,7 +11,7 @@ import com.veltro.inventory.model.AlertType;
 import com.veltro.inventory.repository.AlertConfigurationRepository;
 import com.veltro.inventory.repository.AlertRepository;
 import com.veltro.inventory.repository.InventoryRepository;
-import com.veltro.inventory.security.TenantContext;
+import com.veltro.inventory.security.TenantProvider;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -19,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
@@ -31,12 +33,17 @@ public class AlertService {
     private final InventoryRepository inventoryRepository;
     private final AlertMapper alertMapper;
     private final AlertHandler alertHandlerChain;
+    private final TenantProvider tenantProvider;
 
     @Transactional
     public void evaluateStock(Long productId) {
-        Long businessId = TenantContext.getBusinessId();
+        evaluateStock(productId, tenantProvider.getBusinessId());
+    }
+
+    @Transactional
+    public void evaluateStock(Long productId, Long businessId) {
         var inventory = inventoryRepository.findByProductIdAndActiveTrueAndBusinessId(productId, businessId)
-                .orElseThrow(() -> new IllegalStateException("Inventory not found for product " + productId));
+                .orElseThrow(() -> new NotFoundException("Inventory not found for product id: " + productId));
 
         AlertConfigurationEntity configuration = configurationRepository
                 .findByProductIdAndActiveTrueAndBusinessId(productId, businessId)
@@ -87,7 +94,7 @@ public class AlertService {
 
     @Transactional(readOnly = true)
     public PageResponse<AlertResponse> listActiveAlerts(AlertSeverity severity, Pageable pageable) {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         if (severity != null) {
             return PageResponse.from(
                     alertRepository.findBySeverityAndResolvedFalseAndBusinessIdOrderByCreatedAtDesc(severity, businessId, pageable)
@@ -102,7 +109,7 @@ public class AlertService {
 
     @Transactional
     public void markAsRead(Long alertId) {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         AlertEntity alert = alertRepository.findByIdAndActiveTrueAndBusinessId(alertId, businessId)
                 .orElseThrow(() -> new IllegalArgumentException("Alert not found"));
         alert.setRead(true);
@@ -111,13 +118,13 @@ public class AlertService {
 
     @Transactional
     public void markAllAsRead() {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         alertRepository.markAllAsReadByBusinessId(businessId);
     }
 
     @Transactional
     public void markAsResolved(Long alertId) {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         AlertEntity alert = alertRepository.findByIdAndActiveTrueAndBusinessId(alertId, businessId)
                 .orElseThrow(() -> new IllegalArgumentException("Alert not found"));
         alert.setResolved(true);
@@ -126,14 +133,24 @@ public class AlertService {
 
     @Transactional
     public void resolveAll() {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         alertRepository.resolveAllByBusinessId(businessId);
     }
 
     @Transactional(readOnly = true)
     public long unreadCount() {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         return alertRepository.countByReadFalseAndResolvedFalseAndBusinessId(businessId);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void persistSystemError(Long businessId, String description) {
+        AlertEntity alert = new AlertEntity();
+        alert.setBusinessId(businessId);
+        alert.setType(AlertType.SYSTEM_ERROR);
+        alert.setSeverity(AlertSeverity.CRITICAL);
+        alert.setMessage(description);
+        alertRepository.save(alert);
     }
 }
 
