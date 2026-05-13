@@ -2,6 +2,7 @@ package com.veltro.inventory.repository;
 
 import com.veltro.inventory.model.SaleEntity;
 import com.veltro.inventory.model.SaleStatus;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,6 +16,7 @@ import java.util.Optional;
 @Repository
 public interface SaleRepository extends JpaRepository<SaleEntity, Long> {
 
+    @EntityGraph(attributePaths = {"details", "details.product"})
     Optional<SaleEntity> findByIdAndActiveTrueAndBusinessId(Long id, Long businessId);
 
     @Query(value = "SELECT nextval('sale_number_seq')", nativeQuery = true)
