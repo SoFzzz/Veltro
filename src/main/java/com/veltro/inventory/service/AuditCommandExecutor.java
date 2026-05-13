@@ -8,7 +8,7 @@ import com.veltro.inventory.model.AuditEntityType;
 import com.veltro.inventory.model.AuditRecordEntity;
 import com.veltro.inventory.repository.AuditRecordRepository;
 import com.veltro.inventory.security.RequestContextHolder;
-import com.veltro.inventory.security.TenantContext;
+import com.veltro.inventory.security.TenantProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -48,6 +48,7 @@ public class AuditCommandExecutor {
 
     private final AuditRecordRepository auditRepository;
     private final ObjectMapper objectMapper;
+    private final TenantProvider tenantProvider;
 
     /**
      * Executes an auditable operation with before/after snapshot capture.
@@ -136,7 +137,7 @@ public class AuditCommandExecutor {
         record.setAction(action);
         record.setPreviousData(beforeJson);
         record.setNewData(afterJson);
-        record.setBusinessId(TenantContext.getBusinessId());
+        record.setBusinessId(tenantProvider.getBusinessId());
         record.setUsername(getCurrentUsername());  // From SecurityContextHolder
         
         // Get IP from context, or fall back to RequestContextHolder (captured by filter)
@@ -187,4 +188,5 @@ public class AuditCommandExecutor {
         }
     }
 }
+
 
