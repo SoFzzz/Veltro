@@ -3,6 +3,7 @@ package com.veltro.inventory.repository;
 import com.veltro.inventory.model.InventoryEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,6 +23,7 @@ public interface InventoryRepository extends JpaRepository<InventoryEntity, Long
            "AND i.active = true " +
            "AND i.product.active = true " +
            "AND i.businessId = :businessId")
+    @EntityGraph(attributePaths = {"product"})
     Optional<InventoryEntity> findByProductIdAndActiveTrueAndBusinessId(
             @Param("productId") Long productId, 
             @Param("businessId") Long businessId);
@@ -34,6 +36,7 @@ public interface InventoryRepository extends JpaRepository<InventoryEntity, Long
            "WHERE i.active = true " +
            "AND i.product.active = true " +
            "AND i.businessId = :businessId")
+    @EntityGraph(attributePaths = {"product"})
     Page<InventoryEntity> findAllByActiveTrueAndBusinessId(
             @Param("businessId") Long businessId, 
             Pageable pageable);
