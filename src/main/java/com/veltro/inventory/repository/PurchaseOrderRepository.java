@@ -2,6 +2,7 @@ package com.veltro.inventory.repository;
 
 import com.veltro.inventory.model.PurchaseOrderEntity;
 import com.veltro.inventory.model.PurchaseOrderStatus;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -28,6 +29,9 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrderEnti
     List<PurchaseOrderEntity> findBySupplierIdAndActiveTrueAndBusinessIdOrderByIdAsc(Long supplierId, Long businessId);
 
     Optional<PurchaseOrderEntity> findByIdAndActiveTrueAndBusinessId(Long id, Long businessId);
+
+    @EntityGraph(attributePaths = {"details", "details.product", "supplier"})
+    Optional<PurchaseOrderEntity> findWithDetailsByIdAndActiveTrueAndBusinessId(Long id, Long businessId);
 
     Optional<PurchaseOrderEntity> findByOrderNumberAndActiveTrueAndBusinessId(String orderNumber, Long businessId);
 
