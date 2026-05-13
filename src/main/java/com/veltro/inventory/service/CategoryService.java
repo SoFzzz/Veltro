@@ -9,7 +9,7 @@ import com.veltro.inventory.repository.CategoryRepository;
 import com.veltro.inventory.exception.DuplicateResourceException;
 import com.veltro.inventory.exception.InactiveResourceExistsException;
 import com.veltro.inventory.exception.NotFoundException;
-import com.veltro.inventory.security.TenantContext;
+import com.veltro.inventory.security.TenantProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,6 +31,7 @@ public class CategoryService {
 
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
+    private final TenantProvider tenantProvider;
 
     // -------------------------------------------------------------------------
     // Queries
@@ -42,7 +43,7 @@ public class CategoryService {
      */
     @Transactional(readOnly = true)
     public List<CategoryResponse> findRoots() {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         return categoryRepository.findAllByParentCategoryIsNullAndActiveTrueAndBusinessId(businessId)
                 .stream()
                 .map(categoryMapper::toResponse)
@@ -51,7 +52,7 @@ public class CategoryService {
 
     @Transactional(readOnly = true)
     public CategoryResponse findById(Long id) {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         CategoryEntity entity = requireActive(id, businessId);
         return categoryMapper.toResponse(entity);
     }
@@ -62,7 +63,7 @@ public class CategoryService {
 
     @Transactional
     public CategoryResponse create(CreateCategoryRequest request) {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
 
         // BUG-07: Check for existing category with same name (active or inactive)
         checkForDuplicateName(request.name(), businessId, null);
@@ -82,7 +83,7 @@ public class CategoryService {
 
     @Transactional
     public CategoryResponse update(Long id, UpdateCategoryRequest request) {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         checkForDuplicateName(request.name(), businessId, id);
         CategoryEntity entity = requireActive(id, businessId);
         categoryMapper.updateEntity(request, entity);
@@ -105,7 +106,7 @@ public class CategoryService {
      */
     @Transactional
     public void deactivate(Long id) {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         CategoryEntity entity = requireActive(id, businessId);
         entity.setActive(false);
         categoryRepository.save(entity);
@@ -118,7 +119,7 @@ public class CategoryService {
      */
     @Transactional
     public CategoryResponse reactivate(Long id) {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         CategoryEntity entity = categoryRepository.findByIdAndBusinessId(id, businessId)
                 .orElseThrow(() -> new NotFoundException("Category not found with id: " + id));
 
@@ -137,7 +138,7 @@ public class CategoryService {
      */
     @Transactional
     public void hardDelete(Long id) {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         if (!categoryRepository.existsByIdAndBusinessId(id, businessId)) {
             throw new NotFoundException("Category not found with id: " + id);
         }
@@ -175,4 +176,5 @@ public class CategoryService {
                 .orElseThrow(() -> new NotFoundException("Category not found with id: " + id));
     }
 }
+
 
