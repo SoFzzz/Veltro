@@ -6,7 +6,7 @@ import com.veltro.inventory.mapper.AlertConfigurationMapper;
 import com.veltro.inventory.model.AlertConfigurationEntity;
 import com.veltro.inventory.repository.AlertConfigurationRepository;
 import com.veltro.inventory.repository.InventoryRepository;
-import com.veltro.inventory.security.TenantContext;
+import com.veltro.inventory.security.TenantProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,10 +24,11 @@ public class AlertConfigurationService {
     private final AlertConfigurationRepository configurationRepository;
     private final InventoryRepository inventoryRepository;
     private final AlertConfigurationMapper configurationMapper;
+    private final TenantProvider tenantProvider;
 
     @Transactional
     public AlertConfigurationResponse getConfiguration(Long productId) {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         return configurationRepository.findByProductIdAndActiveTrueAndBusinessId(productId, businessId)
                 .map(configurationMapper::toResponse)
                 .orElseGet(() -> configurationMapper.toResponse(createDefaultConfiguration(productId)));
@@ -35,7 +36,7 @@ public class AlertConfigurationService {
 
     @Transactional
     public AlertConfigurationResponse updateConfiguration(Long productId, UpdateAlertConfigurationRequest request) {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         AlertConfigurationEntity config = configurationRepository.findByProductIdAndActiveTrueAndBusinessId(productId, businessId)
                 .orElseGet(() -> createDefaultConfiguration(productId));
 
@@ -49,7 +50,7 @@ public class AlertConfigurationService {
     }
 
     private AlertConfigurationEntity createDefaultConfiguration(Long productId) {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         var inventory = inventoryRepository.findByProductIdAndActiveTrueAndBusinessId(productId, businessId)
                 .orElseThrow(() -> new IllegalStateException("Inventory not found for product " + productId));
 
@@ -70,4 +71,5 @@ public class AlertConfigurationService {
         return configurationRepository.save(config);
     }
 }
+
 
