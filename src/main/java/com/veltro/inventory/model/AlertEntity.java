@@ -52,4 +52,7 @@ public class AlertEntity extends AbstractAuditableEntity {
 
     @Column(name = "business_id", nullable = false)
     private Long businessId;
+
+    @Column(name = "movement_id")
+    private Long movementId;
 }
