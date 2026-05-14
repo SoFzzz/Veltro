@@ -10,5 +10,6 @@ public enum AlertType {
     OVERSTOCK,
     EXPIRING,
     REORDER,
-    STOCK_MOVEMENT
+    STOCK_MOVEMENT,
+    SYSTEM_ERROR
 }
