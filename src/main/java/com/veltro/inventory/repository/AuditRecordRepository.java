@@ -16,26 +16,6 @@ import java.util.List;
 @Repository
 public interface AuditRecordRepository extends JpaRepository<AuditRecordEntity, Long> {
 
-    List<AuditRecordEntity> findByEntityTypeAndEntityIdOrderByCreatedAtDesc(
-            AuditEntityType entityType, Long entityId);
-
-    @Query("""
-            SELECT a FROM AuditRecordEntity a
-            WHERE (CAST(:entityType AS string) IS NULL OR a.entityType = :entityType)
-              AND (CAST(:action AS string) IS NULL OR a.action = :action)
-              AND (:username IS NULL OR a.username = :username)
-              AND (CAST(:startDate AS string) IS NULL OR a.createdAt >= :startDate)
-              AND (CAST(:endDate AS string) IS NULL OR a.createdAt <= :endDate)
-            ORDER BY a.createdAt DESC
-            """)
-    Page<AuditRecordEntity> findByFilters(
-            @Param("entityType") AuditEntityType entityType,
-            @Param("action") AuditAction action,
-            @Param("username") String username,
-            @Param("startDate") Instant startDate,
-            @Param("endDate") Instant endDate,
-            Pageable pageable);
-
     @Query("""
             SELECT a FROM AuditRecordEntity a
             WHERE (CAST(:entityType AS string) IS NULL OR a.entityType = :entityType)
