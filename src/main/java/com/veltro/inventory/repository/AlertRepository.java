@@ -5,6 +5,7 @@ import com.veltro.inventory.model.AlertSeverity;
 import com.veltro.inventory.model.AlertType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -21,13 +22,13 @@ public interface AlertRepository extends JpaRepository<AlertEntity, Long> {
 
     List<AlertEntity> findByProductIdAndResolvedFalseAndBusinessId(Long productId, Long businessId);
 
-    boolean existsByProductIdAndResolvedFalseAndType(Long productId, AlertType type);
+    boolean existsByProductIdAndResolvedFalseAndTypeAndBusinessId(Long productId, AlertType type, Long businessId);
 
+    @EntityGraph(attributePaths = {"product"})
     Page<AlertEntity> findByResolvedFalseAndBusinessIdOrderBySeverityDescCreatedAtAsc(Long businessId, Pageable pageable);
 
+    @EntityGraph(attributePaths = {"product"})
     Page<AlertEntity> findBySeverityAndResolvedFalseAndBusinessIdOrderByCreatedAtDesc(AlertSeverity severity, Long businessId, Pageable pageable);
-
-    Page<AlertEntity> findByReadFalseAndResolvedFalseOrderBySeverityDescCreatedAtAsc(Pageable pageable);
 
     long countByReadFalseAndResolvedFalseAndBusinessId(Long businessId);
 
