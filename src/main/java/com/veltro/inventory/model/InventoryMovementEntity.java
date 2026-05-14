@@ -70,6 +70,12 @@ public class InventoryMovementEntity {
     @Column(name = "reason")
     private String reason;
 
+    @Column(name = "source_type", length = 30)
+    private String sourceType;
+
+    @Column(name = "source_id")
+    private Long sourceId;
+
     /**
      * Populated automatically by {@link AuditingEntityListener} via
      * {@link VeltroAuditorAware}.
