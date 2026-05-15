@@ -6,6 +6,7 @@ import com.veltro.inventory.event.ReceivedItemInfo;
 import com.veltro.inventory.service.InventoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -28,12 +29,22 @@ public class IncrementStockOrderListener {
         }
 
         for (ReceivedItemInfo item : event.items()) {
-            inventoryService.recordEntry(
-                    item.productId(),
-                    new StockEntryRequest(item.receivedQuantity(), "Purchase Order " + event.orderNumber())
-            );
-            log.info("Added {} units of product {} from order {}",
-                    item.receivedQuantity(), item.productId(), event.orderNumber());
+            try {
+                inventoryService.recordEntry(
+                        item.productId(),
+                        new StockEntryRequest(item.receivedQuantity(), "Purchase Order " + event.orderNumber()),
+                        event.businessId(),
+                        "PURCHASE_IN",
+                        item.detailId()
+                );
+                log.info("Added {} units of product {} from order {}",
+                        item.receivedQuantity(), item.productId(), event.orderNumber());
+            } catch (DataIntegrityViolationException duplicateMovement) {
+                log.warn("Duplicate movement ignored for order {} detail {}", event.orderNumber(), item.detailId());
+            } catch (Exception ex) {
+                log.error("Failed to increment stock for order {} detail {}: {}",
+                        event.orderNumber(), item.detailId(), ex.getMessage(), ex);
+            }
         }
     }
 }
