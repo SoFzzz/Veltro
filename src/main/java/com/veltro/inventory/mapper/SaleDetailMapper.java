@@ -1,16 +1,9 @@
 package com.veltro.inventory.mapper;
 
 import com.veltro.inventory.dto.pos.SaleDetailResponse;
-import com.veltro.inventory.dto.audit.AuditInfo;
 import com.veltro.inventory.model.SaleDetailEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.Named;
-
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 
 /**
  * MapStruct mapper for {@link SaleDetailEntity} 竊・{@link SaleDetailResponse} (B2-01).
@@ -25,32 +18,5 @@ public interface SaleDetailMapper {
     @Mapping(target = "subtotal", source = "subtotal", qualifiedByName = "bigDecimalToString")
     @Mapping(target = "auditInfo", source = ".")
     SaleDetailResponse toResponse(SaleDetailEntity entity);
-
-    /**
-     * Converts BigDecimal to String with 4 decimal places (ADR-005).
-     */
-    @Named("bigDecimalToString")
-    default String bigDecimalToString(BigDecimal value) {
-        return value != null ? value.setScale(4, java.math.RoundingMode.HALF_UP).toPlainString() : null;
-    }
-
-    /**
-     * Extracts audit information from entity.
-     */
-    default AuditInfo toAuditInfo(SaleDetailEntity entity) {
-        return new AuditInfo(
-                instantToLocalDateTime(entity.getCreatedAt()),
-                entity.getCreatedBy(),
-                instantToLocalDateTime(entity.getUpdatedAt()),
-                entity.getUpdatedBy()
-        );
-    }
-
-    /**
-     * Converts Instant to LocalDateTime in system default zone.
-     */
-    default LocalDateTime instantToLocalDateTime(Instant instant) {
-        return instant != null ? LocalDateTime.ofInstant(instant, ZoneId.systemDefault()) : null;
-    }
 }
 
