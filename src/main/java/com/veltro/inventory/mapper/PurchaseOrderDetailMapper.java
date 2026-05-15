@@ -2,16 +2,11 @@ package com.veltro.inventory.mapper;
 
 import com.veltro.inventory.dto.purchasing.PurchaseOrderDetailResponse;
 import com.veltro.inventory.model.PurchaseOrderDetailEntity;
-import com.veltro.inventory.dto.audit.AuditInfo;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.Named;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 
 /**
  * MapStruct mapper for {@link PurchaseOrderDetailEntity} 竊・{@link PurchaseOrderDetailResponse} (B2-04).
@@ -21,20 +16,15 @@ import java.time.ZoneId;
 @Mapper(config = BaseMapperConfig.class)
 public abstract class PurchaseOrderDetailMapper {
 
+    @Autowired
+    protected SharedMappingUtils sharedMappingUtils;
+
     @Mapping(target = "productId", source = "product.id")
     @Mapping(target = "productName", source = "product.name")
     @Mapping(target = "unitCost", source = "unitCost", qualifiedByName = "bigDecimalToString")
     @Mapping(target = "subtotal", expression = "java(calculateSubtotal(entity))")
-    @Mapping(target = "auditInfo", expression = "java(toAuditInfo(entity))")
+    @Mapping(target = "auditInfo", expression = "java(sharedMappingUtils.toAuditInfo(entity))")
     public abstract PurchaseOrderDetailResponse toResponse(PurchaseOrderDetailEntity entity);
-
-    /**
-     * Converts BigDecimal to String with 4 decimal places (ADR-005).
-     */
-    @Named("bigDecimalToString")
-    protected String bigDecimalToString(BigDecimal value) {
-        return value != null ? value.setScale(4, RoundingMode.HALF_UP).toPlainString() : null;
-    }
 
     /**
      * Calculates subtotal as unitCost * requestedQuantity.
@@ -44,25 +34,6 @@ public abstract class PurchaseOrderDetailMapper {
             return "0.0000";
         }
         BigDecimal subtotal = entity.getUnitCost().multiply(BigDecimal.valueOf(entity.getRequestedQuantity()));
-        return bigDecimalToString(subtotal);
-    }
-
-    /**
-     * Extracts audit information from entity.
-     */
-    protected AuditInfo toAuditInfo(PurchaseOrderDetailEntity entity) {
-        return new AuditInfo(
-                instantToLocalDateTime(entity.getCreatedAt()),
-                entity.getCreatedBy(),
-                instantToLocalDateTime(entity.getUpdatedAt()),
-                entity.getUpdatedBy()
-        );
-    }
-
-    /**
-     * Converts Instant to LocalDateTime in system default zone.
-     */
-    protected LocalDateTime instantToLocalDateTime(Instant instant) {
-        return instant != null ? LocalDateTime.ofInstant(instant, ZoneId.systemDefault()) : null;
+        return sharedMappingUtils.bigDecimalToString(subtotal);
     }
 }
