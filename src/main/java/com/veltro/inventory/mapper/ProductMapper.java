@@ -7,10 +7,6 @@ import com.veltro.inventory.model.ProductEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
-import org.mapstruct.Named;
-
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 
 /**
  * MapStruct mapper for {@link ProductEntity} to product DTOs.
@@ -26,8 +22,8 @@ public interface ProductMapper {
      * Monetary fields are formatted to 4 decimal place strings per ADR-005.
      * {@code categoryId} and {@code categoryName} are sourced from the lazy association.
      */
-    @Mapping(target = "costPrice", source = "costPrice", qualifiedByName = "decimalToString")
-    @Mapping(target = "salePrice", source = "salePrice", qualifiedByName = "decimalToString")
+    @Mapping(target = "costPrice", source = "costPrice", qualifiedByName = "bigDecimalToString")
+    @Mapping(target = "salePrice", source = "salePrice", qualifiedByName = "bigDecimalToString")
     @Mapping(target = "categoryId", source = "category.id")
     @Mapping(target = "categoryName", source = "category.name")
     ProductResponse toResponse(ProductEntity entity);
@@ -62,15 +58,5 @@ public interface ProductMapper {
     @Mapping(target = "lastIndexingError", ignore = true)
     void updateEntity(UpdateProductRequest request, @MappingTarget ProductEntity entity);
 
-    /**
-     * Formats a BigDecimal to a String with exactly 4 decimal places (ADR-005).
-     */
-    @Named("decimalToString")
-    default String decimalToString(BigDecimal value) {
-        if (value == null) {
-            return null;
-        }
-        return value.setScale(4, RoundingMode.HALF_UP).toPlainString();
-    }
 }
 
