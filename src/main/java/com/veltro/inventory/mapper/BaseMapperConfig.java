@@ -13,7 +13,8 @@ import org.mapstruct.ReportingPolicy;
 @MapperConfig(
     componentModel = "spring",
     unmappedTargetPolicy = ReportingPolicy.IGNORE,
-    collectionMappingStrategy = CollectionMappingStrategy.ADDER_PREFERRED
+    collectionMappingStrategy = CollectionMappingStrategy.ADDER_PREFERRED,
+    uses = SharedMappingUtils.class
 )
 public interface BaseMapperConfig {
 }
