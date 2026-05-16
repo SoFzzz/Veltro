@@ -11,7 +11,7 @@ import com.veltro.inventory.dto.auth.UpdateRoleRequest;
 import com.veltro.inventory.service.AuthService;
 import com.veltro.inventory.service.AuthenticationService;
 import com.veltro.inventory.service.BusinessRegistrationService;
-import com.veltro.inventory.security.TenantContext;
+import com.veltro.inventory.security.TenantProvider;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -46,6 +46,7 @@ public class AuthController {
     private final AuthService authService;
     private final AuthenticationService authenticationService;
     private final BusinessRegistrationService businessRegistrationService;
+    private final TenantProvider tenantProvider;
 
     /**
      * Authenticates a user and returns an access + refresh token pair.
@@ -107,7 +108,7 @@ public class AuthController {
     @GetMapping("/workers")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<WorkerResponse>> getWorkers() {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         return ResponseEntity.ok(authService.getWorkers(businessId));
     }
 
@@ -119,7 +120,7 @@ public class AuthController {
     public ResponseEntity<WorkerCreatedResponse> createWorker(
             @Valid @RequestBody RegisterRequest request) {
 
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         WorkerCreatedResponse newWorker = authService.createWorker(businessId, request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(newWorker);
@@ -131,7 +132,7 @@ public class AuthController {
     @DeleteMapping("/workers/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, Object>> deactivateWorker(@PathVariable Long id) {
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         authService.deactivateWorker(id, businessId);
         return ResponseEntity.ok(Map.of(
                 "success", true,
@@ -147,8 +148,9 @@ public class AuthController {
             @PathVariable Long id,
             @Valid @RequestBody UpdateRoleRequest request) {
 
-        Long businessId = TenantContext.getBusinessId();
+        Long businessId = tenantProvider.getBusinessId();
         WorkerResponse updated = authService.updateWorkerRole(id, request.role(), businessId);
         return ResponseEntity.ok(updated);
     }
 }
+
