@@ -2,6 +2,7 @@ package com.veltro.inventory.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.veltro.inventory.dto.common.ErrorResponse;
+import com.veltro.inventory.security.RequestContextHolder;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import jakarta.servlet.FilterChain;
@@ -24,6 +25,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class LoginRateLimitFilter extends OncePerRequestFilter {
 
     private static final String LOGIN_PATH = "/api/v1/auth/login";
+    private static final String RATE_LIMIT_MESSAGE =
+            "Demasiados intentos de inicio de sesión. Por favor, intente de nuevo en un minuto.";
 
     private final Bandwidth loginRateLimit;
     private final ObjectMapper objectMapper;
@@ -45,7 +48,10 @@ public class LoginRateLimitFilter extends OncePerRequestFilter {
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain) throws ServletException, IOException {
 
-        String clientIp = extractClientIp(request);
+        String clientIp = RequestContextHolder.getClientIp();
+        if (clientIp == null || clientIp.isBlank()) {
+            clientIp = request.getRemoteAddr() != null ? request.getRemoteAddr() : "unknown";
+        }
         Bucket bucket = bucketsByClientIp.computeIfAbsent(clientIp,
                 ignored -> Bucket.builder().addLimit(loginRateLimit).build());
 
@@ -58,7 +64,7 @@ public class LoginRateLimitFilter extends OncePerRequestFilter {
 
         ErrorResponse errorResponse = ErrorResponse.of(
                 "RATE_LIMIT_EXCEEDED",
-                "Too many login attempts. Please try again in a minute.",
+                RATE_LIMIT_MESSAGE,
                 HttpStatus.TOO_MANY_REQUESTS,
                 request.getRequestURI());
 
@@ -68,11 +74,4 @@ public class LoginRateLimitFilter extends OncePerRequestFilter {
         objectMapper.writeValue(response.getWriter(), errorResponse);
     }
 
-    private String extractClientIp(HttpServletRequest request) {
-        String xForwardedFor = request.getHeader("X-Forwarded-For");
-        if (xForwardedFor != null && !xForwardedFor.isBlank()) {
-            return xForwardedFor.split(",")[0].trim();
-        }
-        return request.getRemoteAddr() != null ? request.getRemoteAddr() : "unknown";
-    }
 }
