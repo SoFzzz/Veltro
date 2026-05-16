@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.veltro.inventory.dto.scanner.ProductSuggestionResponse;
 import com.veltro.inventory.model.ProductEntity;
-import com.veltro.inventory.security.TenantContext;
+import com.veltro.inventory.security.TenantProvider;
 import com.veltro.inventory.service.ProductMatchingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -88,6 +88,7 @@ public class VisionClient {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
     private final ProductMatchingService productMatchingService;
+    private final TenantProvider tenantProvider;
 
     /**
      * Analyzes a product image using OpenAI Vision API.
@@ -527,7 +528,7 @@ public class VisionClient {
             }
 
             Optional<ProductEntity> matchedProduct =
-                    productMatchingService.findMatch(fullName.toString(), TenantContext.getBusinessId());
+                    productMatchingService.findMatch(fullName.toString(), tenantProvider.getBusinessId());
 
             // Map agent inventory to suggestion format
             // Confidence based on clear visibility in image
@@ -631,4 +632,5 @@ public class VisionClient {
         }
     }
 }
+
 
