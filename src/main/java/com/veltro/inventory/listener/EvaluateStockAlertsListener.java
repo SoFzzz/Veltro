@@ -1,11 +1,12 @@
 package com.veltro.inventory.listener;
 
-import com.veltro.inventory.event.StockChangedEvent;
+import com.veltro.inventory.event.StockMovementEvent;
 import com.veltro.inventory.service.AlertService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 @Slf4j
 @Component
@@ -14,19 +15,18 @@ public class EvaluateStockAlertsListener {
 
     private final AlertService alertService;
 
-    @EventListener
-    public void onStockChanged(StockChangedEvent event) {
-        if (event == null || event.productId() == null) {
-            log.warn("Received StockChangedEvent without product information");
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onStockChanged(StockMovementEvent event) {
+        if (event == null || event.productId() == null || event.businessId() == null) {
+            log.warn("Received StockMovementEvent without required identifiers");
             return;
         }
 
         try {
-            alertService.evaluateStock(event.productId());
+            alertService.evaluateStock(event.productId(), event.businessId());
             log.info("Stock alerts evaluated for product {}", event.productId());
         } catch (RuntimeException ex) {
             log.error("Failed to evaluate alerts for product {}", event.productId(), ex);
-            throw ex;
         }
     }
 }
