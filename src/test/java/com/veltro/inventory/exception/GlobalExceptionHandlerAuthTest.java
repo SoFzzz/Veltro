@@ -17,6 +17,9 @@ import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 /**
@@ -38,6 +41,12 @@ class GlobalExceptionHandlerAuthTest {
     void setUp() {
         handler = new GlobalExceptionHandler(messageSource);
         when(request.getRequestURI()).thenReturn("/api/v1/auth/login");
+        lenient().when(messageSource.getMessage(eq("error.invalid_credentials"), eq(null), any()))
+                .thenReturn("Usuario o contraseña incorrectos.");
+        lenient().when(messageSource.getMessage(eq("error.account_disabled"), eq(null), any()))
+                .thenReturn("Su cuenta está deshabilitada.");
+        lenient().when(messageSource.getMessage(eq("error.account_locked"), eq(null), any()))
+                .thenReturn("Su cuenta está bloqueada. Por favor, póngase en contacto con soporte técnico.");
     }
 
     @Test
@@ -53,7 +62,7 @@ class GlobalExceptionHandlerAuthTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().code()).isEqualTo("INVALID_CREDENTIALS");
-        assertThat(response.getBody().message()).isEqualTo("Invalid username or password.");
+        assertThat(response.getBody().message()).isEqualTo("Usuario o contraseña incorrectos.");
         assertThat(response.getBody().status()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
         assertThat(response.getBody().path()).isEqualTo("/api/v1/auth/login");
         assertThat(response.getBody().timestamp()).isNotNull();
@@ -72,7 +81,7 @@ class GlobalExceptionHandlerAuthTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().code()).isEqualTo("INVALID_CREDENTIALS");
-        assertThat(response.getBody().message()).isEqualTo("Invalid username or password.");
+        assertThat(response.getBody().message()).isEqualTo("Usuario o contraseña incorrectos.");
         assertThat(response.getBody().status()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
         assertThat(response.getBody().path()).isEqualTo("/api/v1/auth/login");
         assertThat(response.getBody().timestamp()).isNotNull();
@@ -91,7 +100,7 @@ class GlobalExceptionHandlerAuthTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().code()).isEqualTo("ACCOUNT_DISABLED");
-        assertThat(response.getBody().message()).isEqualTo("Your account is disabled.");
+        assertThat(response.getBody().message()).isEqualTo("Su cuenta está deshabilitada.");
         assertThat(response.getBody().status()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
         assertThat(response.getBody().path()).isEqualTo("/api/v1/auth/login");
         assertThat(response.getBody().timestamp()).isNotNull();
@@ -110,7 +119,7 @@ class GlobalExceptionHandlerAuthTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().code()).isEqualTo("ACCOUNT_LOCKED");
-        assertThat(response.getBody().message()).isEqualTo("Your account is locked. Contact support.");
+        assertThat(response.getBody().message()).isEqualTo("Su cuenta está bloqueada. Por favor, póngase en contacto con soporte técnico.");
         assertThat(response.getBody().status()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
         assertThat(response.getBody().path()).isEqualTo("/api/v1/auth/login");
         assertThat(response.getBody().timestamp()).isNotNull();
