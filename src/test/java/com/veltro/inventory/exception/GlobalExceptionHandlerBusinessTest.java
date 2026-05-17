@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -36,6 +37,10 @@ class GlobalExceptionHandlerBusinessTest {
     void setUp() {
         handler = new GlobalExceptionHandler(messageSource);
         when(request.getRequestURI()).thenReturn("/api/v1/test");
+        lenient().when(messageSource.getMessage(eq("error.access_denied"), eq(null), any()))
+                .thenReturn("No tiene permisos para realizar esta acción.");
+        lenient().when(messageSource.getMessage(eq("error.internal_error"), eq(null), any()))
+                .thenReturn("Ocurrió un error inesperado. Por favor, póngase en contacto con soporte técnico.");
     }
 
     @Test
@@ -124,7 +129,7 @@ class GlobalExceptionHandlerBusinessTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().code()).isEqualTo("ACCESS_DENIED");
-        assertThat(response.getBody().message()).isEqualTo("You do not have permission to perform this action.");
+        assertThat(response.getBody().message()).isEqualTo("No tiene permisos para realizar esta acción.");
         assertThat(response.getBody().status()).isEqualTo(HttpStatus.FORBIDDEN.value());
         assertThat(response.getBody().path()).isEqualTo("/api/v1/test");
         assertThat(response.getBody().timestamp()).isNotNull();
@@ -140,7 +145,7 @@ class GlobalExceptionHandlerBusinessTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().code()).isEqualTo("INTERNAL_ERROR");
-        assertThat(response.getBody().message()).isEqualTo("An unexpected error occurred. Please contact support.");
+        assertThat(response.getBody().message()).isEqualTo("Ocurrió un error inesperado. Por favor, póngase en contacto con soporte técnico.");
         assertThat(response.getBody().status()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.value());
         assertThat(response.getBody().path()).isEqualTo("/api/v1/test");
         assertThat(response.getBody().timestamp()).isNotNull();
