@@ -1,8 +1,7 @@
 package com.veltro.inventory.config;
 
+import com.veltro.inventory.security.TenantContext;
 import org.springframework.data.domain.AuditorAware;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.Optional;
 
@@ -20,14 +19,7 @@ public class VeltroAuditorAware implements AuditorAware<String> {
 
     @Override
     public Optional<String> getCurrentAuditor() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null
-                || !authentication.isAuthenticated()
-                || "anonymousUser".equals(authentication.getPrincipal())) {
-            return Optional.of(SYSTEM_USER);
-        }
-
-        return Optional.of(authentication.getName());
+        return TenantContext.getOptionalUsername()
+                .or(() -> Optional.of(SYSTEM_USER));
     }
 }
