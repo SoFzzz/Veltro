@@ -58,7 +58,7 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.CONFLICT)
                 .body(ErrorResponse.of(
                         "CONCURRENCY_CONFLICT",
-                        "The resource was modified by another operation. Please verify availability and retry.",
+                        resolveMessage("error.concurrency_conflict"),
                         HttpStatus.CONFLICT,
                         request.getRequestURI()));
     }
@@ -93,12 +93,15 @@ public class GlobalExceptionHandler {
             DuplicateResourceException ex, HttpServletRequest request) {
 
         log.warn("Duplicate resource on {}: {}", request.getRequestURI(), ex.getMessage());
+        String userMessage = ex.getMessageKey() != null
+                ? resolveMessage(ex.getMessageKey(), ex.getMessageArgs())
+                : ex.getMessage();
 
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body(ErrorResponse.of(
                         "DUPLICATE_RESOURCE",
-                        ex.getMessage(),
+                        userMessage,
                         HttpStatus.CONFLICT,
                         request.getRequestURI()));
     }
@@ -112,12 +115,15 @@ public class GlobalExceptionHandler {
             InactiveResourceExistsException ex, HttpServletRequest request) {
 
         log.info("Inactive resource conflict on {}: {}", request.getRequestURI(), ex.getMessage());
+        String userMessage = ex.getMessageKey() != null
+                ? resolveMessage(ex.getMessageKey(), ex.getMessageArgs())
+                : ex.getMessage();
 
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body(ErrorResponse.of(
                         "INACTIVE_RESOURCE_EXISTS",
-                        ex.getMessage(),
+                        userMessage,
                         HttpStatus.CONFLICT,
                         request.getRequestURI()));
     }
@@ -147,39 +153,39 @@ public class GlobalExceptionHandler {
     private String extractConstraintViolationMessage(DataIntegrityViolationException ex) {
         String rootMessage = ex.getMostSpecificCause().getMessage();
         if (rootMessage == null) {
-            return "A resource with the same unique identifier already exists.";
+            return resolveMessage("error.constraint.generic");
         }
 
         String lowerMessage = rootMessage.toLowerCase();
 
         // Supplier constraints
         if (lowerMessage.contains("tax_id") || lowerMessage.contains("taxid")) {
-            return "A supplier with this tax ID already exists.";
+            return resolveMessage("error.constraint.tax_id");
         }
 
         // Product constraints
         if (lowerMessage.contains("barcode")) {
-            return "A product with this barcode already exists.";
+            return resolveMessage("error.constraint.barcode");
         }
         if (lowerMessage.contains("sku")) {
-            return "A product with this SKU already exists.";
+            return resolveMessage("error.constraint.sku");
         }
 
         // User constraints
         if (lowerMessage.contains("username")) {
-            return "A user with this username already exists.";
+            return resolveMessage("error.constraint.username");
         }
         if (lowerMessage.contains("email")) {
-            return "A user with this email already exists.";
+            return resolveMessage("error.constraint.email");
         }
 
         // Order constraints
         if (lowerMessage.contains("order_number") || lowerMessage.contains("ordernumber")) {
-            return "An order with this order number already exists.";
+            return resolveMessage("error.constraint.order_number");
         }
 
         // Generic fallback
-        return "A resource with the same unique identifier already exists.";
+        return resolveMessage("error.constraint.generic");
     }
 
     // -------------------------------------------------------------------------
@@ -211,12 +217,15 @@ public class GlobalExceptionHandler {
             InsufficientStockException ex, HttpServletRequest request) {
 
         log.warn("Insufficient stock on {}: {}", request.getRequestURI(), ex.getMessage());
+        String userMessage = ex.getMessageKey() != null
+                ? resolveMessage(ex.getMessageKey(), ex.getMessageArgs())
+                : ex.getMessage();
 
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body(ErrorResponse.of(
                         "INSUFFICIENT_STOCK",
-                        ex.getMessage(),
+                        userMessage,
                         HttpStatus.CONFLICT,
                         request.getRequestURI()));
     }
@@ -230,12 +239,15 @@ public class GlobalExceptionHandler {
             MaxStockExceededException ex, HttpServletRequest request) {
 
         log.warn("Max stock exceeded on {}: {}", request.getRequestURI(), ex.getMessage());
+        String userMessage = ex.getMessageKey() != null
+                ? resolveMessage(ex.getMessageKey(), ex.getMessageArgs())
+                : ex.getMessage();
 
         return ResponseEntity
                 .status(HttpStatus.UNPROCESSABLE_CONTENT)
                 .body(ErrorResponse.of(
                         "MAX_STOCK_EXCEEDED",
-                        ex.getMessage(),
+                        userMessage,
                         HttpStatus.UNPROCESSABLE_CONTENT,
                         request.getRequestURI()));
     }
@@ -311,12 +323,16 @@ public class GlobalExceptionHandler {
             RuntimeException ex, HttpServletRequest request) {
 
         log.info("Resource not found on {}: {}", request.getRequestURI(), ex.getMessage());
+        String userMessage = ex instanceof NotFoundException notFoundException
+                && notFoundException.getMessageKey() != null
+                ? resolveMessage(notFoundException.getMessageKey(), notFoundException.getMessageArgs())
+                : ex.getMessage();
 
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(ErrorResponse.of(
                         "NOT_FOUND",
-                        ex.getMessage(),
+                        userMessage,
                         HttpStatus.NOT_FOUND,
                         request.getRequestURI()));
     }
@@ -335,7 +351,7 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ErrorResponse.of(
                         "MALFORMED_REQUEST",
-                        "Request body is missing or malformed.",
+                        resolveMessage("error.malformed_request"),
                         HttpStatus.BAD_REQUEST,
                         request.getRequestURI()));
     }
@@ -396,7 +412,7 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.FORBIDDEN)
                 .body(ErrorResponse.of(
                         "ACCESS_DENIED",
-                        "You do not have permission to perform this action.",
+                        resolveMessage("error.access_denied"),
                         HttpStatus.FORBIDDEN,
                         request.getRequestURI()));
     }
@@ -415,7 +431,7 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.UNAUTHORIZED)
                 .body(ErrorResponse.of(
                         "INVALID_CREDENTIALS",
-                        "Invalid username or password.",
+                        resolveMessage("error.invalid_credentials"),
                         HttpStatus.UNAUTHORIZED,
                         request.getRequestURI()));
     }
@@ -430,7 +446,7 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.UNAUTHORIZED)
                 .body(ErrorResponse.of(
                         "INVALID_CREDENTIALS",
-                        "Invalid username or password.",
+                        resolveMessage("error.invalid_credentials"),
                         HttpStatus.UNAUTHORIZED,
                         request.getRequestURI()));
     }
@@ -445,7 +461,7 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.UNAUTHORIZED)
                 .body(ErrorResponse.of(
                         "ACCOUNT_DISABLED",
-                        "Your account is disabled.",
+                        resolveMessage("error.account_disabled"),
                         HttpStatus.UNAUTHORIZED,
                         request.getRequestURI()));
     }
@@ -460,7 +476,7 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.UNAUTHORIZED)
                 .body(ErrorResponse.of(
                         "ACCOUNT_LOCKED",
-                        "Your account is locked. Contact support.",
+                        resolveMessage("error.account_locked"),
                         HttpStatus.UNAUTHORIZED,
                         request.getRequestURI()));
     }
@@ -479,8 +495,16 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ErrorResponse.of(
                         "INTERNAL_ERROR",
-                        "An unexpected error occurred. Please contact support.",
+                        resolveMessage("error.internal_error"),
                         HttpStatus.INTERNAL_SERVER_ERROR,
                         request.getRequestURI()));
+    }
+
+    private String resolveMessage(String key) {
+        return messageSource.getMessage(key, null, LocaleContextHolder.getLocale());
+    }
+
+    private String resolveMessage(String key, Object[] args) {
+        return messageSource.getMessage(key, args, LocaleContextHolder.getLocale());
     }
 }
