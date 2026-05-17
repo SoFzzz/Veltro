@@ -3,6 +3,8 @@ package com.veltro.inventory.security;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.util.Optional;
+
 /**
  * Utility class to extract multi-tenant information from the SecurityContext.
  *
@@ -57,6 +59,24 @@ public final class TenantContext {
             return override;
         }
         return getPrincipal().getUsername();
+    }
+
+    /**
+     * Returns the current username when available, without throwing on anonymous
+     * or missing authentication contexts.
+     */
+    public static Optional<String> getOptionalUsername() {
+        String override = MANUAL_USERNAME.get();
+        if (override != null) {
+            return Optional.of(override);
+        }
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null
+                && auth.isAuthenticated()
+                && !"anonymousUser".equals(auth.getPrincipal())) {
+            return Optional.of(auth.getName());
+        }
+        return Optional.empty();
     }
 
     /**
