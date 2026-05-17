@@ -1,6 +1,7 @@
 package com.veltro.inventory.controller;
 
 import com.veltro.inventory.dto.scanner.ProductSuggestionResponse;
+import com.veltro.inventory.dto.scanner.SemanticSearchMatchDto;
 import com.veltro.inventory.model.ProductEntity;
 import com.veltro.inventory.security.TenantProvider;
 import com.veltro.inventory.service.BatchIndexingService;
@@ -18,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -109,14 +109,14 @@ public class ScannerController {
             }
 
             ProductEntity match = products.getFirst();
-            Map<String, Object> matchData = new HashMap<>();
-            matchData.put("id", match.getId());
-            matchData.put("name", match.getName());
-            matchData.put("salePrice", match.getSalePrice());
-            matchData.put("barcode", match.getBarcode());
-            matchData.put("sku", match.getSku());
-
-            return ResponseEntity.ok(List.of(Map.of("matches", List.of(matchData))));
+            SemanticSearchMatchDto matchDto = new SemanticSearchMatchDto(
+                    match.getId(),
+                    match.getName(),
+                    match.getSalePrice(),
+                    match.getBarcode(),
+                    match.getSku()
+            );
+            return ResponseEntity.ok(List.of(Map.of("matches", List.of(matchDto))));
         } catch (Exception e) {
             log.error("Detect search failed", e);
             return ResponseEntity.ok(List.of());
