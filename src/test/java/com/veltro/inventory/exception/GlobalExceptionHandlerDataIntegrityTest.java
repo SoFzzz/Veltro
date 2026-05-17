@@ -16,6 +16,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 /**
@@ -36,6 +39,20 @@ class GlobalExceptionHandlerDataIntegrityTest {
     @BeforeEach
     void setUp() {
         handler = new GlobalExceptionHandler(messageSource);
+        lenient().when(messageSource.getMessage(eq("error.constraint.tax_id"), eq(null), any()))
+                .thenReturn("Ya existe un proveedor con este NIT/identificación fiscal.");
+        lenient().when(messageSource.getMessage(eq("error.constraint.barcode"), eq(null), any()))
+                .thenReturn("Ya existe un producto con este código de barras.");
+        lenient().when(messageSource.getMessage(eq("error.constraint.sku"), eq(null), any()))
+                .thenReturn("Ya existe un producto con este SKU.");
+        lenient().when(messageSource.getMessage(eq("error.constraint.username"), eq(null), any()))
+                .thenReturn("Ya existe un usuario con este nombre de usuario.");
+        lenient().when(messageSource.getMessage(eq("error.constraint.email"), eq(null), any()))
+                .thenReturn("Ya existe un usuario con este correo electrónico.");
+        lenient().when(messageSource.getMessage(eq("error.constraint.order_number"), eq(null), any()))
+                .thenReturn("Ya existe una orden con este número de orden.");
+        lenient().when(messageSource.getMessage(eq("error.constraint.generic"), eq(null), any()))
+                .thenReturn("Ya existe un recurso con el mismo identificador único.");
     }
 
     @Test
@@ -55,7 +72,7 @@ class GlobalExceptionHandlerDataIntegrityTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().code()).isEqualTo("DUPLICATE_RESOURCE");
-        assertThat(response.getBody().message()).isEqualTo("A supplier with this tax ID already exists.");
+        assertThat(response.getBody().message()).isEqualTo("Ya existe un proveedor con este NIT/identificación fiscal.");
         assertThat(response.getBody().status()).isEqualTo(HttpStatus.CONFLICT.value());
         assertThat(response.getBody().path()).isEqualTo("/api/v1/suppliers");
         assertThat(response.getBody().timestamp()).isNotNull();
@@ -78,7 +95,7 @@ class GlobalExceptionHandlerDataIntegrityTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().code()).isEqualTo("DUPLICATE_RESOURCE");
-        assertThat(response.getBody().message()).isEqualTo("A product with this barcode already exists.");
+        assertThat(response.getBody().message()).isEqualTo("Ya existe un producto con este código de barras.");
         assertThat(response.getBody().status()).isEqualTo(HttpStatus.CONFLICT.value());
         assertThat(response.getBody().path()).isEqualTo("/api/v1/products");
     }
@@ -100,7 +117,7 @@ class GlobalExceptionHandlerDataIntegrityTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().code()).isEqualTo("DUPLICATE_RESOURCE");
-        assertThat(response.getBody().message()).isEqualTo("A product with this SKU already exists.");
+        assertThat(response.getBody().message()).isEqualTo("Ya existe un producto con este SKU.");
         assertThat(response.getBody().status()).isEqualTo(HttpStatus.CONFLICT.value());
     }
 
@@ -121,7 +138,7 @@ class GlobalExceptionHandlerDataIntegrityTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().code()).isEqualTo("DUPLICATE_RESOURCE");
-        assertThat(response.getBody().message()).isEqualTo("A user with this username already exists.");
+        assertThat(response.getBody().message()).isEqualTo("Ya existe un usuario con este nombre de usuario.");
         assertThat(response.getBody().status()).isEqualTo(HttpStatus.CONFLICT.value());
     }
 
@@ -142,7 +159,7 @@ class GlobalExceptionHandlerDataIntegrityTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().code()).isEqualTo("DUPLICATE_RESOURCE");
-        assertThat(response.getBody().message()).isEqualTo("A user with this email already exists.");
+        assertThat(response.getBody().message()).isEqualTo("Ya existe un usuario con este correo electrónico.");
         assertThat(response.getBody().status()).isEqualTo(HttpStatus.CONFLICT.value());
     }
 
@@ -163,7 +180,7 @@ class GlobalExceptionHandlerDataIntegrityTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().code()).isEqualTo("DUPLICATE_RESOURCE");
-        assertThat(response.getBody().message()).isEqualTo("An order with this order number already exists.");
+        assertThat(response.getBody().message()).isEqualTo("Ya existe una orden con este número de orden.");
         assertThat(response.getBody().status()).isEqualTo(HttpStatus.CONFLICT.value());
     }
 
@@ -184,7 +201,7 @@ class GlobalExceptionHandlerDataIntegrityTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().code()).isEqualTo("DUPLICATE_RESOURCE");
-        assertThat(response.getBody().message()).isEqualTo("A resource with the same unique identifier already exists.");
+        assertThat(response.getBody().message()).isEqualTo("Ya existe un recurso con el mismo identificador único.");
         assertThat(response.getBody().status()).isEqualTo(HttpStatus.CONFLICT.value());
     }
 
@@ -202,7 +219,7 @@ class GlobalExceptionHandlerDataIntegrityTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().code()).isEqualTo("DUPLICATE_RESOURCE");
-        assertThat(response.getBody().message()).isEqualTo("A resource with the same unique identifier already exists.");
+        assertThat(response.getBody().message()).isEqualTo("Ya existe un recurso con el mismo identificador único.");
         assertThat(response.getBody().status()).isEqualTo(HttpStatus.CONFLICT.value());
     }
 }
