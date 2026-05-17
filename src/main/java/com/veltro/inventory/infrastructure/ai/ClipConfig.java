@@ -12,6 +12,7 @@ public class ClipConfig {
     private String modelPath = "models/clip-image-vit-32.onnx";
     private String modelChecksum = ""; // Optional, if empty no checksum is validated
     private int embeddingDimension = 512;
+    private double similarityThreshold = 0.45;
     private double confidenceThreshold = 0.75;
     private String version = "ViT-B/32-v1";
 }
