@@ -11,8 +11,6 @@ import com.veltro.inventory.security.RequestContextHolder;
 import com.veltro.inventory.security.TenantProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,8 +30,8 @@ import java.util.function.Supplier;
  * integration with SaleService and InventoryService clean and avoids unnecessary class
  * proliferation.
  * 
- * <p>Username is retrieved from {@code SecurityContextHolder}, following the same pattern
- * as {@code VeltroAuditorAware}. Falls back to "SYSTEM" for unauthenticated contexts.
+ * <p>Username is retrieved from {@link TenantProvider}. Falls back to "SYSTEM"
+ * for unauthenticated contexts.
  * 
  * @see AuditableCommand
  * @see RequestAuditContext
@@ -107,7 +105,7 @@ public class AuditCommandExecutor {
         // Persist audit record
         persistAuditRecord(entityType, entityId, action, beforeJson, afterJson, context);
 
-        log.info("Audit record created: {} {} for entity {} #{}", 
+        log.debug("Audit record created: {} {} for entity {} #{}",
                 action, entityType, entityType, entityId);
 
         return result;
@@ -138,7 +136,7 @@ public class AuditCommandExecutor {
         record.setPreviousData(beforeJson);
         record.setNewData(afterJson);
         record.setBusinessId(tenantProvider.getBusinessId());
-        record.setUsername(getCurrentUsername());  // From SecurityContextHolder
+        record.setUsername(getCurrentUsername());
         
         // Get IP from context, or fall back to RequestContextHolder (captured by filter)
         String ipAddress = context.ipAddress();
@@ -153,20 +151,13 @@ public class AuditCommandExecutor {
     }
 
     /**
-     * Retrieves current username from SecurityContextHolder.
+     * Retrieves current username from tenant context provider.
      * Falls back to "SYSTEM" for unauthenticated contexts.
-     * 
-     * <p>This mirrors the logic in {@code VeltroAuditorAware}.
-     * 
+     *
      * @return the current username or "SYSTEM"
      */
     private String getCurrentUsername() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()
-                || "anonymousUser".equals(auth.getPrincipal())) {
-            return SYSTEM_USER;
-        }
-        return auth.getName();
+        return tenantProvider.getOptionalUsername().orElse(SYSTEM_USER);
     }
 
     /**
