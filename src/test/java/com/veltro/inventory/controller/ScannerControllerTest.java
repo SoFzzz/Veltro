@@ -1,6 +1,7 @@
 package com.veltro.inventory.controller;
 
 import com.veltro.inventory.dto.scanner.ProductSuggestionResponse;
+import com.veltro.inventory.dto.scanner.SemanticSearchMatchDto;
 import com.veltro.inventory.model.ProductEntity;
 import com.veltro.inventory.security.TenantProvider;
 import com.veltro.inventory.service.BatchIndexingService;
@@ -173,8 +174,11 @@ class ScannerControllerTest {
         assertThat(response.getStatusCode().value()).isEqualTo(200);
         assertThat(response.getBody()).isInstanceOf(List.class);
         @SuppressWarnings("unchecked")
-        List<Map<String, Object>> payload = (List<Map<String, Object>>) response.getBody();
+        List<Map<String, List<SemanticSearchMatchDto>>> payload =
+                (List<Map<String, List<SemanticSearchMatchDto>>>) response.getBody();
         assertThat(payload).hasSize(1);
         assertThat(payload.getFirst()).containsKey("matches");
+        assertThat(payload.getFirst().get("matches")).hasSize(1);
+        assertThat(payload.getFirst().get("matches").getFirst().name()).isEqualTo("Producto");
     }
 }
