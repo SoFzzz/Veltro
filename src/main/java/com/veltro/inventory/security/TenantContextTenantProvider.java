@@ -2,6 +2,8 @@ package com.veltro.inventory.security;
 
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
+
 /**
  * Spring implementation of {@link TenantProvider} backed by {@link TenantContext}.
  */
@@ -21,5 +23,10 @@ public class TenantContextTenantProvider implements TenantProvider {
     @Override
     public String getUsername() {
         return TenantContext.getUsername();
+    }
+
+    @Override
+    public Optional<String> getOptionalUsername() {
+        return TenantContext.getOptionalUsername();
     }
 }
