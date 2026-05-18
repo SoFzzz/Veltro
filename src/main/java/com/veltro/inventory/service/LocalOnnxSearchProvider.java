@@ -1,6 +1,8 @@
 package com.veltro.inventory.service;
 
+import com.veltro.inventory.infrastructure.ai.ClipConfig;
 import com.veltro.inventory.infrastructure.ai.ClipInferenceService;
+import com.veltro.inventory.infrastructure.ai.VectorUtils;
 import com.veltro.inventory.model.ProductEntity;
 import com.veltro.inventory.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ public class LocalOnnxSearchProvider implements SemanticSearchProvider {
 
     private final ClipInferenceService clipInferenceService;
     private final ProductRepository productRepository;
+    private final ClipConfig clipConfig;
 
     @Override
     public boolean isModelLoaded() {
@@ -45,23 +48,16 @@ public class LocalOnnxSearchProvider implements SemanticSearchProvider {
                 return Optional.empty();
             }
 
-            String embedding = formatEmbedding(embeddingOpt.get());
-            return Optional.of(productRepository.findSimilarProducts(embedding, businessId, limit));
+            String embedding = VectorUtils.formatPgVector(embeddingOpt.get());
+            return Optional.of(productRepository.findSimilarProducts(
+                    embedding,
+                    businessId,
+                    clipConfig.getSimilarityThreshold(),
+                    limit
+            ));
         } catch (Exception e) {
             log.error("Semantic search provider failed", e);
             return Optional.empty();
         }
-    }
-
-    private String formatEmbedding(float[] embedding) {
-        StringBuilder sb = new StringBuilder("[");
-        for (int i = 0; i < embedding.length; i++) {
-            if (i > 0) {
-                sb.append(",");
-            }
-            sb.append(embedding[i]);
-        }
-        sb.append("]");
-        return sb.toString();
     }
 }
