@@ -5,7 +5,6 @@ import com.veltro.inventory.dto.audit.AuditRecordResponse;
 import com.veltro.inventory.dto.common.PageResponse;
 import com.veltro.inventory.service.ForensicAuditService;
 import com.veltro.inventory.model.AuditEntityType;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -85,30 +84,6 @@ public class AuditController {
             @PathVariable("type") AuditEntityType type,
             @PathVariable Long entityId) {
         return ResponseEntity.ok(auditService.findByEntityTypeAndEntityId(type, entityId));
-    }
-
-    /**
-     * Extracts client IP address from HTTP request.
-     * 
-     * <p>Checks {@code X-Forwarded-For} header first (for proxied requests),
-     * then falls back to {@code request.getRemoteAddr()}.
-     * 
-     * <p>This is a utility method used by controllers that trigger auditable
-     * operations (SaleController, PurchaseOrderController, InventoryController).
-     * It's placed here for discoverability but can be moved to a shared utility
-     * class if needed.
-     * 
-     * @param request the HTTP servlet request
-     * @return the client IP address (IPv4 or IPv6), or null if unavailable
-     */
-    public static String extractClientIp(HttpServletRequest request) {
-        String xForwardedFor = request.getHeader("X-Forwarded-For");
-        if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
-            // X-Forwarded-For can contain multiple IPs: "client, proxy1, proxy2"
-            // Take the first one (client IP)
-            return xForwardedFor.split(",")[0].trim();
-        }
-        return request.getRemoteAddr();
     }
 }
 
