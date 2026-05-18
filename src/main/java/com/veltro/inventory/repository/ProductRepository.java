@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -56,9 +57,14 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Long> {
     @Query(value = """
         SELECT * FROM products
         WHERE business_id = :businessId AND active = true
-        AND embedding <=> CAST(:embedding AS vector) < 0.45
+        AND embedding <=> CAST(:embedding AS vector) < :threshold
         ORDER BY embedding <=> CAST(:embedding AS vector)
         LIMIT :limit
         """, nativeQuery = true)
-    List<ProductEntity> findSimilarProducts(String embedding, Long businessId, int limit);
+    List<ProductEntity> findSimilarProducts(
+            @Param("embedding") String embedding,
+            @Param("businessId") Long businessId,
+            @Param("threshold") double threshold,
+            @Param("limit") int limit
+    );
 }
