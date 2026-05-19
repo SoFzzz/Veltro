@@ -79,7 +79,7 @@ public class ForensicAuditService {
 
         return auditRepository.findById(id)
                 .map(mapper::toResponse)
-                .orElseThrow(() -> new NotFoundException("Audit record not found with ID: " + id));
+                .orElseThrow(() -> new NotFoundException("AuditRecord", id));
     }
 
     /**
