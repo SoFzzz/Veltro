@@ -5,6 +5,7 @@ import com.veltro.inventory.model.AlertType;
 import com.veltro.inventory.security.TenantProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,6 +13,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 /**
@@ -32,6 +34,12 @@ public class DashboardService {
 
     private final DashboardQueryRepository dashboardQueryRepository;
     private final TenantProvider tenantProvider;
+    @Value("${veltro.timezone:UTC}")
+    private ZoneId timezone;
+    @Value("${veltro.dashboard.profit-margin:0.20}")
+    private BigDecimal profitMargin;
+    @Value("${veltro.dashboard.recent-sales-limit:10}")
+    private int recentSalesLimit;
 
     /**
      * Retrieves dashboard KPIs (Facade Pattern).
@@ -44,7 +52,7 @@ public class DashboardService {
 
         Long businessId = tenantProvider.getBusinessId();
 
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(timezone);
         LocalDateTime startOfDay = today.atStartOfDay();
         LocalDateTime endOfDay = today.plusDays(1).atStartOfDay();
 
@@ -75,12 +83,10 @@ public class DashboardService {
             monthSales = BigDecimal.ZERO;
         }
         
-        // Estimate: assume 20% profit margin (this could be refined with actual cost data)
-        BigDecimal estimatedMonthlyProfit = monthSales.multiply(BigDecimal.valueOf(0.20))
+        BigDecimal estimatedMonthlyProfit = monthSales.multiply(profitMargin)
                 .setScale(2, RoundingMode.HALF_UP);
 
-        // Recent sales (last 10)
-        List<DashboardResponse.RecentSale> recentSales = dashboardQueryRepository.findRecentSales(10, businessId);
+        List<DashboardResponse.RecentSale> recentSales = dashboardQueryRepository.findRecentSales(recentSalesLimit, businessId);
 
         DashboardResponse response = new DashboardResponse(
                 todaySales.setScale(2, RoundingMode.HALF_UP),
