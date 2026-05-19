@@ -23,6 +23,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -68,6 +69,7 @@ class AuditCommandExecutorTest {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities()));
         lenient().when(tenantProvider.getBusinessId()).thenReturn(businessId);
+        lenient().when(tenantProvider.getOptionalUsername()).thenReturn(Optional.of(username));
     }
 
     @Test
@@ -180,15 +182,9 @@ class AuditCommandExecutorTest {
 
     @Test
     void shouldUseSYSTEMWhenNoAuthentication() throws Exception {
-        // Given 窶・no authentication set, SecurityContext is empty
-        // TenantContext.getBusinessId() will throw, so this test verifies
-        // that the executor fails gracefully when there's no VeltroUserDetails.
-        // In practice, audit operations always happen within authenticated requests.
-
-        // For this test, we authenticate but test the username fallback
-        // by verifying the SYSTEM scenario doesn't apply to multi-tenant
-        // (audit always requires authentication now).
-        authenticateAs("system.user", 1L, 1L);
+        // Given
+        when(tenantProvider.getBusinessId()).thenReturn(1L);
+        when(tenantProvider.getOptionalUsername()).thenReturn(Optional.empty());
 
         Map<String, Object> beforeData = Map.of("stock", 10);
         Map<String, Object> afterData = Map.of("stock", 20);
@@ -217,7 +213,7 @@ class AuditCommandExecutorTest {
 
         AuditRecordEntity saved = captor.getValue();
         assertThat(saved.getBusinessId()).isEqualTo(1L);
-        assertThat(saved.getUsername()).isEqualTo("system.user");
+        assertThat(saved.getUsername()).isEqualTo("SYSTEM");
     }
 
     @Test
@@ -378,4 +374,6 @@ class AuditCommandExecutorTest {
         assertThat(saved.getUsername()).isEqualTo("owner_test");
     }
 }
+
+
 
