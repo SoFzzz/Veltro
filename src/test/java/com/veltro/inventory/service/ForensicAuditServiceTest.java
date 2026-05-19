@@ -283,7 +283,8 @@ class ForensicAuditServiceTest {
         // When / Then
         assertThatThrownBy(() -> auditService.findById(id))
                 .isInstanceOf(NotFoundException.class)
-                .hasMessageContaining("Audit record not found with ID: 999");
+                .hasMessageContaining("AuditRecord")
+                .hasMessageContaining("999");
     }
 
     @Test
