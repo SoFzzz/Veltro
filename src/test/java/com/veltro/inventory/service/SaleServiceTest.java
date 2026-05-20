@@ -5,6 +5,7 @@ import com.veltro.inventory.service.AuditCommandExecutor;
 import com.veltro.inventory.dto.pos.AddItemRequest;
 import com.veltro.inventory.dto.pos.ConfirmSaleRequest;
 import com.veltro.inventory.dto.pos.ModifyItemRequest;
+import com.veltro.inventory.dto.pos.QuickSaleRequest;
 import com.veltro.inventory.dto.pos.SaleResponse;
 import com.veltro.inventory.event.SaleCompletedEvent;
 import com.veltro.inventory.event.SaleVoidedEvent;
@@ -34,12 +35,14 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
 /**
@@ -197,5 +200,43 @@ class SaleServiceTest {
         verify(eventFactory).buildVoidedEvent(sale);
         verify(applicationEventPublisher).publishEvent(voidedEvent);
         verify(snapshotService).buildSnapshot(sale);
+    }
+
+    @Test
+    @DisplayName("quickSale batches product fetch and aggregates duplicated product ids")
+    void quickSale_withDuplicatedProductIds_aggregatesQuantities() {
+        when(tenantProvider.getUserId()).thenReturn(USER_ID);
+        when(saleRepository.getNextSaleSequenceValue()).thenReturn(1L);
+
+        SaleEntity startedSale = createSale(1L, "VLT-2026-000001", SaleStatus.IN_PROGRESS);
+        when(saleRepository.save(any(SaleEntity.class))).thenReturn(startedSale);
+        when(saleRepository.findByIdAndActiveTrueAndBusinessId(1L, BUSINESS_ID)).thenReturn(Optional.of(startedSale));
+
+        ProductEntity product = createProduct(10L, "Widget", new BigDecimal("5.0000"));
+        when(productRepository.findAllByIdInAndActiveTrueAndBusinessId(List.of(10L), BUSINESS_ID))
+                .thenReturn(List.of(product));
+
+        SaleCompletedEvent completedEvent = new SaleCompletedEvent(
+                BUSINESS_ID, 1L, "VLT-2026-000001", USER_ID, new BigDecimal("15.0000"), PaymentMethod.CASH, LocalDateTime.now(), List.of()
+        );
+        when(eventFactory.buildCompletedEvent(startedSale)).thenReturn(completedEvent);
+        when(saleMapper.toResponse(startedSale))
+                .thenReturn(new SaleResponse(1L, "VLT-2026-000001", SaleStatus.COMPLETED, USER_ID,
+                        "15.0000", "15.0000", "20.0000", "5.0000", PaymentMethod.CASH, LocalDateTime.now(), List.of(), BUSINESS_ID, null));
+
+        QuickSaleRequest request = new QuickSaleRequest(
+                List.of(new QuickSaleRequest.Item(10L, 1), new QuickSaleRequest.Item(10L, 2)),
+                PaymentMethod.CASH,
+                new BigDecimal("20.0000"),
+                null
+        );
+
+        SaleResponse response = saleService.quickSale(request);
+
+        assertThat(response).isNotNull();
+        assertThat(startedSale.getDetails()).hasSize(1);
+        assertThat(startedSale.getDetails().get(0).getQuantity()).isEqualTo(3);
+        verify(productRepository).findAllByIdInAndActiveTrueAndBusinessId(List.of(10L), BUSINESS_ID);
+        verify(saleRepository, times(3)).save(any(SaleEntity.class));
     }
 }

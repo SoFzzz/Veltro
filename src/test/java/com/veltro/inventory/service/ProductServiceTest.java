@@ -7,31 +7,38 @@ import com.veltro.inventory.dto.catalog.UpdateProductRequest;
 import com.veltro.inventory.exception.DuplicateResourceException;
 import com.veltro.inventory.exception.InactiveResourceExistsException;
 import com.veltro.inventory.dto.catalog.ProductResponse;
+import com.veltro.inventory.dto.common.PageResponse;
 import com.veltro.inventory.mapper.ProductMapper;
 import org.springframework.context.ApplicationEventPublisher;
 import com.veltro.inventory.model.ProductEntity;
 import com.veltro.inventory.model.IndexingStatus;
 import com.veltro.inventory.repository.CategoryRepository;
 import com.veltro.inventory.repository.ProductRepository;
-import com.veltro.inventory.infrastructure.ai.ClipInferenceService;
 import com.veltro.inventory.repository.SaleDetailRepository;
 import com.veltro.inventory.exception.InvalidPriceException;
 import com.veltro.inventory.exception.NotFoundException;
 import com.veltro.inventory.security.TenantProvider;
 import com.veltro.inventory.service.ProductService;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
+import org.springframework.mock.web.MockMultipartFile;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -44,6 +51,10 @@ import static org.mockito.Mockito.when;
 class ProductServiceTest {
 
     private static final Long BUSINESS_ID = 100L;
+    private static final Long USER_ID = 55L;
+    private static final String USERNAME = "tester";
+    private static final String DEFAULT_ALLOWED_MEDIA_TYPES = "image/jpeg,image/png";
+    private static final String DEFAULT_MAX_FILE_SIZE = "5MB";
 
     @Mock
     private ProductRepository productRepository;
@@ -61,21 +72,38 @@ class ProductServiceTest {
     private ApplicationEventPublisher eventPublisher;
 
     @Mock
-    private ClipInferenceService clipInferenceService;
-    @Mock
     private TenantProvider tenantProvider;
 
     private ProductService productService;
+
+    private java.nio.file.Path tempUploadDir;
 
 
     @BeforeEach
     void setUp() {
         when(tenantProvider.getBusinessId()).thenReturn(BUSINESS_ID);
-        productService = new ProductService(productRepository, categoryRepository, saleDetailRepository, productMapper, eventPublisher, clipInferenceService, tenantProvider);
+        productService = new ProductService(productRepository, categoryRepository, saleDetailRepository, productMapper, eventPublisher, tenantProvider);
+    }
+
+    @AfterEach
+    void tearDown() throws java.io.IOException {
+        if (tempUploadDir != null && java.nio.file.Files.exists(tempUploadDir)) {
+            try (java.util.stream.Stream<java.nio.file.Path> pathStream = java.nio.file.Files.walk(tempUploadDir)) {
+                pathStream.sorted(java.util.Comparator.reverseOrder())
+                        .forEach(path -> {
+                            try {
+                                java.nio.file.Files.delete(path);
+                            } catch (java.io.IOException ignored) {
+                            }
+                        });
+            } finally {
+                tempUploadDir = null;
+            }
+        }
     }
 
     // -------------------------------------------------------------------------
-    // validatePrice 窶・InvalidPriceException
+    // validatePrice — InvalidPriceException
     // -------------------------------------------------------------------------
 
     @Test
@@ -87,7 +115,7 @@ class ProductServiceTest {
                 "WGT-001",
                 "A test widget",
                 new BigDecimal("10.0000"),   // costPrice
-                new BigDecimal("9.9999"),    // salePrice 窶・violates constraint
+                new BigDecimal("9.9999"),    // salePrice — violates constraint
                 null,                        // categoryId
                 5,                           // minStockInfo
                 10,                          // minStockWarning
@@ -165,7 +193,7 @@ class ProductServiceTest {
     }
 
     // -------------------------------------------------------------------------
-    // findByBarcode 窶・NotFoundException
+    // findByBarcode — NotFoundException
     // -------------------------------------------------------------------------
 
     @Test
@@ -199,7 +227,7 @@ class ProductServiceTest {
     }
 
     // -------------------------------------------------------------------------
-    // findById 窶・NotFoundException
+    // findById — NotFoundException
     // -------------------------------------------------------------------------
 
     @Test
@@ -375,6 +403,73 @@ class ProductServiceTest {
                 .isInstanceOf(InactiveResourceExistsException.class)
                 .hasMessageContaining("Consider reactivating it")
                 .hasMessageContaining("id=2");
+    }
+
+    @Test
+    @DisplayName("uploadImages publishes async indexing event and marks product as pending")
+    void uploadImages_publishesEventAndMarksPending() throws java.io.IOException {
+        ProductEntity product = new ProductEntity();
+        product.setId(7L);
+        product.setActive(true);
+        product.setBusinessId(BUSINESS_ID);
+
+        when(tenantProvider.getUserId()).thenReturn(USER_ID);
+        when(tenantProvider.getUsername()).thenReturn(USERNAME);
+
+        when(productRepository.findByIdAndActiveTrueAndBusinessId(7L, BUSINESS_ID))
+                .thenReturn(Optional.of(product));
+        when(productRepository.save(any(ProductEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        tempUploadDir = java.nio.file.Files.createTempDirectory("veltro-uploads-");
+        ReflectionTestUtils.setField(productService, "uploadsDirPath", tempUploadDir.toString());
+        ReflectionTestUtils.setField(productService, "maxFileSize", DEFAULT_MAX_FILE_SIZE);
+        ReflectionTestUtils.setField(productService, "allowedMediaTypes", DEFAULT_ALLOWED_MEDIA_TYPES);
+
+        byte[] validPng;
+        try {
+            java.awt.image.BufferedImage img = new java.awt.image.BufferedImage(1, 1, java.awt.image.BufferedImage.TYPE_INT_ARGB);
+            java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+            javax.imageio.ImageIO.write(img, "png", baos);
+            validPng = baos.toByteArray();
+        } catch (java.io.IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        MockMultipartFile image = new MockMultipartFile(
+                "file",
+                "image.png",
+                "image/png",
+                validPng
+        );
+
+        productService.uploadImages(7L, List.of(image));
+
+        assertThat(product.getIndexingStatus()).isEqualTo(IndexingStatus.INDEXING_PENDING);
+        verify(eventPublisher).publishEvent(any(com.veltro.inventory.event.ProductImageUploadedEvent.class));
+    }
+
+    @Test
+    @DisplayName("findAllInactive returns paginated inactive products for the current tenant")
+    void findAllInactive_returnsPageResponseOfInactiveProducts() {
+        ProductEntity inactiveEntity = new ProductEntity();
+        inactiveEntity.setId(10L);
+        inactiveEntity.setActive(false);
+
+        PageImpl<ProductEntity> page = new PageImpl<>(List.of(inactiveEntity));
+        ProductResponse stubResponse = new ProductResponse(
+                10L, "Inactive Widget", "BARCODE-X", "SKU-X", "desc",
+                "5.0000", "9.0000", 1L, "Test Category", false,
+                5, 10, 2, IndexingStatus.INDEXING_PENDING);
+
+        when(productRepository.findAllByActiveFalseAndBusinessId(eq(BUSINESS_ID), any(Pageable.class)))
+                .thenReturn(page);
+        when(productMapper.toResponse(inactiveEntity)).thenReturn(stubResponse);
+
+        PageResponse<ProductResponse> result = productService.findAllInactive(Pageable.unpaged());
+
+        assertThat(result.content()).hasSize(1);
+        assertThat(result.content().get(0).active()).isFalse();
+        verify(productRepository).findAllByActiveFalseAndBusinessId(eq(BUSINESS_ID), any(Pageable.class));
     }
 }
 
