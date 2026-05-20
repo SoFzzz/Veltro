@@ -80,9 +80,13 @@ class InventoryServiceTest {
     @Mock
     private AlertRepository alertRepository;
     @Mock
+    private com.veltro.inventory.repository.AlertConfigurationRepository configurationRepository;
+    @Mock
     private MessageSource messageSource;
     @Mock
     private TenantProvider tenantProvider;
+    @Mock
+    private AlertService alertService;
 
     private InventoryService inventoryService;
 
@@ -93,7 +97,7 @@ class InventoryServiceTest {
         lenient().when(messageSource.getMessage(eq("alert.movement.entry"), any(), any(Locale.class))).thenReturn("Registro de Llegada");
         lenient().when(messageSource.getMessage(eq("alert.movement.exit"), any(), any(Locale.class))).thenReturn("Registro de Salida");
         lenient().when(messageSource.getMessage(eq("alert.movement.adjustment"), any(), any(Locale.class))).thenReturn("Registro de Ajuste");
-        inventoryService = new InventoryService(inventoryRepository, movementRepository, inventoryMapper, movementMapper, eventPublisher, auditCommandExecutor, alertRepository, messageSource, tenantProvider);
+        inventoryService = new InventoryService(inventoryRepository, movementRepository, inventoryMapper, movementMapper, eventPublisher, auditCommandExecutor, alertRepository, configurationRepository, messageSource, tenantProvider, alertService);
     }
 
     @AfterEach

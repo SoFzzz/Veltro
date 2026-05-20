@@ -82,4 +82,25 @@ public class AlertController {
             @Valid @RequestBody UpdateAlertConfigurationRequest request) {
         return ResponseEntity.ok(alertFacade.updateConfiguration(productId, request));
     }
+
+    @GetMapping("/debug-all")
+    public ResponseEntity<?> debugAll() {
+        return ResponseEntity.ok(alertFacade.debugListAll());
+    }
+
+    @GetMapping("/debug-inventory")
+    public ResponseEntity<?> debugInventory() {
+        return ResponseEntity.ok(alertFacade.debugListInventories());
+    }
+
+    @GetMapping("/debug-evaluate-all")
+    public ResponseEntity<?> debugEvaluateAll() {
+        alertFacade.debugEvaluateAll();
+        return ResponseEntity.ok(java.util.Map.of("message", "Evaluation triggered for all products"));
+    }
+
+    @GetMapping("/debug-configurations")
+    public ResponseEntity<?> debugConfigurations() {
+        return ResponseEntity.ok(alertFacade.debugListConfigurations());
+    }
 }

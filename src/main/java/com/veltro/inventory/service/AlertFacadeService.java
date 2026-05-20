@@ -52,4 +52,20 @@ public class AlertFacadeService {
     public Object updateConfiguration(Long productId, UpdateAlertConfigurationRequest request) {
         return configurationService.updateConfiguration(productId, request);
     }
+
+    public java.util.List<AlertResponse> debugListAll() {
+        return alertService.debugListAll();
+    }
+
+    public java.util.List<java.util.Map<String, Object>> debugListInventories() {
+        return alertService.debugListInventories();
+    }
+
+    public void debugEvaluateAll() {
+        alertService.debugEvaluateAll();
+    }
+
+    public java.util.List<java.util.Map<String, Object>> debugListConfigurations() {
+        return alertService.debugListConfigurations();
+    }
 }

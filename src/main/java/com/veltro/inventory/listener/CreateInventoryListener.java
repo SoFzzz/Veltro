@@ -4,6 +4,7 @@ import com.veltro.inventory.event.ProductCreatedEvent;
 import com.veltro.inventory.model.ProductEntity;
 import com.veltro.inventory.repository.ProductRepository;
 import com.veltro.inventory.service.InventoryService;
+import com.veltro.inventory.service.AlertService;
 import com.veltro.inventory.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +24,7 @@ public class CreateInventoryListener {
 
     private final ProductRepository productRepository;
     private final InventoryService inventoryService;
+    private final AlertService alertService;
 
     @EventListener
     public void onProductCreated(ProductCreatedEvent event) {
@@ -32,5 +34,8 @@ public class CreateInventoryListener {
 
         inventoryService.createForProduct(product);
         log.info("Inventory record created for new product: id={}", event.productId());
+        
+        alertService.evaluateStock(product.getId(), product.getBusinessId());
+        log.info("Initial stock alert evaluated for new product: id={}", event.productId());
     }
 }

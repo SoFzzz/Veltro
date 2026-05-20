@@ -1,5 +1,6 @@
 package com.veltro.inventory.controller;
 
+import com.veltro.inventory.dto.purchasing.ReceiveOrderRequest;
 import com.veltro.inventory.dto.purchasing.AddOrderItemRequest;
 import com.veltro.inventory.dto.purchasing.CreatePurchaseOrderRequest;
 import com.veltro.inventory.dto.purchasing.PurchaseOrderResponse;
@@ -153,8 +154,10 @@ public class PurchaseOrderController {
      */
     @PutMapping("/{orderId}/receive")
     @PreAuthorize("hasAnyRole('ADMIN', 'WAREHOUSE')")
-    public ResponseEntity<PurchaseOrderResponse> markAsReceived(@PathVariable Long orderId) {
-        PurchaseOrderResponse order = purchaseOrderService.markAsReceived(orderId);
+    public ResponseEntity<PurchaseOrderResponse> markAsReceived(
+            @PathVariable Long orderId,
+            @RequestBody(required = false) ReceiveOrderRequest request) {
+        PurchaseOrderResponse order = purchaseOrderService.markAsReceived(orderId, request);
         return ResponseEntity.ok(order);
     }
 

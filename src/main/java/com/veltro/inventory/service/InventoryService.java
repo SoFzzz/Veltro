@@ -49,8 +49,10 @@ public class InventoryService {
     private final ApplicationEventPublisher eventPublisher;
     private final AuditCommandExecutor auditCommandExecutor;
     private final com.veltro.inventory.repository.AlertRepository alertRepository;
+    private final com.veltro.inventory.repository.AlertConfigurationRepository configurationRepository;
     private final MessageSource messageSource;
     private final TenantProvider tenantProvider;
+    private final AlertService alertService;
 
     @Transactional(readOnly = true)
     public PageResponse<InventoryResponse> findAll(Pageable pageable) {
@@ -191,8 +193,24 @@ public class InventoryService {
         inventory.setMaxStock(request.maxStock());
         InventoryEntity saved = inventoryRepository.save(inventory);
 
+        configurationRepository.findByProductIdAndActiveTrueAndBusinessId(productId, businessId)
+                .ifPresentOrElse(config -> {
+                    config.setMinStock(request.minStock());
+                    config.setOverstockThreshold(request.maxStock());
+                    configurationRepository.save(config);
+                }, () -> {
+                    com.veltro.inventory.model.AlertConfigurationEntity config = new com.veltro.inventory.model.AlertConfigurationEntity();
+                    config.setProduct(inventory.getProduct());
+                    config.setBusinessId(businessId);
+                    config.setCriticalStock(0);
+                    config.setMinStock(request.minStock());
+                    config.setOverstockThreshold(request.maxStock());
+                    configurationRepository.save(config);
+                });
+
         log.info("Stock limits updated: productId={}, min={}, max={}",
                 productId, request.minStock(), request.maxStock());
+        alertService.evaluateStock(productId, businessId);
         return inventoryMapper.toResponse(saved);
     }
 

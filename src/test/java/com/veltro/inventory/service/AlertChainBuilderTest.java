@@ -59,7 +59,7 @@ class AlertChainBuilderTest {
         AlertChainBuilder builder = new AlertChainBuilder();
         AlertHandler chain = builder.alertHandlerChain();
         StockAlertEvaluationContext context = new StockAlertEvaluationContext(
-                2L, "Widget", 4, 1, 5, 20); // current=4, critical=1, min=5, overstock=20
+                2L, "Widget", 5, 1, 5, 20); // current=5, critical=1, min=5, overstock=20
 
         // Act
         chain.handle(context);
@@ -100,7 +100,7 @@ class AlertChainBuilderTest {
         StockAlertEvaluationContext context1 = new StockAlertEvaluationContext(
                 4L, "Item1", 0, 2, 5, 20); // OUT_OF_STOCK
         StockAlertEvaluationContext context2 = new StockAlertEvaluationContext(
-                5L, "Item2", 3, 1, 5, 20); // LOW_STOCK
+                5L, "Item2", 5, 1, 5, 20); // LOW_STOCK (current == minStock)
         StockAlertEvaluationContext context3 = new StockAlertEvaluationContext(
                 6L, "Item3", 30, 2, 5, 20); // OVERSTOCK
 

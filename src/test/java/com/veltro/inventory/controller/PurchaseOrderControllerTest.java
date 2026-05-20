@@ -279,23 +279,23 @@ class PurchaseOrderControllerTest {
     @Test
     @DisplayName("PUT /purchase-orders/{orderId}/receive returns 200 with updated order")
     void markAsReceived_validId_returns200() {
-        when(purchaseOrderService.markAsReceived(1L)).thenReturn(stubPurchaseOrder());
+        when(purchaseOrderService.markAsReceived(1L, null)).thenReturn(stubPurchaseOrder());
 
-        ResponseEntity<PurchaseOrderResponse> response = controller.markAsReceived(1L);
+        ResponseEntity<PurchaseOrderResponse> response = controller.markAsReceived(1L, null);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        verify(purchaseOrderService).markAsReceived(1L);
+        verify(purchaseOrderService).markAsReceived(1L, null);
     }
 
     @Test
     @DisplayName("PUT /purchase-orders/{orderId}/receive delegates to PurchaseOrderService")
     void markAsReceived_delegatesToService() {
-        when(purchaseOrderService.markAsReceived(3L)).thenReturn(stubPurchaseOrder());
+        when(purchaseOrderService.markAsReceived(3L, null)).thenReturn(stubPurchaseOrder());
 
-        controller.markAsReceived(3L);
+        controller.markAsReceived(3L, null);
 
-        verify(purchaseOrderService).markAsReceived(3L);
+        verify(purchaseOrderService).markAsReceived(3L, null);
     }
 
     // -------------------------------------------------------------------------

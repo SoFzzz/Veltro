@@ -48,14 +48,14 @@ class LowStockHandlerTest {
         AlertEntity alert = alerts.get(0);
         assertThat(alert.getType()).isEqualTo(AlertType.LOW_STOCK);
         assertThat(alert.getSeverity()).isEqualTo(AlertSeverity.WARNING);
-        assertThat(alert.getMessage()).isEqualTo("Product Test Product is below minimum stock");
+        assertThat(alert.getMessage()).isEqualTo("Product Test Product is at minimum stock");
         
         verify(nextHandler).handle(context);
     }
 
     @Test
-    @DisplayName("creates LOW_STOCK alert when current stock is below minimum but above critical")
-    void handle_stockBelowMinimumButAboveCritical_createsLowStockAlert() {
+    @DisplayName("does not create LOW_STOCK alert when current stock is below minimum but above critical")
+    void handle_stockBelowMinimumButAboveCritical_doesNotCreateAlert() {
         // Arrange
         LowStockHandler handler = new LowStockHandler();
         handler.setNext(nextHandler);
@@ -67,12 +67,7 @@ class LowStockHandlerTest {
 
         // Assert
         List<AlertEntity> alerts = context.getGeneratedAlerts();
-        assertThat(alerts).hasSize(1);
-        
-        AlertEntity alert = alerts.get(0);
-        assertThat(alert.getType()).isEqualTo(AlertType.LOW_STOCK);
-        assertThat(alert.getSeverity()).isEqualTo(AlertSeverity.WARNING);
-        assertThat(alert.getMessage()).isEqualTo("Product Widget is below minimum stock");
+        assertThat(alerts).isEmpty();
         
         verify(nextHandler).handle(context);
     }
@@ -122,7 +117,7 @@ class LowStockHandlerTest {
         LowStockHandler handler = new LowStockHandler();
         // No next handler set
         StockAlertEvaluationContext context = new StockAlertEvaluationContext(
-                5L, "Product", 3, 1, 5, 20);
+                5L, "Product", 5, 1, 5, 20);
 
         // Act
         handler.handle(context);

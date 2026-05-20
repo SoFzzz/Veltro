@@ -7,7 +7,9 @@ public class OutOfStockHandler extends AbstractAlertHandler {
 
     @Override
     protected boolean evaluate(StockAlertEvaluationContext context) {
-        return context.getCurrentStock() <= context.getCriticalStock();
+        int stock = context.getCurrentStock();
+        int minStock = context.getMinStock();
+        return stock < minStock || stock == 0;
     }
 
     @Override
@@ -22,6 +24,6 @@ public class OutOfStockHandler extends AbstractAlertHandler {
 
     @Override
     protected String buildMessage(StockAlertEvaluationContext context) {
-        return "Product " + context.getProductName() + " is at critical stock level";
+        return "Product " + context.getProductName() + " is below minimum stock or out of stock";
     }
 }

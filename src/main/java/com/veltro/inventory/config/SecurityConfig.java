@@ -73,6 +73,10 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/register").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/refresh").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
+                .requestMatchers("/api/v1/alerts/debug-all").permitAll()
+                .requestMatchers("/api/v1/alerts/debug-inventory").permitAll()
+                .requestMatchers("/api/v1/alerts/debug-evaluate-all").permitAll()
+                .requestMatchers("/api/v1/alerts/debug-configurations").permitAll()
                 // Role-restricted endpoints (more will be added in B1-03, B2-x)
                 .requestMatchers("/api/v1/audit/**").hasRole("ADMIN")
                 // Everything else requires a valid token

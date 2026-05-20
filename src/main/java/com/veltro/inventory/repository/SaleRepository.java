@@ -16,7 +16,7 @@ import java.util.Optional;
 @Repository
 public interface SaleRepository extends JpaRepository<SaleEntity, Long> {
 
-    @EntityGraph(attributePaths = {"details", "details.product"})
+    @EntityGraph(attributePaths = {"details"})
     Optional<SaleEntity> findByIdAndActiveTrueAndBusinessId(Long id, Long businessId);
 
     @Query(value = "SELECT nextval('sale_number_seq')", nativeQuery = true)

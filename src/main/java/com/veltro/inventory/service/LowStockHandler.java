@@ -8,7 +8,8 @@ public class LowStockHandler extends AbstractAlertHandler {
     @Override
     protected boolean evaluate(StockAlertEvaluationContext context) {
         int stock = context.getCurrentStock();
-        return stock > context.getCriticalStock() && stock <= context.getMinStock();
+        int minStock = context.getMinStock();
+        return minStock > 0 && stock == minStock;
     }
 
     @Override
@@ -23,6 +24,6 @@ public class LowStockHandler extends AbstractAlertHandler {
 
     @Override
     protected String buildMessage(StockAlertEvaluationContext context) {
-        return "Product " + context.getProductName() + " is below minimum stock";
+        return "Product " + context.getProductName() + " is at minimum stock";
     }
 }

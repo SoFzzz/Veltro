@@ -25,6 +25,7 @@ public class AlertConfigurationService {
     private final InventoryRepository inventoryRepository;
     private final AlertConfigurationMapper configurationMapper;
     private final TenantProvider tenantProvider;
+    private final AlertService alertService;
 
     @Transactional
     public AlertConfigurationResponse getConfiguration(Long productId) {
@@ -45,7 +46,15 @@ public class AlertConfigurationService {
         config.setOverstockThreshold(request.overstockThreshold());
 
         AlertConfigurationEntity saved = configurationRepository.save(config);
+
+        inventoryRepository.findByProductIdAndActiveTrueAndBusinessId(productId, businessId).ifPresent(inv -> {
+            inv.setMinStock(request.minStock());
+            inv.setMaxStock(request.overstockThreshold());
+            inventoryRepository.save(inv);
+        });
+
         log.info("Alert configuration updated for product {}", productId);
+        alertService.evaluateStock(productId, businessId);
         return configurationMapper.toResponse(saved);
     }
 

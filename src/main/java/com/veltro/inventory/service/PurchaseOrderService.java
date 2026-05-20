@@ -1,5 +1,6 @@
 package com.veltro.inventory.service;
 
+import com.veltro.inventory.dto.purchasing.ReceiveOrderRequest;
 import com.veltro.inventory.dto.purchasing.AddOrderItemRequest;
 import com.veltro.inventory.dto.purchasing.CreatePurchaseOrderRequest;
 import com.veltro.inventory.dto.purchasing.PurchaseOrderResponse;
@@ -269,12 +270,44 @@ public class PurchaseOrderService {
      */
     @Transactional
     public PurchaseOrderResponse markAsReceived(Long orderId) {
+        return markAsReceived(orderId, null);
+    }
+
+    @Transactional
+    public PurchaseOrderResponse markAsReceived(Long orderId, ReceiveOrderRequest request) {
         Long businessId = tenantProvider.getBusinessId();
         PurchaseOrderEntity order = orderRepository.findWithDetailsByIdAndActiveTrueAndBusinessId(orderId, businessId)
                 .orElseThrow(() -> new NotFoundException("Purchase order not found with id: " + orderId));
 
         // Capture state BEFORE receiving for audit (B3-03)
         final Map<String, Object> beforeSnapshot = snapshotService.buildSnapshot(order);
+
+        if (request != null) {
+            StringBuilder notesBuilder = new StringBuilder();
+            if (order.getNotes() != null && !order.getNotes().isBlank()) {
+                notesBuilder.append(order.getNotes()).append("\n");
+            }
+            boolean addedPayment = false;
+            if (request.paymentMethod() != null && !request.paymentMethod().isBlank()) {
+                notesBuilder.append("Método de Pago: ").append(request.paymentMethod());
+                addedPayment = true;
+            }
+            if (request.paymentDetails() != null && !request.paymentDetails().isBlank()) {
+                if (addedPayment) {
+                    notesBuilder.append(" | ");
+                }
+                notesBuilder.append("Detalles: ").append(request.paymentDetails());
+            }
+            if (request.notes() != null && !request.notes().isBlank()) {
+                if (notesBuilder.length() > 0) {
+                    notesBuilder.append("\n");
+                }
+                notesBuilder.append("Notas de Recepción: ").append(request.notes());
+            }
+            if (notesBuilder.length() > 0) {
+                order.setNotes(notesBuilder.toString());
+            }
+        }
 
         List<PurchaseOrderDetailEntity> activeDetails = order.getDetails().stream()
                 .filter(d -> d.isActive())

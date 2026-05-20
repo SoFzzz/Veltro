@@ -93,6 +93,67 @@ public class AlertService {
     }
 
     @Transactional(readOnly = true)
+    public List<AlertResponse> debugListAll() {
+        return alertRepository.findAll().stream()
+                .map(alertMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<java.util.Map<String, Object>> debugListInventories() {
+        return inventoryRepository.findAll().stream()
+                .map(inv -> java.util.Map.<String, Object>of(
+                        "id", inv.getId(),
+                        "productId", inv.getProduct() != null ? inv.getProduct().getId() : null,
+                        "productName", inv.getProduct() != null ? inv.getProduct().getName() : null,
+                        "currentStock", inv.getCurrentStock(),
+                        "minStock", inv.getMinStock(),
+                        "maxStock", inv.getMaxStock(),
+                        "businessId", inv.getBusinessId(),
+                        "active", inv.isActive()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void debugEvaluateAll() {
+        inventoryRepository.findAll().forEach(inv -> {
+            if (inv.getProduct() != null) {
+                configurationRepository.findByProductIdAndActiveTrueAndBusinessId(inv.getProduct().getId(), inv.getBusinessId())
+                        .ifPresentOrElse(config -> {
+                            config.setMinStock(inv.getMinStock());
+                            config.setOverstockThreshold(inv.getMaxStock());
+                            configurationRepository.save(config);
+                        }, () -> {
+                            AlertConfigurationEntity config = new AlertConfigurationEntity();
+                            config.setProduct(inv.getProduct());
+                            config.setBusinessId(inv.getBusinessId());
+                            config.setCriticalStock(0);
+                            config.setMinStock(inv.getMinStock());
+                            config.setOverstockThreshold(inv.getMaxStock());
+                            configurationRepository.save(config);
+                        });
+                evaluateStock(inv.getProduct().getId(), inv.getBusinessId());
+            }
+        });
+    }
+
+    @Transactional(readOnly = true)
+    public List<java.util.Map<String, Object>> debugListConfigurations() {
+        return configurationRepository.findAll().stream()
+                .map(config -> java.util.Map.<String, Object>of(
+                        "id", config.getId(),
+                        "productId", config.getProduct() != null ? config.getProduct().getId() : null,
+                        "productName", config.getProduct() != null ? config.getProduct().getName() : null,
+                        "criticalStock", config.getCriticalStock(),
+                        "minStock", config.getMinStock(),
+                        "overstockThreshold", config.getOverstockThreshold(),
+                        "businessId", config.getBusinessId()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
     public PageResponse<AlertResponse> listActiveAlerts(AlertSeverity severity, Pageable pageable) {
         Long businessId = tenantProvider.getBusinessId();
         if (severity != null) {

@@ -25,7 +25,17 @@ public interface AlertRepository extends JpaRepository<AlertEntity, Long> {
     boolean existsByProductIdAndResolvedFalseAndTypeAndBusinessId(Long productId, AlertType type, Long businessId);
 
     @EntityGraph(attributePaths = {"product"})
-    Page<AlertEntity> findByResolvedFalseAndBusinessIdOrderBySeverityDescCreatedAtAsc(Long businessId, Pageable pageable);
+    @Query("""
+        SELECT a FROM AlertEntity a
+        WHERE a.resolved = false AND a.businessId = :businessId
+        ORDER BY CASE a.severity
+            WHEN com.veltro.inventory.model.AlertSeverity.CRITICAL THEN 3
+            WHEN com.veltro.inventory.model.AlertSeverity.WARNING THEN 2
+            WHEN com.veltro.inventory.model.AlertSeverity.INFO THEN 1
+            ELSE 0
+        END DESC, a.createdAt ASC
+        """)
+    Page<AlertEntity> findByResolvedFalseAndBusinessIdOrderBySeverityDescCreatedAtAsc(@Param("businessId") Long businessId, Pageable pageable);
 
     @EntityGraph(attributePaths = {"product"})
     Page<AlertEntity> findBySeverityAndResolvedFalseAndBusinessIdOrderByCreatedAtDesc(AlertSeverity severity, Long businessId, Pageable pageable);
