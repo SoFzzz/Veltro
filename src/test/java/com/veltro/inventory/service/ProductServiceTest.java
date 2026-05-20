@@ -18,21 +18,15 @@ import com.veltro.inventory.repository.SaleDetailRepository;
 import com.veltro.inventory.exception.InvalidPriceException;
 import com.veltro.inventory.exception.NotFoundException;
 import com.veltro.inventory.security.TenantProvider;
-import com.veltro.inventory.security.VeltroUserDetails;
 import com.veltro.inventory.service.ProductService;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -49,7 +43,6 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class ProductServiceTest {
 
-    private static final Long USER_ID = 10L;
     private static final Long BUSINESS_ID = 100L;
 
     @Mock
@@ -77,14 +70,8 @@ class ProductServiceTest {
 
     @BeforeEach
     void setUp() {
-        authenticateAsTenantUser();
         when(tenantProvider.getBusinessId()).thenReturn(BUSINESS_ID);
         productService = new ProductService(productRepository, categoryRepository, saleDetailRepository, productMapper, eventPublisher, clipInferenceService, tenantProvider);
-    }
-
-    @AfterEach
-    void tearDown() {
-        SecurityContextHolder.clearContext();
     }
 
     // -------------------------------------------------------------------------
@@ -388,19 +375,6 @@ class ProductServiceTest {
                 .isInstanceOf(InactiveResourceExistsException.class)
                 .hasMessageContaining("Consider reactivating it")
                 .hasMessageContaining("id=2");
-    }
-
-    private void authenticateAsTenantUser() {
-        VeltroUserDetails principal = new VeltroUserDetails(
-                "product-tester",
-                "password",
-                List.of(new SimpleGrantedAuthority("ROLE_ADMIN")),
-                USER_ID,
-                BUSINESS_ID
-        );
-        UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(principal, principal.getPassword(), principal.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 }
 
