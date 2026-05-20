@@ -22,8 +22,6 @@ import com.veltro.inventory.exception.InvalidPaymentException;
 import com.veltro.inventory.exception.InvalidStateTransitionException;
 import com.veltro.inventory.exception.NotFoundException;
 import com.veltro.inventory.security.TenantProvider;
-import com.veltro.inventory.security.VeltroUserDetails;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,9 +29,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -98,12 +93,6 @@ class SaleServiceTest {
                 eventFactory,
                 tenantProvider);
         when(tenantProvider.getBusinessId()).thenReturn(BUSINESS_ID);
-        authenticateAsTenantUser();
-    }
-
-    @AfterEach
-    void tearDown() {
-        SecurityContextHolder.clearContext();
     }
 
     // -------------------------------------------------------------------------
@@ -208,18 +197,5 @@ class SaleServiceTest {
         verify(eventFactory).buildVoidedEvent(sale);
         verify(applicationEventPublisher).publishEvent(voidedEvent);
         verify(snapshotService).buildSnapshot(sale);
-    }
-
-    private void authenticateAsTenantUser() {
-        VeltroUserDetails principal = new VeltroUserDetails(
-                "testuser",
-                "password",
-                List.of(new SimpleGrantedAuthority("ROLE_CASHIER")),
-                USER_ID,
-                BUSINESS_ID
-        );
-        UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(principal, principal.getPassword(), principal.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 }
