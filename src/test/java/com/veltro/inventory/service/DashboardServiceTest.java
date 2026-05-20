@@ -3,23 +3,20 @@ package com.veltro.inventory.service;
 import com.veltro.inventory.dto.dashboard.DashboardResponse;
 import com.veltro.inventory.model.AlertType;
 import com.veltro.inventory.security.TenantProvider;
-import com.veltro.inventory.security.VeltroUserDetails;
 import com.veltro.inventory.service.DashboardQueryRepository;
 import com.veltro.inventory.service.DashboardService;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -36,7 +33,6 @@ import static org.mockito.Mockito.when;
 @DisplayName("DashboardService")
 class DashboardServiceTest {
 
-    private static final Long USER_ID = 10L;
     private static final Long BUSINESS_ID = 100L;
 
     @Mock
@@ -49,14 +45,11 @@ class DashboardServiceTest {
 
     @BeforeEach
     void setUp() {
-        authenticateAsTenantUser();
         when(tenantProvider.getBusinessId()).thenReturn(BUSINESS_ID);
         dashboardService = new DashboardService(dashboardQueryRepository, tenantProvider);
-    }
-
-    @AfterEach
-    void tearDown() {
-        SecurityContextHolder.clearContext();
+        ReflectionTestUtils.setField(dashboardService, "timezone", ZoneId.of("UTC"));
+        ReflectionTestUtils.setField(dashboardService, "profitMargin", new BigDecimal("0.20"));
+        ReflectionTestUtils.setField(dashboardService, "recentSalesLimit", 10);
     }
 
     @Test
@@ -170,19 +163,6 @@ class DashboardServiceTest {
 
         // Assert
         verify(dashboardQueryRepository).findRecentSales(10, BUSINESS_ID);
-    }
-
-    private void authenticateAsTenantUser() {
-        VeltroUserDetails principal = new VeltroUserDetails(
-                "dashboard-tester",
-                "password",
-                List.of(new SimpleGrantedAuthority("ROLE_ADMIN")),
-                USER_ID,
-                BUSINESS_ID
-        );
-        UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(principal, principal.getPassword(), principal.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 }
 
