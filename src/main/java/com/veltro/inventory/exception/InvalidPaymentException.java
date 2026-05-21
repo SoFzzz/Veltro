@@ -13,7 +13,26 @@ import com.veltro.inventory.service.SaleService;
  */
 public class InvalidPaymentException extends RuntimeException {
 
+    private final String messageKey;
+    private final Object[] messageArgs;
+
     public InvalidPaymentException(String message) {
         super(message);
+        this.messageKey = null;
+        this.messageArgs = new Object[0];
+    }
+
+    public InvalidPaymentException(String message, String messageKey, Object... messageArgs) {
+        super(message);
+        this.messageKey = messageKey;
+        this.messageArgs = messageArgs != null ? messageArgs.clone() : new Object[0];
+    }
+
+    public String getMessageKey() {
+        return messageKey;
+    }
+
+    public Object[] getMessageArgs() {
+        return messageArgs.clone();
     }
 }
