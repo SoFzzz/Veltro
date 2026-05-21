@@ -9,6 +9,10 @@ spring:
   threads:
     virtual:
       enabled: true
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 50MB
 
 # JWT configuration (B1-02).
 # Override jwt.secret per environment profile; never commit a real secret here.
