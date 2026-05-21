@@ -85,6 +85,14 @@ public class WorkerManagementService {
     }
 
     /**
+     * Returns the total count of active workers belonging to the given business.
+     */
+    @Transactional(readOnly = true)
+    public long getWorkerCount(Long businessId) {
+        return userRepository.countByBusinessIdAndActiveTrueAndRoleNot(businessId, Role.ADMIN);
+    }
+
+    /**
      * Deactivates (soft-deletes) a worker in the admin's business.
      */
     @Transactional

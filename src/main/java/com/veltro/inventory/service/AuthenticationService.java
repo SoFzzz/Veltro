@@ -11,6 +11,8 @@ import com.veltro.inventory.repository.UserRepository;
 import com.veltro.inventory.security.CustomUserDetailsService;
 import com.veltro.inventory.security.JwtTokenProvider;
 import com.veltro.inventory.security.VeltroUserDetails;
+import com.veltro.inventory.model.BusinessEntity;
+import com.veltro.inventory.repository.BusinessRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -34,6 +36,7 @@ public class AuthenticationService {
     private final JwtTokenProvider jwtTokenProvider;
     private final CustomUserDetailsService userDetailsService;
     private final UserRepository userRepository;
+    private final BusinessRepository businessRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtProperties jwtProperties;
 
@@ -59,6 +62,26 @@ public class AuthenticationService {
             businessId = v.getBusinessId();
         }
 
+        String email = null;
+        String businessName = null;
+        String adminName = null;
+
+        if (businessId != null) {
+            UserEntity userEntity = userRepository.findByUsernameAndActiveTrue(request.username())
+                    .orElseThrow(() -> new NotFoundException("User not found"));
+            email = userEntity.getEmail();
+
+            BusinessEntity businessEntity = businessRepository.findById(businessId).orElse(null);
+            if (businessEntity != null) {
+                businessName = businessEntity.getName();
+                if (!"ADMIN".equals(role)) {
+                    if (businessEntity.getOwner() != null) {
+                        adminName = businessEntity.getOwner().getUsername();
+                    }
+                }
+            }
+        }
+
         log.info("User '{}' logged in successfully (bid={})", request.username(), businessId);
 
         return LoginResponse.of(
@@ -67,7 +90,10 @@ public class AuthenticationService {
                 jwtProperties.accessTokenExpiration(),
                 request.username(),
                 role,
-                businessId);
+                businessId,
+                email,
+                businessName,
+                adminName);
     }
 
     /**
@@ -95,6 +121,26 @@ public class AuthenticationService {
             businessId = v.getBusinessId();
         }
 
+        String email = null;
+        String businessName = null;
+        String adminName = null;
+
+        if (businessId != null) {
+            UserEntity userEntity = userRepository.findByUsernameAndActiveTrue(username)
+                    .orElseThrow(() -> new NotFoundException("User not found"));
+            email = userEntity.getEmail();
+
+            BusinessEntity businessEntity = businessRepository.findById(businessId).orElse(null);
+            if (businessEntity != null) {
+                businessName = businessEntity.getName();
+                if (!"ADMIN".equals(role)) {
+                    if (businessEntity.getOwner() != null) {
+                        adminName = businessEntity.getOwner().getUsername();
+                    }
+                }
+            }
+        }
+
         log.debug("Access token refreshed for user '{}'", username);
 
         return LoginResponse.of(
@@ -103,7 +149,10 @@ public class AuthenticationService {
                 jwtProperties.accessTokenExpiration(),
                 username,
                 role,
-                businessId);
+                businessId,
+                email,
+                businessName,
+                adminName);
     }
 
     /**

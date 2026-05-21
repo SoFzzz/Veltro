@@ -4,37 +4,34 @@ import com.veltro.inventory.dto.catalog.CreateProductRequest;
 import com.veltro.inventory.dto.catalog.ProductResponse;
 import com.veltro.inventory.dto.catalog.UpdateProductRequest;
 import com.veltro.inventory.dto.common.PageResponse;
+import com.veltro.inventory.event.ProductCreatedEvent;
+import com.veltro.inventory.event.ProductImageUploadedEvent;
+import com.veltro.inventory.exception.DuplicateResourceException;
+import com.veltro.inventory.exception.InactiveResourceExistsException;
+import com.veltro.inventory.exception.InvalidMediaFormatException;
+import com.veltro.inventory.exception.InvalidPriceException;
+import com.veltro.inventory.exception.NotFoundException;
+import com.veltro.inventory.exception.ProductAlreadyActiveException;
 import com.veltro.inventory.mapper.ProductMapper;
 import com.veltro.inventory.model.CategoryEntity;
+import com.veltro.inventory.model.IndexingStatus;
 import com.veltro.inventory.model.ProductEntity;
 import com.veltro.inventory.repository.CategoryRepository;
 import com.veltro.inventory.repository.ProductRepository;
 import com.veltro.inventory.repository.SaleDetailRepository;
-import com.veltro.inventory.infrastructure.ai.ClipInferenceService;
-import com.veltro.inventory.model.IndexingStatus;
-import com.veltro.inventory.exception.DuplicateResourceException;
-import com.veltro.inventory.exception.InactiveResourceExistsException;
-import com.veltro.inventory.exception.InvalidPriceException;
-import com.veltro.inventory.exception.InvalidMediaFormatException;
-import com.veltro.inventory.exception.NotFoundException;
-import com.veltro.inventory.exception.ProductAlreadyActiveException;
 import com.veltro.inventory.security.TenantProvider;
-import com.veltro.inventory.event.ProductCreatedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.Set;
-import org.springframework.web.multipart.MultipartFile;
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.InputStream;
-import java.util.Arrays;
 import java.util.stream.Collectors;
 
 /**
@@ -53,7 +50,6 @@ public class ProductService {
     private final SaleDetailRepository saleDetailRepository;
     private final ProductMapper productMapper;
     private final ApplicationEventPublisher eventPublisher;
-    private final ClipInferenceService clipInferenceService;
     private final TenantProvider tenantProvider;
 
     @Value("${app.uploads-dir:./uploads}")
@@ -63,13 +59,6 @@ public class ProductService {
     @Value("${app.media.allowed-types:image/jpeg,image/png,image/webp}")
     private String allowedMediaTypes;
 
-    // -------------------------------------------------------------------------
-    // Queries
-    // -------------------------------------------------------------------------
-
-    /**
-     * Returns a paginated page of active products (AC-07).
-     */
     @Transactional(readOnly = true)
     public PageResponse<ProductResponse> findAll(Pageable pageable) {
         Long businessId = tenantProvider.getBusinessId();
@@ -80,33 +69,32 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
+    public PageResponse<ProductResponse> findAllInactive(Pageable pageable) {
+        Long businessId = tenantProvider.getBusinessId();
+        return PageResponse.from(
+                productRepository.findAllByActiveFalseAndBusinessId(businessId, pageable)
+                        .map(productMapper::toResponse)
+        );
+    }
+
+    @Transactional(readOnly = true)
     public ProductResponse findById(Long id) {
         return productMapper.toResponse(requireActive(id));
     }
 
-    /**
-     * Looks up a product by its barcode 窶・used by the POS scanner (UC-01).
-     * Uses the B-Tree index on {@code barcode} created in V1 migration.
-     */
     @Transactional(readOnly = true)
     public ProductResponse findByBarcode(String barcode) {
         Long businessId = tenantProvider.getBusinessId();
         ProductEntity entity = productRepository.findByBarcodeAndActiveTrueAndBusinessId(barcode, businessId)
-                .orElseThrow(() -> new NotFoundException(
-                        "Product not found with barcode: " + barcode));
+                .orElseThrow(() -> new NotFoundException("Product not found with barcode: " + barcode));
         return productMapper.toResponse(entity);
     }
-
-    // -------------------------------------------------------------------------
-    // Commands
-    // -------------------------------------------------------------------------
 
     @Transactional
     public ProductResponse create(CreateProductRequest request) {
         Long businessId = tenantProvider.getBusinessId();
         validatePrice(request.costPrice(), request.salePrice());
 
-        // BUG-15: Check for existing product with same barcode or SKU (active or inactive)
         checkForDuplicateBarcode(request.barcode(), businessId, null);
         if (request.sku() != null && !request.sku().isBlank()) {
             checkForDuplicateSku(request.sku(), businessId, null);
@@ -141,68 +129,63 @@ public class ProductService {
         return productMapper.toResponse(saved);
     }
 
+    @Transactional
     public void uploadImages(Long id, java.util.List<MultipartFile> images) {
+        Long businessId = tenantProvider.getBusinessId();
+        Long userId = tenantProvider.getUserId();
+        String username = tenantProvider.getUsername();
         ProductEntity entity = requireActive(id);
-        
+
         if (images.isEmpty()) {
             return;
         }
 
-        MultipartFile primaryImage = images.get(0);
-        validateMedia(primaryImage);
-        log.info("Uploaded image for product id={}: {} ({} bytes)", id, primaryImage.getOriginalFilename(), primaryImage.getSize());
+        // Limit processing to a maximum of 2 images. Discard the rest silently.
+        int limit = Math.min(images.size(), 2);
+        java.util.List<MultipartFile> imagesToProcess = images.subList(0, limit);
+
+        // Phase 1: Validate only the processed images (fail-fast)
+        for (MultipartFile img : imagesToProcess) {
+            validateMedia(img);
+            validateImageResolution(img);
+        }
 
         try {
-            // 1. Persist image on disk
-            java.nio.file.Path uploadDir = java.nio.file.Paths.get(uploadsDirPath).toAbsolutePath().normalize();
+            java.nio.file.Path uploadDir = java.nio.file.Paths.get(uploadsDirPath)
+                    .toAbsolutePath().normalize();
             java.nio.file.Files.createDirectories(uploadDir);
-            
-            String filename = "prod_" + id + "_" + System.currentTimeMillis() + ".jpg";
-            java.nio.file.Path filePath = uploadDir.resolve(filename);
-            primaryImage.transferTo(filePath.toFile());
-            log.info("Image saved to: {}", filePath.toAbsolutePath());
 
-            // 2. Si CLIP cargado -> generar embedding
-            if (clipInferenceService.isModelLoaded()) {
-                entity.setIndexingStatus(IndexingStatus.INDEXING_PENDING);
-                productRepository.save(entity);
-
-                try (InputStream is = java.nio.file.Files.newInputStream(filePath)) {
-                    BufferedImage bImage = ImageIO.read(is);
-                    if (bImage != null) {
-                        Optional<float[]> embeddingOpt = clipInferenceService.generateEmbedding(bImage);
-                        if (embeddingOpt.isPresent()) {
-                            entity.setEmbedding(formatEmbedding(embeddingOpt.get()));
-                            entity.setIndexingStatus(IndexingStatus.INDEXING_READY);
-                            entity.setLastIndexingError(null);
-                        } else {
-                            entity.setIndexingStatus(IndexingStatus.INDEXING_FAILED);
-                            entity.setLastIndexingError("Model inference returned empty");
-                        }
-                    } else {
-                        entity.setIndexingStatus(IndexingStatus.INDEXING_FAILED);
-                        entity.setLastIndexingError("Could not read image format");
-                    }
-                }
-            } else {
-                // 3. Si CLIP NO cargado -> marcar PENDING
-                entity.setIndexingStatus(IndexingStatus.INDEXING_PENDING);
-                log.warn("CLIP Model not loaded, image saved but skipping semantic embedding generation for product {}", id);
+            // Phase 2: Persist only the processed images to disk with downscaling
+            java.util.List<java.nio.file.Path> savedPaths = new java.util.ArrayList<>();
+            for (int i = 0; i < imagesToProcess.size(); i++) {
+                byte[] optimized = downscaleIfNeeded(imagesToProcess.get(i));
+                String filename = "prod_" + id + "_" + System.currentTimeMillis() + "_" + i + ".jpg";
+                java.nio.file.Path filePath = uploadDir.resolve(filename);
+                java.nio.file.Files.write(filePath, optimized);
+                savedPaths.add(filePath.toAbsolutePath().normalize());
+                log.info("Image {} saved to: {} ({} bytes)", i, filePath, optimized.length);
             }
+
+            // Phase 3: Dispatch indexing event with primary and secondary paths
+            java.nio.file.Path primaryPath = savedPaths.get(0);
+            java.nio.file.Path secondaryPath = savedPaths.size() >= 2 ? savedPaths.get(1) : null;
+
+            entity.setIndexingStatus(IndexingStatus.INDEXING_PENDING);
+            entity.setLastIndexingError(null);
+            productRepository.save(entity);
+
+            eventPublisher.publishEvent(
+                    new ProductImageUploadedEvent(
+                            entity.getId(), businessId, userId, username,
+                            primaryPath, secondaryPath));
         } catch (Exception e) {
             log.error("Failed to process image upload for product {}", id, e);
             entity.setIndexingStatus(IndexingStatus.INDEXING_FAILED);
             entity.setLastIndexingError(e.getMessage());
-        } finally {
-            // 4. Nunca propagar excepción al controller
             productRepository.save(entity);
         }
     }
 
-    /**
-     * Soft-deletes a product (AC-05). Sets {@code active=false};
-     * the record is retained for audit and purchasing history.
-     */
     @Transactional
     public void deactivate(Long id) {
         ProductEntity entity = requireActive(id);
@@ -211,10 +194,6 @@ public class ProductService {
         log.info("Product deactivated: id={}", id);
     }
 
-    /**
-     * Reactivates a soft-deleted product (BUG-14 fix).
-     * Sets {@code active=true} so the product appears in listings again.
-     */
     @Transactional
     public ProductResponse reactivate(Long id) {
         Long businessId = tenantProvider.getBusinessId();
@@ -231,53 +210,27 @@ public class ProductService {
         return productMapper.toResponse(saved);
     }
 
-    /**
-     * Hard-deletes a product. Allowed only if the product belongs to the current tenant
-     * AND has no associated sale details.
-     * 
-     * @param id the product ID to delete
-     * @throws NotFoundException if product doesn't exist or belong to tenant
-     * @throws IllegalStateException if product has associated sale details
-     */
     @Transactional
     public void hardDelete(Long id) {
         Long businessId = tenantProvider.getBusinessId();
         if (!productRepository.existsByIdAndBusinessId(id, businessId)) {
             throw new NotFoundException("Product not found with id: " + id);
         }
-        
-        // BUG-001 fix: Check if product has sale history before hard delete
+
         if (saleDetailRepository.existsByProductIdAndActiveTrue(id)) {
             throw new IllegalStateException(
                     "Cannot hard-delete product with active sale history. Use deactivate() instead to preserve audit trail.");
         }
-        
+
         productRepository.deleteById(id);
         log.info("Product hard deleted: id={}", id);
     }
 
-    // -------------------------------------------------------------------------
-    // Internal helpers
-    // -------------------------------------------------------------------------
-
-    private String formatEmbedding(float[] embedding) {
-        StringBuilder sb = new StringBuilder("[");
-        for (int i = 0; i < embedding.length; i++) {
-            if (i > 0) sb.append(",");
-            sb.append(embedding[i]);
-        }
-        sb.append("]");
-        return sb.toString();
-    }
-
-    /**
-     * Enforces the domain constraint: salePrice must be >= costPrice.
-     * Throws {@link InvalidPriceException} (mapped to HTTP 422) if violated.
-     */
     private void validatePrice(java.math.BigDecimal costPrice, java.math.BigDecimal salePrice) {
         if (salePrice.compareTo(costPrice) < 0) {
             throw new InvalidPriceException(
-                    "Sale price (" + salePrice + ") must be greater than or equal to cost price (" + costPrice + ").");
+                    "Sale price (" + salePrice + ") must be greater than or equal to cost price (" + costPrice + ").",
+                    "error.invalid_price");
         }
     }
 
@@ -298,18 +251,13 @@ public class ProductService {
         }
     }
 
-    /**
-     * Checks if a product with the given barcode already exists for the business.
-     * Distinguishes between active duplicates (error) and inactive ones (suggest reactivation).
-     * BUG-15 fix.
-     */
     private void checkForDuplicateBarcode(String barcode, Long businessId, Long currentProductId) {
         if (barcode == null || barcode.isBlank()) {
             return;
         }
-        
+
         Optional<ProductEntity> existing = productRepository.findByBarcodeAndBusinessId(barcode, businessId);
-        
+
         if (existing.isPresent()) {
             ProductEntity product = existing.get();
             if (currentProductId != null && currentProductId.equals(product.getId())) {
@@ -323,14 +271,9 @@ public class ProductService {
         }
     }
 
-    /**
-     * Checks if a product with the given SKU already exists for the business.
-     * Distinguishes between active duplicates (error) and inactive ones (suggest reactivation).
-     * BUG-15 fix.
-     */
     private void checkForDuplicateSku(String sku, Long businessId, Long currentProductId) {
         Optional<ProductEntity> existing = productRepository.findBySkuAndBusinessId(sku, businessId);
-        
+
         if (existing.isPresent()) {
             ProductEntity product = existing.get();
             if (currentProductId != null && currentProductId.equals(product.getId())) {
@@ -375,5 +318,85 @@ public class ProductService {
         }
         return Long.parseLong(normalized);
     }
-}
 
+    /**
+     * Reads image dimensions from file headers without decoding pixel data.
+     * Prevents "Pixel Bomb" attacks where a highly compressed file (e.g. 2MB JPEG)
+     * decompresses into gigabytes of heap memory.
+     *
+     * @param file the uploaded multipart file to validate
+     * @throws InvalidMediaFormatException if dimensions exceed MAX_RESOLUTION (4096px)
+     */
+    private void validateImageResolution(MultipartFile file) {
+        try (java.io.InputStream is = file.getInputStream();
+             javax.imageio.stream.ImageInputStream iis = javax.imageio.ImageIO.createImageInputStream(is)) {
+            java.util.Iterator<javax.imageio.ImageReader> readers = javax.imageio.ImageIO.getImageReaders(iis);
+            if (readers.hasNext()) {
+                javax.imageio.ImageReader reader = readers.next();
+                try {
+                    reader.setInput(iis, true, true);
+                    int width = reader.getWidth(0);
+                    int height = reader.getHeight(0);
+                    if (width > 4096 || height > 4096) {
+                        throw new InvalidMediaFormatException(
+                                "error.media.resolution_exceeded",
+                                String.valueOf(width), String.valueOf(height), "4096");
+                    }
+                } finally {
+                    reader.dispose();
+                }
+            }
+        } catch (java.io.IOException e) {
+            throw new InvalidMediaFormatException("error.media.invalid_format");
+        }
+    }
+
+    /**
+     * Downscales an image proportionally if either dimension exceeds 1024 pixels.
+     * Re-encodes as JPEG quality 80% to minimize disk usage and network transfer.
+     * Returns the optimized byte array ready for disk persistence.
+     *
+     * @param file the uploaded multipart file
+     * @return optimized byte array (JPEG 80% at max 1024px)
+     */
+    private byte[] downscaleIfNeeded(MultipartFile file) throws java.io.IOException {
+        java.awt.image.BufferedImage original = javax.imageio.ImageIO.read(file.getInputStream());
+        if (original == null) {
+            throw new InvalidMediaFormatException("error.media.invalid_format");
+        }
+
+        int origWidth = original.getWidth();
+        int origHeight = original.getHeight();
+
+        if (origWidth <= 1024 && origHeight <= 1024) {
+            return file.getBytes();
+        }
+
+        double ratio = Math.min(1024.0 / origWidth, 1024.0 / origHeight);
+        int newWidth = (int) (origWidth * ratio);
+        int newHeight = (int) (origHeight * ratio);
+
+        java.awt.image.BufferedImage resized =
+                new java.awt.image.BufferedImage(newWidth, newHeight, java.awt.image.BufferedImage.TYPE_INT_RGB);
+        java.awt.Graphics2D g2d = resized.createGraphics();
+        g2d.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION,
+                java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g2d.drawImage(original, 0, 0, newWidth, newHeight, null);
+        g2d.dispose();
+
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        javax.imageio.ImageWriter writer = javax.imageio.ImageIO.getImageWritersByFormatName("jpeg").next();
+        javax.imageio.ImageWriteParam param = writer.getDefaultWriteParam();
+        param.setCompressionMode(javax.imageio.ImageWriteParam.MODE_EXPLICIT);
+        param.setCompressionQuality(0.80f);
+
+        try (javax.imageio.stream.ImageOutputStream ios =
+                     javax.imageio.ImageIO.createImageOutputStream(baos)) {
+            writer.setOutput(ios);
+            writer.write(null, new javax.imageio.IIOImage(resized, null, null), param);
+        } finally {
+            writer.dispose();
+        }
+        return baos.toByteArray();
+    }
+}

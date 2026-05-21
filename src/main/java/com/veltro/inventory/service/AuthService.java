@@ -56,6 +56,10 @@ public class AuthService {
         return workerManagementService.getWorkers(businessId);
     }
 
+    public long getWorkerCount(Long businessId) {
+        return workerManagementService.getWorkerCount(businessId);
+    }
+
     public void deactivateWorker(Long workerId, Long businessId) {
         workerManagementService.deactivateWorker(workerId, businessId);
     }

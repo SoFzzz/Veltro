@@ -32,6 +32,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -201,11 +203,14 @@ public class SaleService {
         // Validate cash payment (B2-01 requirement)
         if (request.paymentMethod() == PaymentMethod.CASH) {
             if (request.amountReceived() == null) {
-                throw new InvalidPaymentException("Amount received is required for cash payments");
+                throw new InvalidPaymentException(
+                        "Amount received is required for cash payments",
+                        "error.payment.amount_required");
             }
             if (request.amountReceived().compareTo(sale.getTotal()) < 0) {
                 throw new InvalidPaymentException(
-                        "Amount received must be greater than or equal to total for cash payments");
+                        "Amount received must be greater than or equal to total for cash payments",
+                        "error.payment.insufficient_amount");
             }
             sale.setAmountReceived(request.amountReceived());
             sale.setChange(request.amountReceived().subtract(sale.getTotal()));
@@ -287,16 +292,49 @@ public class SaleService {
      */
     @Transactional
     public SaleResponse quickSale(QuickSaleRequest request) {
-        // 1. Start the sale
         SaleResponse started = startSale();
         Long saleId = started.id();
+        Long businessId = tenantProvider.getBusinessId();
 
-        // 2. Add all items
-        for (QuickSaleRequest.Item item : request.items()) {
-            addItem(saleId, new AddItemRequest(item.productId(), item.quantity()));
+        SaleEntity sale = saleRepository.findByIdAndActiveTrueAndBusinessId(saleId, businessId)
+                .orElseThrow(() -> new NotFoundException("Sale not found with id: " + saleId));
+
+        List<Long> requestedProductIds = request.items().stream()
+                .map(QuickSaleRequest.Item::productId)
+                .toList();
+        List<Long> uniqueProductIds = new ArrayList<>(requestedProductIds.stream().distinct().toList());
+
+        Map<Long, ProductEntity> productById = productRepository
+                .findAllByIdInAndActiveTrueAndBusinessId(uniqueProductIds, businessId)
+                .stream()
+                .collect(Collectors.toMap(ProductEntity::getId, p -> p));
+
+        if (productById.size() != uniqueProductIds.size()) {
+            for (Long productId : uniqueProductIds) {
+                if (!productById.containsKey(productId)) {
+                    throw new NotFoundException("Product not found with id: " + productId);
+                }
+            }
         }
 
-        // 3. Confirm the sale
+        Map<Long, Integer> quantitiesByProduct = new HashMap<>();
+        for (QuickSaleRequest.Item item : request.items()) {
+            quantitiesByProduct.merge(item.productId(), item.quantity(), Integer::sum);
+        }
+
+        for (Map.Entry<Long, Integer> entry : quantitiesByProduct.entrySet()) {
+            ProductEntity product = productById.get(entry.getKey());
+            SaleDetailEntity detail = new SaleDetailEntity();
+            detail.setProductId(product.getId());
+            detail.setProductName(product.getName());
+            detail.setQuantity(entry.getValue());
+            detail.setUnitPrice(product.getSalePrice());
+            detail.calculateSubtotal();
+            sale.addItem(detail);
+        }
+        sale.recalculateTotals();
+        saleRepository.save(sale);
+
         return confirm(saleId, new ConfirmSaleRequest(request.paymentMethod(), request.amountReceived()));
     }
 
