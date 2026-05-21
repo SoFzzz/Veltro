@@ -27,4 +27,6 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
      * Used by the Workers management page to display employees.
      */
     List<UserEntity> findAllByBusinessIdAndActiveTrue(Long businessId);
+
+    long countByBusinessIdAndActiveTrueAndRoleNot(Long businessId, com.veltro.inventory.model.Role role);
 }

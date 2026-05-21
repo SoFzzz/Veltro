@@ -19,10 +19,16 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Long> {
     Page<ProductEntity> findAllByActiveTrueAndBusinessId(Long businessId, Pageable pageable);
 
     @EntityGraph(attributePaths = {"category"})
+    Page<ProductEntity> findAllByActiveFalseAndBusinessId(Long businessId, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"category"})
     Optional<ProductEntity> findByBarcodeAndActiveTrueAndBusinessId(String barcode, Long businessId);
 
     @EntityGraph(attributePaths = {"category"})
     Optional<ProductEntity> findByIdAndActiveTrueAndBusinessId(Long id, Long businessId);
+
+    @EntityGraph(attributePaths = {"category"})
+    List<ProductEntity> findAllByIdInAndActiveTrueAndBusinessId(List<Long> ids, Long businessId);
 
     /**
      * Finds a product by barcode and business, regardless of active status.
@@ -44,6 +50,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Long> {
 
     boolean existsByIdAndBusinessId(Long id, Long businessId);
 
+
     /**
      * Finds a small set of active products in the tenant whose names contain the given keyword.
      * Used by AI product matching to enrich visual suggestions with existing catalog data.
@@ -52,13 +59,22 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Long> {
 
     /**
      * Finds products similar to an embedding using pgvector cosine similarity.
-     * Queries the products table directly leveraging the HNSW partial index.
+     * Evaluates both primary and secondary embeddings (dual-angle search).
+     * NULL secondary embeddings are skipped via COALESCE fallback to 99.0.
      */
     @Query(value = """
         SELECT * FROM products
         WHERE business_id = :businessId AND active = true
-        AND embedding <=> CAST(:embedding AS vector) < :threshold
-        ORDER BY embedding <=> CAST(:embedding AS vector)
+        AND (
+            (embedding <=> CAST(:embedding AS vector) < :threshold)
+            OR
+            (embedding_secondary IS NOT NULL
+             AND embedding_secondary <=> CAST(:embedding AS vector) < :threshold)
+        )
+        ORDER BY LEAST(
+            embedding <=> CAST(:embedding AS vector),
+            COALESCE(embedding_secondary <=> CAST(:embedding AS vector), 99.0)
+        )
         LIMIT :limit
         """, nativeQuery = true)
     List<ProductEntity> findSimilarProducts(

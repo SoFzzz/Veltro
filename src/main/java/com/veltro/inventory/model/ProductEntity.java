@@ -89,4 +89,9 @@ public class ProductEntity extends AbstractAuditableEntity {
     @org.hibernate.annotations.ColumnTransformer(write = "?::vector")
     @Column(name = "embedding", columnDefinition = "vector(512)")
     private String embedding;
+
+    // Secondary vector embedding for double-angle AI search. Null when only one image exists.
+    @org.hibernate.annotations.ColumnTransformer(write = "?::vector")
+    @Column(name = "embedding_secondary", columnDefinition = "vector(512)")
+    private String embeddingSecondary;
 }
