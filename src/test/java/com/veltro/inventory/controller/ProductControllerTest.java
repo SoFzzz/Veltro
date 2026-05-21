@@ -64,6 +64,13 @@ class ProductControllerTest {
                 5, 10, 2, IndexingStatus.INDEXING_PENDING);
     }
 
+    private static ProductResponse inactiveProduct() {
+        return new ProductResponse(
+                10L, "Inactive Widget", "BARC-010", "WGT-010", "Inactive",
+                "5.0000", "9.9900", 10L, "Electronics", false,
+                5, 10, 2, IndexingStatus.INDEXING_PENDING);
+    }
+
     // -------------------------------------------------------------------------
     // GET /products 窶・paginated listing
     // -------------------------------------------------------------------------
@@ -164,6 +171,26 @@ class ProductControllerTest {
                 .hasMessage("Product not found with barcode: INVALID");
 
         verify(productService).findByBarcode("INVALID");
+    }
+
+    // -------------------------------------------------------------------------
+    // GET /products/inactive
+    // -------------------------------------------------------------------------
+
+    @Test
+    @DisplayName("GET /products/inactive returns 200 with paginated inactive products")
+    void listInactiveProducts_returns200WithPage() {
+        Pageable pageable = PageRequest.of(0, 20);
+        PageImpl<ProductResponse> page = new PageImpl<>(List.of(inactiveProduct()), pageable, 1);
+        when(productService.findAllInactive(pageable)).thenReturn(PageResponse.from(page));
+
+        ResponseEntity<PageResponse<ProductResponse>> response = controller.listInactiveProducts(pageable);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().content()).hasSize(1);
+        assertThat(response.getBody().content().get(0).active()).isFalse();
+        verify(productService).findAllInactive(pageable);
     }
 
     // -------------------------------------------------------------------------

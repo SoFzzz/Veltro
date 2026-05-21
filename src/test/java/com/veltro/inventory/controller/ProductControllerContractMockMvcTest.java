@@ -1,6 +1,7 @@
 package com.veltro.inventory.controller;
 
 import com.veltro.inventory.dto.catalog.ProductResponse;
+import com.veltro.inventory.dto.common.PageResponse;
 import com.veltro.inventory.exception.DuplicateResourceException;
 import com.veltro.inventory.exception.GlobalExceptionHandler;
 import com.veltro.inventory.model.IndexingStatus;
@@ -16,18 +17,28 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 
+import java.util.List;
 import java.util.Locale;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
 class ProductControllerContractMockMvcTest {
+
+    private static final String INACTIVE_PRODUCTS_PATH = "/api/v1/products/inactive";
+    private static final int DEFAULT_PAGE_SIZE = 20;
 
     @Mock
     private ProductService productService;
@@ -39,9 +50,10 @@ class ProductControllerContractMockMvcTest {
     @BeforeEach
     void setUp() {
         ProductController controller = new ProductController(productService);
-        when(messageSource.getMessage(eq("product.conflict.message"), eq(null), any(Locale.class)))
+        lenient().when(messageSource.getMessage(eq("product.conflict.message"), eq(null), any(Locale.class)))
                 .thenReturn("Ya existe un producto con este código de barras o SKU");
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
                 .setControllerAdvice(new GlobalExceptionHandler(messageSource))
                 .build();
     }
@@ -84,5 +96,21 @@ class ProductControllerContractMockMvcTest {
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.message").value("Ya existe un producto con este código de barras o SKU"))
                 .andExpect(jsonPath("$.existingProductId").value(123));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/products/inactive routes to inactive listing")
+    void listInactiveProducts_routesToInactiveHandler() throws Exception {
+        when(productService.findAllInactive(any())).thenReturn(emptyPage());
+
+        mockMvc.perform(get(INACTIVE_PRODUCTS_PATH))
+                .andExpect(status().isOk());
+
+        verify(productService).findAllInactive(any());
+        verify(productService, never()).findById(anyLong());
+    }
+
+    private PageResponse<ProductResponse> emptyPage() {
+        return new PageResponse<>(List.of(), 0, DEFAULT_PAGE_SIZE, 0L, 0, true);
     }
 }
