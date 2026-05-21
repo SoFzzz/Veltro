@@ -261,12 +261,15 @@ public class GlobalExceptionHandler {
             InvalidPriceException ex, HttpServletRequest request) {
 
         log.warn("Invalid price on {}: {}", request.getRequestURI(), ex.getMessage());
+        String userMessage = ex.getMessageKey() != null
+                ? resolveMessage(ex.getMessageKey(), ex.getMessageArgs())
+                : ex.getMessage();
 
         return ResponseEntity
                 .status(HttpStatus.UNPROCESSABLE_CONTENT)
                 .body(ErrorResponse.of(
                         "INVALID_PRICE",
-                        ex.getMessage(),
+                        userMessage,
                         HttpStatus.UNPROCESSABLE_CONTENT,
                         request.getRequestURI()));
     }
@@ -280,12 +283,15 @@ public class GlobalExceptionHandler {
             InvalidPaymentException ex, HttpServletRequest request) {
 
         log.warn("Invalid payment on {}: {}", request.getRequestURI(), ex.getMessage());
+        String userMessage = ex.getMessageKey() != null
+                ? resolveMessage(ex.getMessageKey(), ex.getMessageArgs())
+                : ex.getMessage();
 
         return ResponseEntity
                 .status(HttpStatus.UNPROCESSABLE_CONTENT)
                 .body(ErrorResponse.of(
                         "INVALID_PAYMENT",
-                        ex.getMessage(),
+                        userMessage,
                         HttpStatus.UNPROCESSABLE_CONTENT,
                         request.getRequestURI()));
     }
