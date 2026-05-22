@@ -35,6 +35,7 @@ class AlertConfigurationServiceTest {
     @Mock private InventoryRepository inventoryRepository;
     @Mock private AlertConfigurationMapper configurationMapper;
     @Mock private TenantProvider tenantProvider;
+    @Mock private AlertService alertService;
 
     @InjectMocks
     private AlertConfigurationService service;
