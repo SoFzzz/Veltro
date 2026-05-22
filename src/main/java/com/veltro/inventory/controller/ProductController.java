@@ -11,6 +11,7 @@ import com.veltro.inventory.service.ProductService;
 import lombok.extern.slf4j.Slf4j;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
@@ -27,13 +28,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+
 /**
  * REST controller for product catalog management (B1-03).
  *
  * Role rules (RF-12):
  * <ul>
  *   <li>GET /products and GET /products/{id}: ADMIN, WAREHOUSE, CASHIER.</li>
- *   <li>GET /products/barcode/{barcode}: any authenticated user (primary POS path 窶・UC-01).</li>
+ *   <li>GET /products/barcode/{barcode}: any authenticated user (primary POS path — UC-01).</li>
  *   <li>POST / PUT: ADMIN or WAREHOUSE only.</li>
  * </ul>
  *
@@ -67,7 +69,7 @@ public class ProductController {
     }
 
     /**
-     * Barcode lookup 窶・the primary endpoint called by the POS scanner (UC-01).
+     * Barcode lookup — the primary endpoint called by the POS scanner (UC-01).
      * Returns 404 when no active product matches the barcode.
      */
     @GetMapping("/barcode/{barcode}")
@@ -75,8 +77,18 @@ public class ProductController {
         return ResponseEntity.ok(productService.findByBarcode(barcode));
     }
 
+    /**
+     * Paginated listing of inactive (soft-deleted) products.
+     * Restricted to ADMIN and WAREHOUSE roles per RF-12.
+     */
+    @GetMapping("/inactive")
+    @PreAuthorize("hasAnyRole('ADMIN', 'WAREHOUSE')")
+    public ResponseEntity<PageResponse<ProductResponse>> listInactiveProducts(
+            @PageableDefault(size = 20, sort = "updatedAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(productService.findAllInactive(pageable));
+    }
     // -------------------------------------------------------------------------
-    // POST / PUT endpoints 窶・ADMIN or WAREHOUSE only
+    // POST / PUT endpoints — ADMIN or WAREHOUSE only
     // -------------------------------------------------------------------------
 
     @PostMapping(consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
