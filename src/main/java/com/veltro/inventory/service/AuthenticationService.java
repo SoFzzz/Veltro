@@ -62,25 +62,7 @@ public class AuthenticationService {
             businessId = v.getBusinessId();
         }
 
-        String email = null;
-        String businessName = null;
-        String adminName = null;
-
-        if (businessId != null) {
-            UserEntity userEntity = userRepository.findByUsernameAndActiveTrue(request.username())
-                    .orElseThrow(() -> new NotFoundException("User not found"));
-            email = userEntity.getEmail();
-
-            BusinessEntity businessEntity = businessRepository.findById(businessId).orElse(null);
-            if (businessEntity != null) {
-                businessName = businessEntity.getName();
-                if (!"ADMIN".equals(role)) {
-                    if (businessEntity.getOwner() != null) {
-                        adminName = businessEntity.getOwner().getUsername();
-                    }
-                }
-            }
-        }
+        UserBusinessInfo info = resolveUserBusinessInfo(request.username(), businessId, role);
 
         log.info("User '{}' logged in successfully (bid={})", request.username(), businessId);
 
@@ -91,9 +73,9 @@ public class AuthenticationService {
                 request.username(),
                 role,
                 businessId,
-                email,
-                businessName,
-                adminName);
+                info.email(),
+                info.businessName(),
+                info.adminName());
     }
 
     /**
@@ -121,25 +103,7 @@ public class AuthenticationService {
             businessId = v.getBusinessId();
         }
 
-        String email = null;
-        String businessName = null;
-        String adminName = null;
-
-        if (businessId != null) {
-            UserEntity userEntity = userRepository.findByUsernameAndActiveTrue(username)
-                    .orElseThrow(() -> new NotFoundException("User not found"));
-            email = userEntity.getEmail();
-
-            BusinessEntity businessEntity = businessRepository.findById(businessId).orElse(null);
-            if (businessEntity != null) {
-                businessName = businessEntity.getName();
-                if (!"ADMIN".equals(role)) {
-                    if (businessEntity.getOwner() != null) {
-                        adminName = businessEntity.getOwner().getUsername();
-                    }
-                }
-            }
-        }
+        UserBusinessInfo info = resolveUserBusinessInfo(username, businessId, role);
 
         log.debug("Access token refreshed for user '{}'", username);
 
@@ -150,9 +114,9 @@ public class AuthenticationService {
                 username,
                 role,
                 businessId,
-                email,
-                businessName,
-                adminName);
+                info.email(),
+                info.businessName(),
+                info.adminName());
     }
 
     /**
@@ -178,5 +142,42 @@ public class AuthenticationService {
         userRepository.save(user);
 
         log.info("Password changed successfully for user '{}'", username);
+    }
+
+    /**
+     * Holds resolved user and business information for authentication responses.
+     */
+    private record UserBusinessInfo(String email, String businessName, String adminName) {}
+
+    /**
+     * Resolves the email, business name, and admin name for the given user.
+     *
+     * @param username   the username to look up
+     * @param businessId the business ID (may be {@code null})
+     * @param role       the user's role (e.g. "ADMIN", "CASHIER")
+     * @return a {@link UserBusinessInfo} with resolved values, or all-null if no business
+     */
+    private UserBusinessInfo resolveUserBusinessInfo(String username, Long businessId, String role) {
+        if (businessId == null) {
+            return new UserBusinessInfo(null, null, null);
+        }
+
+        UserEntity userEntity = userRepository.findByUsernameAndActiveTrue(username)
+                .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
+        String email = userEntity.getEmail();
+
+        String businessName = null;
+        String adminName = null;
+        BusinessEntity businessEntity = businessRepository.findById(businessId).orElse(null);
+        if (businessEntity != null) {
+            businessName = businessEntity.getName();
+            if (!"ADMIN".equals(role)) {
+                if (businessEntity.getOwner() != null) {
+                    adminName = businessEntity.getOwner().getUsername();
+                }
+            }
+        }
+
+        return new UserBusinessInfo(email, businessName, adminName);
     }
 }
