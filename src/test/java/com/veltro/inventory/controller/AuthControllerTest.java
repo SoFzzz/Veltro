@@ -124,4 +124,19 @@ class AuthControllerTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         verify(authenticationService).changePassword(eq("alice"), any(ChangePasswordRequest.class));
     }
+
+    @Test
+    @DisplayName("GET /workers/count delegates to AuthService")
+    void getWorkerCount_authorized_returns200() {
+        when(tenantProvider.getBusinessId()).thenReturn(1L);
+        when(authService.getWorkerCount(1L)).thenReturn(5L);
+
+        ResponseEntity<Map<String, Object>> response = controller.getWorkerCount();
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().get("count")).isEqualTo(5L);
+        verify(tenantProvider).getBusinessId();
+        verify(authService).getWorkerCount(1L);
+    }
 }
