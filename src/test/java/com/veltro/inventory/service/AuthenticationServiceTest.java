@@ -7,7 +7,9 @@ import com.veltro.inventory.dto.auth.LoginResponse;
 import com.veltro.inventory.dto.auth.RefreshRequest;
 import com.veltro.inventory.exception.NotFoundException;
 import com.veltro.inventory.model.Role;
+import com.veltro.inventory.model.BusinessEntity;
 import com.veltro.inventory.model.UserEntity;
+import com.veltro.inventory.repository.BusinessRepository;
 import com.veltro.inventory.repository.UserRepository;
 import com.veltro.inventory.security.CustomUserDetailsService;
 import com.veltro.inventory.security.JwtTokenProvider;
@@ -43,6 +45,7 @@ class AuthenticationServiceTest {
     @Mock private JwtTokenProvider jwtTokenProvider;
     @Mock private CustomUserDetailsService userDetailsService;
     @Mock private UserRepository userRepository;
+    @Mock private BusinessRepository businessRepository;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private JwtProperties jwtProperties;
 
@@ -63,6 +66,14 @@ class AuthenticationServiceTest {
         when(jwtTokenProvider.generateRefreshToken(details)).thenReturn("refresh-token");
         when(jwtProperties.accessTokenExpiration()).thenReturn(3600L);
 
+        UserEntity userEntity = new UserEntity();
+        userEntity.setEmail("admin@test.com");
+        when(userRepository.findByUsernameAndActiveTrue("admin")).thenReturn(Optional.of(userEntity));
+
+        BusinessEntity business = new BusinessEntity();
+        business.setName("Test Business");
+        when(businessRepository.findById(100L)).thenReturn(Optional.of(business));
+
         LoginResponse response = authenticationService.login(request);
 
         assertThat(response.accessToken()).isEqualTo("access-token");
@@ -72,6 +83,9 @@ class AuthenticationServiceTest {
         assertThat(response.businessId()).isEqualTo(100L);
         assertThat(response.tokenType()).isEqualTo("Bearer");
         assertThat(response.expiresIn()).isEqualTo(3600L);
+        assertThat(response.email()).isEqualTo("admin@test.com");
+        assertThat(response.businessName()).isEqualTo("Test Business");
+        assertThat(response.adminName()).isNull();
     }
 
     @Test
@@ -133,11 +147,22 @@ class AuthenticationServiceTest {
         when(jwtTokenProvider.generateAccessToken(details)).thenReturn("new-access-token");
         when(jwtProperties.accessTokenExpiration()).thenReturn(3600L);
 
+        UserEntity userEntity = new UserEntity();
+        userEntity.setEmail("admin@test.com");
+        when(userRepository.findByUsernameAndActiveTrue("admin")).thenReturn(Optional.of(userEntity));
+
+        BusinessEntity business = new BusinessEntity();
+        business.setName("Test Business");
+        when(businessRepository.findById(100L)).thenReturn(Optional.of(business));
+
         LoginResponse response = authenticationService.refresh(request);
 
         assertThat(response.accessToken()).isEqualTo("new-access-token");
         assertThat(response.refreshToken()).isEqualTo("valid-refresh");
         assertThat(response.businessId()).isEqualTo(100L);
+        assertThat(response.email()).isEqualTo("admin@test.com");
+        assertThat(response.businessName()).isEqualTo("Test Business");
+        assertThat(response.adminName()).isNull();
     }
 
     @Test
