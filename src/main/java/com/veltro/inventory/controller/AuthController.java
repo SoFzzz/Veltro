@@ -101,7 +101,6 @@ public class AuthController {
                 "success", true,
                 "message", "Password changed successfully."));
     }
-
     /**
      * Lists all active workers in the current admin's business.
      */
@@ -113,10 +112,20 @@ public class AuthController {
     }
 
     /**
+     * Gets the total count of active workers in the current admin's business.
+     */
+    @GetMapping("/workers/count")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, Object>> getWorkerCount() {
+        Long businessId = tenantProvider.getBusinessId();
+        long count = authService.getWorkerCount(businessId);
+        return ResponseEntity.ok(Map.of("count", count));
+    }
+
+    /**
      * Creates a worker within the current admin's business.
      */
     @PostMapping("/workers")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<WorkerCreatedResponse> createWorker(
             @Valid @RequestBody RegisterRequest request) {
 
