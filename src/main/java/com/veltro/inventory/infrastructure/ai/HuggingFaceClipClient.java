@@ -36,6 +36,26 @@ public class HuggingFaceClipClient {
      * @return the embedding as a float array, or empty if the call fails
      */
     public Optional<float[]> generateEmbedding(MultipartFile image) {
+        try {
+            String filename = image.getOriginalFilename() != null
+                    ? image.getOriginalFilename()
+                    : "image.jpg";
+            return generateEmbedding(image.getBytes(), filename);
+        } catch (Exception e) {
+            log.error("Failed to read bytes from MultipartFile", e);
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Sends raw image bytes to the remote CLIP service and retrieves the embedding vector.
+     * This overload is used by the indexing pipeline where images are read from disk.
+     *
+     * @param imageBytes raw image content
+     * @param filename   descriptive filename for the multipart upload
+     * @return the embedding as a float array, or empty if the call fails
+     */
+    public Optional<float[]> generateEmbedding(byte[] imageBytes, String filename) {
         String remoteUrl = clipConfig.getRemoteUrl();
         if (remoteUrl == null || remoteUrl.isBlank()) {
             log.warn("CLIP remote URL is not configured; skipping remote embedding.");
@@ -47,14 +67,10 @@ public class HuggingFaceClipClient {
                 : remoteUrl + "/embed-image";
 
         try {
-            byte[] imageBytes = image.getBytes();
-
             ByteArrayResource imageResource = new ByteArrayResource(imageBytes) {
                 @Override
                 public String getFilename() {
-                    return image.getOriginalFilename() != null
-                            ? image.getOriginalFilename()
-                            : "image.jpg";
+                    return filename;
                 }
             };
 
