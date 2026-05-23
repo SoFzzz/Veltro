@@ -125,12 +125,17 @@ public class AlertService {
                             config.setOverstockThreshold(inv.getMaxStock());
                             configurationRepository.save(config);
                         }, () -> {
-                            AlertConfigurationEntity config = new AlertConfigurationEntity();
-                            config.setProduct(inv.getProduct());
+                            AlertConfigurationEntity config = configurationRepository.findByProductId(inv.getProduct().getId())
+                                    .orElseGet(() -> {
+                                        AlertConfigurationEntity newConfig = new AlertConfigurationEntity();
+                                        newConfig.setProduct(inv.getProduct());
+                                        return newConfig;
+                                    });
                             config.setBusinessId(inv.getBusinessId());
                             config.setCriticalStock(0);
                             config.setMinStock(inv.getMinStock());
                             config.setOverstockThreshold(inv.getMaxStock());
+                            config.setActive(true);
                             configurationRepository.save(config);
                         });
                 evaluateStock(inv.getProduct().getId(), inv.getBusinessId());

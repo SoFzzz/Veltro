@@ -10,4 +10,6 @@ import java.util.Optional;
 public interface AlertConfigurationRepository extends JpaRepository<AlertConfigurationEntity, Long> {
 
     Optional<AlertConfigurationEntity> findByProductIdAndActiveTrueAndBusinessId(Long productId, Long businessId);
+
+    Optional<AlertConfigurationEntity> findByProductId(Long productId);
 }

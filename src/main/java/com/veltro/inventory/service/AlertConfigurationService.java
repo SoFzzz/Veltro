@@ -70,12 +70,18 @@ public class AlertConfigurationService {
                 ? inventory.getMaxStock()
                 : DEFAULT_OVERSTOCK_THRESHOLD;
 
-        AlertConfigurationEntity config = new AlertConfigurationEntity();
-        config.setProduct(inventory.getProduct());
+        AlertConfigurationEntity config = configurationRepository.findByProductId(productId)
+                .orElseGet(() -> {
+                    AlertConfigurationEntity newConfig = new AlertConfigurationEntity();
+                    newConfig.setProduct(inventory.getProduct());
+                    return newConfig;
+                });
+
         config.setBusinessId(businessId);
         config.setCriticalStock(DEFAULT_CRITICAL_STOCK);
         config.setMinStock(minStock);
         config.setOverstockThreshold(maxStock);
+        config.setActive(true);
 
         return configurationRepository.save(config);
     }

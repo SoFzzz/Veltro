@@ -199,12 +199,17 @@ public class InventoryService {
                     config.setOverstockThreshold(request.maxStock());
                     configurationRepository.save(config);
                 }, () -> {
-                    com.veltro.inventory.model.AlertConfigurationEntity config = new com.veltro.inventory.model.AlertConfigurationEntity();
-                    config.setProduct(inventory.getProduct());
+                    com.veltro.inventory.model.AlertConfigurationEntity config = configurationRepository.findByProductId(productId)
+                            .orElseGet(() -> {
+                                com.veltro.inventory.model.AlertConfigurationEntity newConfig = new com.veltro.inventory.model.AlertConfigurationEntity();
+                                newConfig.setProduct(inventory.getProduct());
+                                return newConfig;
+                            });
                     config.setBusinessId(businessId);
                     config.setCriticalStock(0);
                     config.setMinStock(request.minStock());
                     config.setOverstockThreshold(request.maxStock());
+                    config.setActive(true);
                     configurationRepository.save(config);
                 });
 
