@@ -1,6 +1,8 @@
 package com.veltro.inventory.infrastructure.ai;
 
+import jakarta.annotation.PostConstruct;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -25,6 +27,7 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationProperties(prefix = "veltro.ai.openai")
 @Data
+@Slf4j
 public class VisionApiConfig {
 
     /**
@@ -89,5 +92,15 @@ public class VisionApiConfig {
      */
     public boolean isConfigured() {
         return enabled && apiKey != null && !apiKey.isBlank();
+    }
+
+    @PostConstruct
+    public void logConfigurationStatus() {
+        if (isConfigured()) {
+            log.info("AI Vision ENABLED: model={}, endpoint={}", model, apiEndpoint);
+        } else {
+            log.warn("AI Vision DISABLED: enabled={}, apiKeyConfigured={}",
+                     enabled, apiKey != null && !apiKey.isBlank());
+        }
     }
 }
