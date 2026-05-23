@@ -15,4 +15,5 @@ public class ClipConfig {
     private double similarityThreshold = 0.45;
     private double confidenceThreshold = 0.75;
     private String version = "ViT-B/32-v1";
+    private String remoteUrl = ""; // Hugging Face Space URL (e.g. https://veltro-ucc-veltro-models.hf.space)
 }

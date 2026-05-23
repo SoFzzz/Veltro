@@ -37,6 +37,8 @@ veltro:
       timeout-seconds: 30
       max-image-size-mb: 10
       max-retries: 3
+    clip:
+      remote-url: ${CLIP_API_URL:}
 
 app:
   uploads-dir: ${UPLOADS_DIR:./uploads}

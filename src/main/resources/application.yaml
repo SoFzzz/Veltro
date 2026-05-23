@@ -45,6 +45,7 @@ veltro:
       model-path: "models/clip-image-vit-32.onnx"
       model-checksum: ""
       version: "ViT-B/32-v1"
+      remote-url: ${CLIP_API_URL:}
 
 app:
   uploads-dir: ${UPLOADS_DIR:./uploads}
