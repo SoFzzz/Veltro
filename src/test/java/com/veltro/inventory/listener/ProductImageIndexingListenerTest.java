@@ -1,7 +1,9 @@
 package com.veltro.inventory.listener;
 
 import com.veltro.inventory.event.ProductImageUploadedEvent;
+import com.veltro.inventory.infrastructure.ai.ClipConfig;
 import com.veltro.inventory.infrastructure.ai.ClipInferenceService;
+import com.veltro.inventory.infrastructure.ai.HuggingFaceClipClient;
 import com.veltro.inventory.model.IndexingStatus;
 import com.veltro.inventory.model.ProductEntity;
 import com.veltro.inventory.repository.ProductRepository;
@@ -30,6 +32,12 @@ class ProductImageIndexingListenerTest {
     @Mock
     private ClipInferenceService clipInferenceService;
 
+    @Mock
+    private HuggingFaceClipClient huggingFaceClipClient;
+
+    @Mock
+    private ClipConfig clipConfig;
+
     @Test
     @DisplayName("listener sets INDEXING_READY on successful embedding generation")
     void onProductImageUploaded_success_setsReady() throws Exception {
@@ -46,7 +54,7 @@ class ProductImageIndexingListenerTest {
         when(clipInferenceService.generateEmbedding(any())).thenReturn(Optional.of(new float[] {1.0f, 2.0f}));
         when(productRepository.save(any(ProductEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        ProductImageIndexingListener listener = new ProductImageIndexingListener(productRepository, clipInferenceService);
+        ProductImageIndexingListener listener = new ProductImageIndexingListener(productRepository, clipInferenceService, huggingFaceClipClient, clipConfig);
         listener.onProductImageUploaded(new ProductImageUploadedEvent(1L, 100L, 77L, "user", image, null));
 
         assertThat(entity.getIndexingStatus()).isEqualTo(IndexingStatus.INDEXING_READY);
@@ -71,7 +79,7 @@ class ProductImageIndexingListenerTest {
         when(clipInferenceService.generateEmbedding(any())).thenThrow(new RuntimeException("boom"));
         when(productRepository.save(any(ProductEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        ProductImageIndexingListener listener = new ProductImageIndexingListener(productRepository, clipInferenceService);
+        ProductImageIndexingListener listener = new ProductImageIndexingListener(productRepository, clipInferenceService, huggingFaceClipClient, clipConfig);
         listener.onProductImageUploaded(new ProductImageUploadedEvent(1L, 100L, 77L, "user", image, null));
 
         assertThat(entity.getIndexingStatus()).isEqualTo(IndexingStatus.INDEXING_FAILED);
