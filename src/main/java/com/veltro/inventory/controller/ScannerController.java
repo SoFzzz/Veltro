@@ -1,5 +1,6 @@
 package com.veltro.inventory.controller;
 
+import com.veltro.inventory.dto.scanner.DetectSearchResponse;
 import com.veltro.inventory.dto.scanner.ProductSuggestionResponse;
 import com.veltro.inventory.dto.scanner.SemanticSearchMatchDto;
 import com.veltro.inventory.model.ProductEntity;
@@ -86,10 +87,13 @@ public class ScannerController {
 
     @PostMapping(value = "/detect", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyRole('ADMIN', 'CASHIER', 'WAREHOUSE')")
-    public ResponseEntity<?> detectSearch(@RequestParam("image") MultipartFile image) {
+    public ResponseEntity<List<DetectSearchResponse>> detectSearch(@RequestParam("image") MultipartFile image) {
         ResponseEntity<Map<String, Object>> fileValidationError = validateDetectImageFile(image);
         if (fileValidationError != null) {
-            return fileValidationError;
+            @SuppressWarnings("unchecked")
+            ResponseEntity<List<DetectSearchResponse>> errorResponse = 
+                (ResponseEntity<List<DetectSearchResponse>>) (ResponseEntity<?>) fileValidationError;
+            return errorResponse;
         }
 
         if (!semanticSearchProvider.isModelLoaded()) {
@@ -116,7 +120,7 @@ public class ScannerController {
                     match.getBarcode(),
                     match.getSku()
             );
-            return ResponseEntity.ok(List.of(Map.of("matches", List.of(matchDto))));
+            return ResponseEntity.ok(List.of(new DetectSearchResponse(List.of(matchDto))));
         } catch (Exception e) {
             log.error("Detect search failed", e);
             return ResponseEntity.ok(List.of());
