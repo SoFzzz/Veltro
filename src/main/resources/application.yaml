@@ -45,7 +45,7 @@ veltro:
       model-path: "models/clip-image-vit-32.onnx"
       model-checksum: ""
       version: "ViT-B/32-v1"
-      remote-url: ${CLIP_API_URL:}
+      remote-url: ${CLIP_API_URL:https://huggingface.co/spaces/YOUR_ORG/clip-api/embed-image}
 
 app:
   uploads-dir: ${UPLOADS_DIR:./uploads}
