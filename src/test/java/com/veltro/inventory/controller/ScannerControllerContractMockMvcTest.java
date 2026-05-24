@@ -5,6 +5,7 @@ import com.veltro.inventory.security.TenantProvider;
 import com.veltro.inventory.service.BatchIndexingService;
 import com.veltro.inventory.service.ProductRecognitionService;
 import com.veltro.inventory.service.SemanticSearchProvider;
+import com.veltro.inventory.infrastructure.ai.SamSegmentationClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,6 +39,8 @@ class ScannerControllerContractMockMvcTest {
     private SemanticSearchProvider semanticSearchProvider;
     @Mock
     private TenantProvider tenantProvider;
+    @Mock
+    private SamSegmentationClient samSegmentationClient;
 
     private MockMvc mockMvc;
 
@@ -47,6 +50,7 @@ class ScannerControllerContractMockMvcTest {
                 scannerService,
                 batchIndexingService,
                 semanticSearchProvider,
+                samSegmentationClient,
                 tenantProvider
         );
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();

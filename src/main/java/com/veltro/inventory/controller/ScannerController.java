@@ -2,7 +2,9 @@ package com.veltro.inventory.controller;
 
 import com.veltro.inventory.dto.scanner.DetectSearchResponse;
 import com.veltro.inventory.dto.scanner.ProductSuggestionResponse;
+import com.veltro.inventory.dto.scanner.SamSegmentationResponse;
 import com.veltro.inventory.dto.scanner.SemanticSearchMatchDto;
+import com.veltro.inventory.infrastructure.ai.SamSegmentationClient;
 import com.veltro.inventory.model.ProductEntity;
 import com.veltro.inventory.security.TenantProvider;
 import com.veltro.inventory.service.BatchIndexingService;
@@ -44,6 +46,7 @@ public class ScannerController {
     private final ProductRecognitionService scannerService;
     private final BatchIndexingService batchIndexingService;
     private final SemanticSearchProvider semanticSearchProvider;
+    private final SamSegmentationClient samSegmentationClient;
     private final TenantProvider tenantProvider;
 
     @PostMapping(value = "/ai", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -83,6 +86,26 @@ public class ScannerController {
                 "loaded", semanticSearchProvider.isModelLoaded(),
                 "version", semanticSearchProvider.getModelVersion()
         ));
+    }
+
+    @PostMapping(value = "/segment", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('ADMIN', 'CASHIER', 'WAREHOUSE')")
+    public ResponseEntity<SamSegmentationResponse> segmentImage(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("x") float x,
+            @RequestParam("y") float y) {
+        
+        if (file == null || file.isEmpty()) {
+            return ResponseEntity.badRequest().body(new SamSegmentationResponse("error", null));
+        }
+
+        try {
+            SamSegmentationResponse response = samSegmentationClient.segmentWithAI(file, x, y);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error during SAM segmentation proxy", e);
+            return ResponseEntity.internalServerError().body(new SamSegmentationResponse("error", null));
+        }
     }
 
     @PostMapping(value = "/detect", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

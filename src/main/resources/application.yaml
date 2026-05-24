@@ -47,5 +47,9 @@ veltro:
       version: "ViT-B/32-v1"
       remote-url: ${CLIP_API_URL:https://huggingface.co/spaces/YOUR_ORG/clip-api/embed-image}
 
+    sam:
+      enabled: true
+      remote-url: ${DIGITALOCEAN_SAM_URL:}
+
 app:
   uploads-dir: ${UPLOADS_DIR:./uploads}
