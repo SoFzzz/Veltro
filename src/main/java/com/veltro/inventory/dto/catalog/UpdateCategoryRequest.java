@@ -9,9 +9,10 @@ import jakarta.validation.constraints.Size;
 public record UpdateCategoryRequest(
 
         @NotBlank(message = "{validation.category.name.notblank}")
-        @Size(max = 100, message = "{validation.category.name.size}")
+        @Size(max = 30, message = "{validation.category.name.size}")
         String name,
 
+        @Size(max = 40, message = "{validation.category.description.size}")
         String description,
 
         /** Optional 窶・set to null to move category to root level. */
