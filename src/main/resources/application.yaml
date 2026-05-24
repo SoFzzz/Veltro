@@ -1,8 +1,6 @@
 spring:
   application:
     name: veltro
-  config:
-    import: optional:file:./.env[.properties]
   profiles:
     # Keep a single active profile to avoid merge-conflict artifacts.
     active: dev-with-ai
