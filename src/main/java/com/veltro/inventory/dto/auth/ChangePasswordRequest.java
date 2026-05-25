@@ -10,11 +10,13 @@ import jakarta.validation.constraints.Size;
 public record ChangePasswordRequest(
 
         @NotBlank(message = "Current password is required")
+        @Size(min = 64, max = 64, message = "Current password format invalid")
+        @Pattern(regexp = "^[a-f0-9]{64}$", message = "Current password format invalid")
         String currentPassword,
 
         @NotBlank(message = "New password is required")
-        @Size(min = 8, max = 20, message = "New password must be between 8 and 20 characters")
-        @Pattern(regexp = "^\\S+$", message = "Password must not contain whitespace")
+        @Size(min = 64, max = 64, message = "New password format invalid")
+        @Pattern(regexp = "^[a-f0-9]{64}$", message = "New password format invalid")
         String newPassword
 ) {
 }

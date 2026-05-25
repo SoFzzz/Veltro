@@ -16,8 +16,8 @@ public record RegisterRequest(
         String email,
 
         @NotBlank(message = "Password is required")
-        @Size(min = 8, max = 20, message = "Password must be between 8 and 20 characters")
-        @Pattern(regexp = "^\\S+$", message = "Password must not contain whitespace")
+        @Size(min = 64, max = 64, message = "Password format invalid")
+        @Pattern(regexp = "^[a-f0-9]{64}$", message = "Password format invalid")
         String password,
 
         String role,

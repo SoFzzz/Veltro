@@ -14,6 +14,7 @@ import com.veltro.inventory.repository.UserRepository;
 import com.veltro.inventory.security.CustomUserDetailsService;
 import com.veltro.inventory.security.JwtTokenProvider;
 import com.veltro.inventory.security.VeltroUserDetails;
+import com.veltro.inventory.util.PasswordHashUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -55,7 +56,7 @@ class AuthenticationServiceTest {
     @Test
     @DisplayName("login — éxito con VeltroUserDetails devuelve businessId")
     void login_success_withVeltroUserDetails() {
-        LoginRequest request = new LoginRequest("admin", "password123");
+        LoginRequest request = new LoginRequest("admin", PasswordHashUtils.sha256Hex("password123"));
         VeltroUserDetails details = new VeltroUserDetails(
                 "admin", "hash",
                 List.of(new SimpleGrantedAuthority("ROLE_ADMIN")),
@@ -91,7 +92,7 @@ class AuthenticationServiceTest {
     @Test
     @DisplayName("login — éxito con UserDetails estándar devuelve businessId null")
     void login_success_withRegularUserDetails() {
-        LoginRequest request = new LoginRequest("user", "password123");
+        LoginRequest request = new LoginRequest("user", PasswordHashUtils.sha256Hex("password123"));
         UserDetails details = new User("user", "hash",
                 List.of(new SimpleGrantedAuthority("ROLE_CASHIER")));
 
@@ -109,7 +110,7 @@ class AuthenticationServiceTest {
     @Test
     @DisplayName("login — credenciales inválidas propaga excepción")
     void login_authenticationFails_propagatesException() {
-        LoginRequest request = new LoginRequest("admin", "wrong");
+        LoginRequest request = new LoginRequest("admin", PasswordHashUtils.sha256Hex("wrong"));
         when(authenticationManager.authenticate(any()))
                 .thenThrow(new BadCredentialsException("Bad credentials"));
 
@@ -120,7 +121,7 @@ class AuthenticationServiceTest {
     @Test
     @DisplayName("login — sin authorities devuelve role vacío")
     void login_noAuthorities_returnsEmptyRole() {
-        LoginRequest request = new LoginRequest("user", "pass123456");
+        LoginRequest request = new LoginRequest("user", PasswordHashUtils.sha256Hex("pass123456"));
         UserDetails details = new User("user", "hash", List.of());
 
         when(userDetailsService.loadUserByUsername("user")).thenReturn(details);
@@ -186,14 +187,14 @@ class AuthenticationServiceTest {
     @Test
     @DisplayName("changePassword — éxito actualiza contraseña")
     void changePassword_success() {
-        ChangePasswordRequest request = new ChangePasswordRequest("oldPass", "newPass123");
+        ChangePasswordRequest request = new ChangePasswordRequest(PasswordHashUtils.sha256Hex("oldPass"), PasswordHashUtils.sha256Hex("newPass123"));
         UserEntity user = new UserEntity();
         user.setUsername("admin");
         user.setPasswordHash("encoded-old");
 
         when(userRepository.findByUsernameAndActiveTrue("admin")).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches("oldPass", "encoded-old")).thenReturn(true);
-        when(passwordEncoder.encode("newPass123")).thenReturn("encoded-new");
+        when(passwordEncoder.matches(PasswordHashUtils.sha256Hex("oldPass"), "encoded-old")).thenReturn(true);
+        when(passwordEncoder.encode(PasswordHashUtils.sha256Hex("newPass123"))).thenReturn("encoded-new");
 
         authenticationService.changePassword("admin", request);
 
@@ -204,7 +205,7 @@ class AuthenticationServiceTest {
     @Test
     @DisplayName("changePassword — usuario no encontrado lanza NotFoundException")
     void changePassword_userNotFound_throwsNotFoundException() {
-        ChangePasswordRequest request = new ChangePasswordRequest("old", "newPass123");
+        ChangePasswordRequest request = new ChangePasswordRequest(PasswordHashUtils.sha256Hex("old"), PasswordHashUtils.sha256Hex("newPass123"));
         when(userRepository.findByUsernameAndActiveTrue("ghost")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> authenticationService.changePassword("ghost", request))
@@ -215,12 +216,12 @@ class AuthenticationServiceTest {
     @Test
     @DisplayName("changePassword — contraseña actual incorrecta lanza IllegalArgumentException")
     void changePassword_wrongCurrentPassword_throwsIllegalArgument() {
-        ChangePasswordRequest request = new ChangePasswordRequest("wrong", "newPass123");
+        ChangePasswordRequest request = new ChangePasswordRequest(PasswordHashUtils.sha256Hex("wrong"), PasswordHashUtils.sha256Hex("newPass123"));
         UserEntity user = new UserEntity();
         user.setPasswordHash("encoded-old");
 
         when(userRepository.findByUsernameAndActiveTrue("admin")).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches("wrong", "encoded-old")).thenReturn(false);
+        when(passwordEncoder.matches(PasswordHashUtils.sha256Hex("wrong"), "encoded-old")).thenReturn(false);
 
         assertThatThrownBy(() -> authenticationService.changePassword("admin", request))
                 .isInstanceOf(IllegalArgumentException.class)

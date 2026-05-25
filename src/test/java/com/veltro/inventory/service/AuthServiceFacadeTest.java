@@ -7,6 +7,7 @@ import com.veltro.inventory.dto.auth.RefreshRequest;
 import com.veltro.inventory.dto.auth.RegisterRequest;
 import com.veltro.inventory.dto.auth.WorkerCreatedResponse;
 import com.veltro.inventory.dto.auth.WorkerResponse;
+import com.veltro.inventory.util.PasswordHashUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,7 +38,7 @@ class AuthServiceFacadeTest {
     @Test
     @DisplayName("login delega a AuthenticationService")
     void login_delegatesToAuthenticationService() {
-        LoginRequest request = new LoginRequest("user", "pass123456");
+        LoginRequest request = new LoginRequest("user", PasswordHashUtils.sha256Hex("pass123456"));
         LoginResponse expected = LoginResponse.of("at", "rt", 3600, "user", "ADMIN", 1L);
         when(authenticationService.login(request)).thenReturn(expected);
 
@@ -70,7 +71,7 @@ class AuthServiceFacadeTest {
     @Test
     @DisplayName("register delega a BusinessRegistrationService")
     void register_delegatesToBusinessRegistrationService() {
-        RegisterRequest request = new RegisterRequest("admin", "admin@test.com", "Password1", "ADMIN", "Negocio");
+        RegisterRequest request = new RegisterRequest("admin", "admin@test.com", PasswordHashUtils.sha256Hex("Password1"), "ADMIN", "Negocio");
 
         authService.register(request);
 
@@ -80,7 +81,7 @@ class AuthServiceFacadeTest {
     @Test
     @DisplayName("changePassword delega a AuthenticationService")
     void changePassword_delegatesToAuthenticationService() {
-        ChangePasswordRequest request = new ChangePasswordRequest("old", "newPass123");
+        ChangePasswordRequest request = new ChangePasswordRequest(PasswordHashUtils.sha256Hex("old"), PasswordHashUtils.sha256Hex("newPass123"));
 
         authService.changePassword("user", request);
 
@@ -90,7 +91,7 @@ class AuthServiceFacadeTest {
     @Test
     @DisplayName("createWorker delega a WorkerManagementService")
     void createWorker_delegatesToWorkerManagementService() {
-        RegisterRequest request = new RegisterRequest("cajero", "cajero@test.com", "Password1", "CASHIER", null);
+        RegisterRequest request = new RegisterRequest("cajero", "cajero@test.com", PasswordHashUtils.sha256Hex("Password1"), "CASHIER", null);
         WorkerCreatedResponse expected = new WorkerCreatedResponse(1L, "cajero", "cajero@test.com", "CASHIER", Instant.now());
         when(workerManagementService.createWorker(100L, request)).thenReturn(expected);
 

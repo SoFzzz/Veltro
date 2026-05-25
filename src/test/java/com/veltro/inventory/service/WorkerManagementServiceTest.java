@@ -7,6 +7,7 @@ import com.veltro.inventory.exception.NotFoundException;
 import com.veltro.inventory.model.Role;
 import com.veltro.inventory.model.UserEntity;
 import com.veltro.inventory.repository.UserRepository;
+import com.veltro.inventory.util.PasswordHashUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -58,13 +59,13 @@ class WorkerManagementServiceTest {
         @Test
         @DisplayName("éxito — crea cajero correctamente")
         void success_cashier() {
-            RegisterRequest request = new RegisterRequest("cajero1", "cajero@test.com", "Password1", "CASHIER", null);
+            RegisterRequest request = new RegisterRequest("cajero1", "cajero@test.com", PasswordHashUtils.sha256Hex("Password1"), "CASHIER", null);
             UserEntity saved = createWorkerEntity(1L, "cajero1", Role.CASHIER, BUSINESS_ID);
             saved.setCreatedAt(Instant.now());
 
             when(userRepository.findByUsernameAndBusinessId("cajero1", BUSINESS_ID)).thenReturn(Optional.empty());
             when(userRepository.findByEmailAndActiveTrue("cajero@test.com")).thenReturn(Optional.empty());
-            when(passwordEncoder.encode("Password1")).thenReturn("hash");
+            when(passwordEncoder.encode(PasswordHashUtils.sha256Hex("Password1"))).thenReturn("hash");
             when(userRepository.save(any(UserEntity.class))).thenReturn(saved);
 
             WorkerCreatedResponse response = service.createWorker(BUSINESS_ID, request);
@@ -77,13 +78,13 @@ class WorkerManagementServiceTest {
         @Test
         @DisplayName("éxito — crea almacenero correctamente")
         void success_warehouse() {
-            RegisterRequest request = new RegisterRequest("bodega1", "bodega@test.com", "Password1", "WAREHOUSE", null);
+            RegisterRequest request = new RegisterRequest("bodega1", "bodega@test.com", PasswordHashUtils.sha256Hex("Password1"), "WAREHOUSE", null);
             UserEntity saved = createWorkerEntity(2L, "bodega1", Role.WAREHOUSE, BUSINESS_ID);
             saved.setCreatedAt(Instant.now());
 
             when(userRepository.findByUsernameAndBusinessId("bodega1", BUSINESS_ID)).thenReturn(Optional.empty());
             when(userRepository.findByEmailAndActiveTrue("bodega@test.com")).thenReturn(Optional.empty());
-            when(passwordEncoder.encode("Password1")).thenReturn("hash");
+            when(passwordEncoder.encode(PasswordHashUtils.sha256Hex("Password1"))).thenReturn("hash");
             when(userRepository.save(any(UserEntity.class))).thenReturn(saved);
 
             WorkerCreatedResponse response = service.createWorker(BUSINESS_ID, request);
@@ -93,7 +94,7 @@ class WorkerManagementServiceTest {
         @Test
         @DisplayName("rol ADMIN lanza IllegalArgumentException")
         void adminRole_throws() {
-            RegisterRequest request = new RegisterRequest("admin2", "admin2@test.com", "Password1", "ADMIN", null);
+            RegisterRequest request = new RegisterRequest("admin2", "admin2@test.com", PasswordHashUtils.sha256Hex("Password1"), "ADMIN", null);
 
             assertThatThrownBy(() -> service.createWorker(BUSINESS_ID, request))
                     .isInstanceOf(IllegalArgumentException.class)
@@ -103,7 +104,7 @@ class WorkerManagementServiceTest {
         @Test
         @DisplayName("username duplicado en el negocio lanza IllegalArgumentException")
         void duplicateUsername_throws() {
-            RegisterRequest request = new RegisterRequest("cajero1", "cajero@test.com", "Password1", "CASHIER", null);
+            RegisterRequest request = new RegisterRequest("cajero1", "cajero@test.com", PasswordHashUtils.sha256Hex("Password1"), "CASHIER", null);
             when(userRepository.findByUsernameAndBusinessId("cajero1", BUSINESS_ID))
                     .thenReturn(Optional.of(new UserEntity()));
 
@@ -115,7 +116,7 @@ class WorkerManagementServiceTest {
         @Test
         @DisplayName("email duplicado lanza IllegalArgumentException")
         void duplicateEmail_throws() {
-            RegisterRequest request = new RegisterRequest("nuevo", "existing@test.com", "Password1", "CASHIER", null);
+            RegisterRequest request = new RegisterRequest("nuevo", "existing@test.com", PasswordHashUtils.sha256Hex("Password1"), "CASHIER", null);
             when(userRepository.findByUsernameAndBusinessId("nuevo", BUSINESS_ID)).thenReturn(Optional.empty());
             when(userRepository.findByEmailAndActiveTrue("existing@test.com"))
                     .thenReturn(Optional.of(new UserEntity()));

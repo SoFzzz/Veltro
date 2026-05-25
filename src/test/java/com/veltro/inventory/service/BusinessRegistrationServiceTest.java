@@ -6,6 +6,7 @@ import com.veltro.inventory.model.Role;
 import com.veltro.inventory.model.UserEntity;
 import com.veltro.inventory.repository.BusinessRepository;
 import com.veltro.inventory.repository.UserRepository;
+import com.veltro.inventory.util.PasswordHashUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,7 +37,7 @@ class BusinessRegistrationServiceTest {
     private BusinessRegistrationService service;
 
     private RegisterRequest validRequest() {
-        return new RegisterRequest("admin", "admin@test.com", "Password1", "ADMIN", "Mi Negocio");
+        return new RegisterRequest("admin", "admin@test.com", PasswordHashUtils.sha256Hex("Password1"), "ADMIN", "Mi Negocio");
     }
 
     @Test
@@ -52,7 +53,7 @@ class BusinessRegistrationServiceTest {
         savedUser.setUsername("admin");
 
         when(userRepository.findByEmailAndActiveTrue("admin@test.com")).thenReturn(Optional.empty());
-        when(passwordEncoder.encode("Password1")).thenReturn("hashed");
+        when(passwordEncoder.encode(PasswordHashUtils.sha256Hex("Password1"))).thenReturn("hashedPass");
         when(businessRepository.save(any(BusinessEntity.class))).thenReturn(savedBusiness);
         when(userRepository.save(any(UserEntity.class))).thenReturn(savedUser);
 
@@ -65,7 +66,7 @@ class BusinessRegistrationServiceTest {
     @Test
     @DisplayName("register — nombre de negocio null lanza IllegalArgumentException")
     void register_nullBusinessName_throws() {
-        RegisterRequest request = new RegisterRequest("admin", "admin@test.com", "Password1", "ADMIN", null);
+        RegisterRequest request = new RegisterRequest("admin", "admin@test.com", PasswordHashUtils.sha256Hex("Password1"), "ADMIN", null);
 
         assertThatThrownBy(() -> service.register(request))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -75,7 +76,7 @@ class BusinessRegistrationServiceTest {
     @Test
     @DisplayName("register — nombre de negocio vacío lanza IllegalArgumentException")
     void register_blankBusinessName_throws() {
-        RegisterRequest request = new RegisterRequest("admin", "admin@test.com", "Password1", "ADMIN", "   ");
+        RegisterRequest request = new RegisterRequest("admin", "admin@test.com", PasswordHashUtils.sha256Hex("Password1"), "ADMIN", "   ");
 
         assertThatThrownBy(() -> service.register(request))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -121,7 +122,7 @@ class BusinessRegistrationServiceTest {
     @Test
     @DisplayName("register — hace trim al nombre del negocio")
     void register_trimsBusinessName() {
-        RegisterRequest request = new RegisterRequest("admin", "admin@test.com", "Password1", "ADMIN", "  Mi Negocio  ");
+        RegisterRequest request = new RegisterRequest("admin", "admin@test.com", PasswordHashUtils.sha256Hex("Password1"), "ADMIN", "  Mi Negocio  ");
         BusinessEntity savedBusiness = new BusinessEntity();
         savedBusiness.setId(1L);
         UserEntity savedUser = new UserEntity();
@@ -149,7 +150,7 @@ class BusinessRegistrationServiceTest {
         savedUser.setId(10L);
 
         when(userRepository.findByEmailAndActiveTrue(request.email())).thenReturn(Optional.empty());
-        when(passwordEncoder.encode("Password1")).thenReturn("bcrypt-hash");
+        when(passwordEncoder.encode(PasswordHashUtils.sha256Hex("Password1"))).thenReturn("bcrypt-hash");
         when(businessRepository.save(any())).thenReturn(savedBusiness);
         when(userRepository.save(any(UserEntity.class))).thenReturn(savedUser);
 

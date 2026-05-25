@@ -9,6 +9,7 @@ import com.veltro.inventory.security.TenantProvider;
 import com.veltro.inventory.service.AuthService;
 import com.veltro.inventory.service.AuthenticationService;
 import com.veltro.inventory.service.BusinessRegistrationService;
+import com.veltro.inventory.util.PasswordHashUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -69,7 +70,7 @@ class AuthControllerTest {
     void login_validCredentials_returns200() {
         when(authenticationService.login(any(LoginRequest.class))).thenReturn(stubResponse());
 
-        LoginRequest request = new LoginRequest("alice", "secret123");
+        LoginRequest request = new LoginRequest("alice", PasswordHashUtils.sha256Hex("secret123"));
         ResponseEntity<LoginResponse> response = controller.login(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -81,7 +82,7 @@ class AuthControllerTest {
     void register_delegatesToBusinessRegistrationService() {
         doNothing().when(businessRegistrationService).register(any(RegisterRequest.class));
 
-        RegisterRequest request = new RegisterRequest("alice", "alice@example.com", "secret123", "Alice Business", "CASHIER");
+        RegisterRequest request = new RegisterRequest("alice", "alice@example.com", PasswordHashUtils.sha256Hex("secret123"), "Alice Business", "CASHIER");
         ResponseEntity<Map<String, Object>> response = controller.register(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -118,7 +119,7 @@ class AuthControllerTest {
         doNothing().when(authenticationService).changePassword(eq("alice"), any(ChangePasswordRequest.class));
 
         UserDetails userDetails = adminUser();
-        ChangePasswordRequest request = new ChangePasswordRequest("oldPass1", "newPass1");
+        ChangePasswordRequest request = new ChangePasswordRequest(PasswordHashUtils.sha256Hex("oldPass1"), PasswordHashUtils.sha256Hex("newPass1"));
         ResponseEntity<Map<String, Object>> response = controller.changePassword(userDetails, request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
