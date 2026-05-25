@@ -1,5 +1,6 @@
 package com.veltro.inventory.dto.purchasing;
 
+import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
@@ -15,6 +16,7 @@ public record CreatePurchaseOrderRequest(
         @Size(max = 1000, message = "{validation.purchase.order.notes.size}")
         String notes,
 
+        @Future(message = "{validation.purchase.order.date.future}")
         OffsetDateTime expectedDeliveryDate,
 
         @Size(max = 5000, message = "{validation.purchase.order.receipt.size}")
