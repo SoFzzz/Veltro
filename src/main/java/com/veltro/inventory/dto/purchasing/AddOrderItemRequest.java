@@ -1,6 +1,7 @@
 package com.veltro.inventory.dto.purchasing;
 
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
@@ -17,6 +18,7 @@ public record AddOrderItemRequest(
 
         @NotNull(message = "{validation.purchase.item.quantity.required}")
         @Positive(message = "{validation.purchase.item.quantity.positive}")
+        @Max(value = 999999, message = "{validation.purchase.item.quantity.max}")
         Integer requestedQuantity,
 
         @NotNull(message = "{validation.purchase.item.unitcost.required}")
