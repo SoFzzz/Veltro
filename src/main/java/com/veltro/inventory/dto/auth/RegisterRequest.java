@@ -12,6 +12,7 @@ public record RegisterRequest(
 
         @NotBlank(message = "Email is required")
         @Email(message = "Invalid email format")
+        @Size(max = 254, message = "Email must not exceed 254 characters")
         String email,
 
         @NotBlank(message = "Password is required")
