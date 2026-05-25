@@ -27,6 +27,10 @@ public class SamSegmentationClient {
     @Value("${veltro.ai.sam.remote-url:}")
     private String samApiUrl;
 
+    public boolean isAvailable() {
+        return samApiUrl != null && !samApiUrl.isBlank();
+    }
+
     public SamSegmentationResponse segmentWithAI(MultipartFile file, float x, float y) throws IOException {
         if (samApiUrl == null || samApiUrl.isBlank()) {
             log.error("La variable DIGITALOCEAN_SAM_URL no está configurada (veltro.ai.sam.remote-url).");

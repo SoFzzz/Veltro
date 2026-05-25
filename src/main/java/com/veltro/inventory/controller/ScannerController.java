@@ -72,6 +72,14 @@ public class ScannerController {
         return ResponseEntity.ok(Map.of("available", scannerService.isAiVisionAvailable()));
     }
 
+    @GetMapping("/sam-status")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CASHIER', 'WAREHOUSE')")
+    public ResponseEntity<Map<String, Boolean>> getSamStatus() {
+        boolean isAvailable = samSegmentationClient.isAvailable();
+        log.info("Endpoint /sam-status consultado. samAvailable = {}", isAvailable);
+        return ResponseEntity.ok(Map.of("samAvailable", isAvailable));
+    }
+
     @PostMapping("/reindex")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, String>> reindexAll() {
