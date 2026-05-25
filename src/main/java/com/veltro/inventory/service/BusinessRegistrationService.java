@@ -35,6 +35,10 @@ public class BusinessRegistrationService {
             throw new IllegalArgumentException("Business name is required for registration");
         }
 
+        if (userRepository.existsByUsername(request.username())) {
+            throw new IllegalArgumentException("Username already in use");
+        }
+
         if (userRepository.findByEmailAndActiveTrue(request.email()).isPresent()) {
             throw new IllegalArgumentException("Email already in use");
         }

@@ -41,8 +41,8 @@ public class WorkerManagementService {
             throw new IllegalArgumentException("Cannot create ADMIN workers. Use registration instead.");
         }
 
-        if (userRepository.findByUsernameAndBusinessId(request.username(), adminBusinessId).isPresent()) {
-            throw new IllegalArgumentException("Username already exists in this business");
+        if (userRepository.existsByUsername(request.username())) {
+            throw new IllegalArgumentException("Username already in use");
         }
 
         if (userRepository.findByEmailAndActiveTrue(request.email()).isPresent()) {
