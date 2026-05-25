@@ -43,6 +43,7 @@ public class AuthenticationService {
     /**
      * Authenticates username/password and returns a token pair.
      */
+    @Transactional(readOnly = true)
     public LoginResponse login(LoginRequest request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.username(), request.password()));
@@ -81,6 +82,7 @@ public class AuthenticationService {
     /**
      * Validates a Refresh token and issues a new Access token.
      */
+    @Transactional(readOnly = true)
     public LoginResponse refresh(RefreshRequest request) {
         String token = request.refreshToken();
 
