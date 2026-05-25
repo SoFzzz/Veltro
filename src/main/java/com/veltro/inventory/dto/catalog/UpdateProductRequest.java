@@ -23,6 +23,7 @@ public record UpdateProductRequest(
         @Size(max = 100, message = "{validation.product.sku.size}")
         String sku,
 
+        @Size(max = 500, message = "{validation.product.description.size}")
         String description,
 
         @NotNull(message = "{validation.product.costprice.required}")
