@@ -45,7 +45,7 @@ public class WorkerManagementService {
             throw new IllegalArgumentException("Username already in use");
         }
 
-        if (userRepository.findByEmailAndActiveTrue(request.email()).isPresent()) {
+        if (userRepository.existsByEmail(request.email())) {
             throw new IllegalArgumentException("Email already in use");
         }
 

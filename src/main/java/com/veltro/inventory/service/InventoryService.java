@@ -56,9 +56,24 @@ public class InventoryService {
 
     @Transactional(readOnly = true)
     public PageResponse<InventoryResponse> findAll(Pageable pageable) {
+        return findAll(null, pageable);
+    }
+
+    /**
+     * Returns a paginated inventory list, optionally filtered by product name.
+     * B11 fix: search is delegated to the repository query.
+     *
+     * @param search   optional substring to filter by product name (case-insensitive)
+     * @param pageable pagination + sorting
+     */
+    @Transactional(readOnly = true)
+    public PageResponse<InventoryResponse> findAll(String search, Pageable pageable) {
         Long businessId = tenantProvider.getBusinessId();
         return PageResponse.from(
-                inventoryRepository.findAllByActiveTrueAndBusinessId(businessId, pageable)
+                inventoryRepository.findAllByActiveTrueAndBusinessIdAndSearch(
+                        businessId,
+                        (search != null && !search.isBlank()) ? search.trim() : null,
+                        pageable)
                         .map(inventoryMapper::toResponse)
         );
     }

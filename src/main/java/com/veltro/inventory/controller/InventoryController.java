@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -51,13 +52,13 @@ public class InventoryController {
     // -------------------------------------------------------------------------
 
     /**
-     * Returns all inventory records with pagination.
-     * Useful for inventory overview pages.
+     * Returns all inventory records with pagination and optional name search (B11).
      */
     @GetMapping
     public ResponseEntity<PageResponse<InventoryResponse>> getAll(
+            @RequestParam(required = false) String search,
             @PageableDefault(size = 20, sort = "id") Pageable pageable) {
-        return ResponseEntity.ok(inventoryService.findAll(pageable));
+        return ResponseEntity.ok(inventoryService.findAll(search, pageable));
     }
 
     /**
