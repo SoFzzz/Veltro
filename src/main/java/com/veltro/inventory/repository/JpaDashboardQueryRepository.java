@@ -124,7 +124,7 @@ public class JpaDashboardQueryRepository implements com.veltro.inventory.service
                         (BigDecimal) row[2],
                         ((Number) row[3]).intValue(),
                         (Long) row[4],
-                        row[5] != null ? ((LocalDateTime) row[5]).atOffset(ZoneOffset.UTC) : null))
+                        row[5] != null ? ((LocalDateTime) row[5]).atZone(java.time.ZoneId.systemDefault()).toOffsetDateTime() : null))
                 .toList();
     }
 }
