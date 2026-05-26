@@ -168,7 +168,7 @@ public class AlertService {
             );
         }
         return PageResponse.from(
-                alertRepository.findByResolvedFalseAndBusinessIdOrderBySeverityDescCreatedAtAsc(businessId, pageable)
+                alertRepository.findByResolvedFalseAndBusinessIdOrderBySeverityDescCreatedAtDesc(businessId, pageable)
                         .map(alertMapper::toResponse)
         );
     }

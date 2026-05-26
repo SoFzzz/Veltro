@@ -303,7 +303,7 @@ class AlertServiceTest {
         AlertResponse response2 = new AlertResponse(2L, 2L, "Product 2", "LOW_STOCK", 
                 "WARNING", "Low stock", false, true, OffsetDateTime.now());
 
-        when(alertRepository.findByResolvedFalseAndBusinessIdOrderBySeverityDescCreatedAtAsc(eq(BUSINESS_ID), eq(pageable)))
+        when(alertRepository.findByResolvedFalseAndBusinessIdOrderBySeverityDescCreatedAtDesc(eq(BUSINESS_ID), eq(pageable)))
                 .thenReturn(alertPage);
         when(alertMapper.toResponse(alert1)).thenReturn(response1);
         when(alertMapper.toResponse(alert2)).thenReturn(response2);

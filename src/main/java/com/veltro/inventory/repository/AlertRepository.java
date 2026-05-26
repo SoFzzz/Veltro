@@ -33,9 +33,9 @@ public interface AlertRepository extends JpaRepository<AlertEntity, Long> {
             WHEN com.veltro.inventory.model.AlertSeverity.WARNING THEN 2
             WHEN com.veltro.inventory.model.AlertSeverity.INFO THEN 1
             ELSE 0
-        END DESC, a.createdAt ASC
+        END DESC, a.createdAt DESC
         """)
-    Page<AlertEntity> findByResolvedFalseAndBusinessIdOrderBySeverityDescCreatedAtAsc(@Param("businessId") Long businessId, Pageable pageable);
+    Page<AlertEntity> findByResolvedFalseAndBusinessIdOrderBySeverityDescCreatedAtDesc(@Param("businessId") Long businessId, Pageable pageable);
 
     @EntityGraph(attributePaths = {"product"})
     Page<AlertEntity> findBySeverityAndResolvedFalseAndBusinessIdOrderByCreatedAtDesc(AlertSeverity severity, Long businessId, Pageable pageable);
