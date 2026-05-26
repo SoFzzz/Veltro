@@ -39,6 +39,7 @@ server:
 
 # AI Vision API configuration - ENABLED FOR TESTING
 veltro:
+  timezone: America/Bogota
   ai:
     openai:
       enabled: true

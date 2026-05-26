@@ -34,7 +34,7 @@ public class DashboardService {
 
     private final DashboardQueryRepository dashboardQueryRepository;
     private final TenantProvider tenantProvider;
-    @Value("${veltro.timezone:UTC}")
+    @Value("${veltro.timezone:#{T(java.time.ZoneId).systemDefault().getId()}}")
     private ZoneId timezone;
     @Value("${veltro.dashboard.profit-margin:0.20}")
     private BigDecimal profitMargin;
