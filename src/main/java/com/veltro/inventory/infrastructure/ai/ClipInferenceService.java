@@ -60,6 +60,7 @@ public class ClipInferenceService {
                 this.session = env.createSession(tempModelFile.toString(), opts);
                 this.modelLoaded = true;
                 log.info("ONNX CLIP Model loaded successfully. Version: {}", config.getVersion());
+                warmup();
             } else {
                 log.warn("ONNX CLIP Model not found at classpath:{}. Inference will not be available.",
                         config.getModelPath());
@@ -67,6 +68,27 @@ public class ClipInferenceService {
         } catch (Exception e) {
             log.error("Failed to initialize ONNX Runtime session for CLIP", e);
             this.modelLoaded = false;
+        }
+    }
+
+    /**
+     * Warm-up inference to amortize ONNX Runtime JIT compilation cost at startup.
+     * A forward pass with a black 224×224 image warms JIT caches before the first
+     * real request arrives. Non-fatal: any exception is logged as WARN only.
+     */
+    private void warmup() {
+        try {
+            BufferedImage black = new BufferedImage(224, 224, BufferedImage.TYPE_INT_RGB);
+            long start = System.currentTimeMillis();
+            var result = generateEmbedding(black);
+            long elapsed = System.currentTimeMillis() - start;
+            if (result.isPresent()) {
+                log.info("CLIP warmup inference complete ({} ms, embedding dim={})", elapsed, result.get().length);
+            } else {
+                log.warn("CLIP warmup returned empty embedding");
+            }
+        } catch (Exception e) {
+            log.warn("CLIP warmup failed (non-fatal): {}", e.getMessage());
         }
     }
 
