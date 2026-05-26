@@ -12,12 +12,24 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Repository
 public interface SaleRepository extends JpaRepository<SaleEntity, Long> {
 
     @EntityGraph(attributePaths = {"details"})
     Optional<SaleEntity> findByIdAndActiveTrueAndBusinessId(Long id, Long businessId);
+
+    /**
+     * Returns all active sales for a business, most recent first (V04).
+     * Optional filter by status.
+     */
+    @EntityGraph(attributePaths = {"details"})
+    Page<SaleEntity> findAllByActiveTrueAndBusinessId(Long businessId, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"details"})
+    Page<SaleEntity> findAllByActiveTrueAndBusinessIdAndStatus(Long businessId, SaleStatus status, Pageable pageable);
 
     @Query(value = "SELECT nextval('sale_number_seq')", nativeQuery = true)
     Long getNextSaleSequenceValue();

@@ -37,6 +37,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import com.veltro.inventory.dto.common.PageResponse;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 /**
  * Application service for sale (POS) management (B2-01).
@@ -63,6 +67,30 @@ public class SaleService {
     // -------------------------------------------------------------------------
     // Queries
     // -------------------------------------------------------------------------
+
+    /**
+     * Returns a paginated list of sales for the current business, newest first (V04).
+     *
+     * @param status   optional status filter (null = all statuses)
+     * @param pageable pagination info (sort is overridden to id DESC)
+     */
+    @Transactional(readOnly = true)
+    public PageResponse<SaleResponse> findAll(SaleStatus status, Pageable pageable) {
+        Long businessId = tenantProvider.getBusinessId();
+        // Always force newest-first regardless of what the caller sends
+        Pageable sorted = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+                Sort.by(Sort.Direction.DESC, "id"));
+        if (status != null) {
+            return PageResponse.from(
+                    saleRepository.findAllByActiveTrueAndBusinessIdAndStatus(businessId, status, sorted)
+                            .map(saleMapper::toResponse)
+            );
+        }
+        return PageResponse.from(
+                saleRepository.findAllByActiveTrueAndBusinessId(businessId, sorted)
+                        .map(saleMapper::toResponse)
+        );
+    }
 
     @Transactional(readOnly = true)
     public SaleResponse findById(Long saleId) {

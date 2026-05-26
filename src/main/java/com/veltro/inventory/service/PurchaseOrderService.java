@@ -71,13 +71,13 @@ public class PurchaseOrderService {
         Long businessId = tenantProvider.getBusinessId();
 
         if (status != null) {
-            return orderRepository.findAllByActiveTrueAndStatusAndBusinessIdOrderByIdAsc(status, businessId)
+            return orderRepository.findAllByActiveTrueAndStatusAndBusinessIdOrderByIdDesc(status, businessId)
                     .stream()
                     .map(orderMapper::toResponse)
                     .toList();
         }
 
-        return orderRepository.findAllByActiveTrueAndBusinessIdOrderByIdAsc(businessId)
+        return orderRepository.findAllByActiveTrueAndBusinessIdOrderByIdDesc(businessId)
                 .stream()
                 .map(orderMapper::toResponse)
                 .toList();
@@ -92,7 +92,7 @@ public class PurchaseOrderService {
     @Transactional(readOnly = true)
     public List<PurchaseOrderResponse> findBySupplier(Long supplierId) {
         Long businessId = tenantProvider.getBusinessId();
-        return orderRepository.findBySupplierIdAndActiveTrueAndBusinessIdOrderByIdAsc(supplierId, businessId)
+        return orderRepository.findBySupplierIdAndActiveTrueAndBusinessIdOrderByIdDesc(supplierId, businessId)
                 .stream()
                 .map(orderMapper::toResponse)
                 .toList();

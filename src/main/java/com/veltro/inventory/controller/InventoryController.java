@@ -77,7 +77,7 @@ public class InventoryController {
     @GetMapping("/{productId}/movements")
     public ResponseEntity<PageResponse<InventoryMovementResponse>> getMovements(
             @PathVariable Long productId,
-            @PageableDefault(size = 20, sort = "id") Pageable pageable) {
+            @PageableDefault(size = 20, sort = "id", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable) {
         return ResponseEntity.ok(inventoryService.getMovements(productId, pageable));
     }
 

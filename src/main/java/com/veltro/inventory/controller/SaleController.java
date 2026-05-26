@@ -1,5 +1,6 @@
 package com.veltro.inventory.controller;
 
+import com.veltro.inventory.dto.common.PageResponse;
 import com.veltro.inventory.dto.pos.AddItemRequest;
 import com.veltro.inventory.dto.pos.ConfirmSaleRequest;
 import com.veltro.inventory.dto.pos.ModifyItemRequest;
@@ -7,9 +8,12 @@ import com.veltro.inventory.dto.pos.QuickSaleRequest;
 import com.veltro.inventory.dto.pos.SaleResponse;
 import com.veltro.inventory.event.SaleCompletedEvent;
 import com.veltro.inventory.event.SaleVoidedEvent;
+import com.veltro.inventory.model.SaleStatus;
 import com.veltro.inventory.service.SaleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -32,6 +36,25 @@ import org.springframework.web.bind.annotation.*;
 public class SaleController {
 
     private final SaleService saleService;
+
+    // -------------------------------------------------------------------------
+    // GET /api/v1/sales - List sales history (ADMIN, CASHIER)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Returns all sales for the current business, newest first (V04).
+     *
+     * @param status   optional status filter (COMPLETED, IN_PROGRESS, VOIDED)
+     * @param pageable pagination parameters
+     * @return paginated list of sales
+     */
+    @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'CASHIER')")
+    public ResponseEntity<PageResponse<SaleResponse>> findAll(
+            @RequestParam(required = false) SaleStatus status,
+            @PageableDefault(size = 20) Pageable pageable) {
+        return ResponseEntity.ok(saleService.findAll(status, pageable));
+    }
 
     // -------------------------------------------------------------------------
     // POST /api/v1/sales/start - Start new sale (ADMIN, CASHIER)
