@@ -52,7 +52,8 @@ class BusinessRegistrationServiceTest {
         savedUser.setId(10L);
         savedUser.setUsername("admin");
 
-        when(userRepository.findByEmailAndActiveTrue("admin@test.com")).thenReturn(Optional.empty());
+        when(userRepository.existsByUsername("admin")).thenReturn(false);
+        when(userRepository.existsByEmail("admin@test.com")).thenReturn(false);
         when(passwordEncoder.encode(PasswordHashUtils.sha256Hex("Password1"))).thenReturn("hashedPass");
         when(businessRepository.save(any(BusinessEntity.class))).thenReturn(savedBusiness);
         when(userRepository.save(any(UserEntity.class))).thenReturn(savedUser);
@@ -84,11 +85,24 @@ class BusinessRegistrationServiceTest {
     }
 
     @Test
+    @DisplayName("register — username duplicado lanza IllegalArgumentException")
+    void register_duplicateUsername_throws() {
+        RegisterRequest request = validRequest();
+        when(userRepository.existsByUsername("admin")).thenReturn(true);
+
+        assertThatThrownBy(() -> service.register(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Username already in use");
+
+        verify(businessRepository, never()).save(any());
+    }
+
+    @Test
     @DisplayName("register — email duplicado lanza IllegalArgumentException")
     void register_duplicateEmail_throws() {
         RegisterRequest request = validRequest();
-        when(userRepository.findByEmailAndActiveTrue("admin@test.com"))
-                .thenReturn(Optional.of(new UserEntity()));
+        when(userRepository.existsByUsername("admin")).thenReturn(false);
+        when(userRepository.existsByEmail("admin@test.com")).thenReturn(true);
 
         assertThatThrownBy(() -> service.register(request))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -107,7 +121,8 @@ class BusinessRegistrationServiceTest {
         UserEntity savedUser = new UserEntity();
         savedUser.setId(10L);
 
-        when(userRepository.findByEmailAndActiveTrue(request.email())).thenReturn(Optional.empty());
+        when(userRepository.existsByUsername("admin")).thenReturn(false);
+        when(userRepository.existsByEmail("admin@test.com")).thenReturn(false);
         when(passwordEncoder.encode(request.password())).thenReturn("hashed");
         when(businessRepository.save(any())).thenReturn(savedBusiness);
         when(userRepository.save(any(UserEntity.class))).thenReturn(savedUser);
@@ -128,7 +143,8 @@ class BusinessRegistrationServiceTest {
         UserEntity savedUser = new UserEntity();
         savedUser.setId(10L);
 
-        when(userRepository.findByEmailAndActiveTrue(request.email())).thenReturn(Optional.empty());
+        when(userRepository.existsByUsername("admin")).thenReturn(false);
+        when(userRepository.existsByEmail("admin@test.com")).thenReturn(false);
         when(passwordEncoder.encode(request.password())).thenReturn("hashed");
         when(businessRepository.save(any(BusinessEntity.class))).thenReturn(savedBusiness);
         when(userRepository.save(any(UserEntity.class))).thenReturn(savedUser);
@@ -149,7 +165,8 @@ class BusinessRegistrationServiceTest {
         UserEntity savedUser = new UserEntity();
         savedUser.setId(10L);
 
-        when(userRepository.findByEmailAndActiveTrue(request.email())).thenReturn(Optional.empty());
+        when(userRepository.existsByUsername("admin")).thenReturn(false);
+        when(userRepository.existsByEmail("admin@test.com")).thenReturn(false);
         when(passwordEncoder.encode(PasswordHashUtils.sha256Hex("Password1"))).thenReturn("bcrypt-hash");
         when(businessRepository.save(any())).thenReturn(savedBusiness);
         when(userRepository.save(any(UserEntity.class))).thenReturn(savedUser);

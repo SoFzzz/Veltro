@@ -69,13 +69,19 @@ public class InventoryService {
     @Transactional(readOnly = true)
     public PageResponse<InventoryResponse> findAll(String search, Pageable pageable) {
         Long businessId = tenantProvider.getBusinessId();
-        return PageResponse.from(
-                inventoryRepository.findAllByActiveTrueAndBusinessIdAndSearch(
-                        businessId,
-                        (search != null && !search.isBlank()) ? search.trim() : null,
-                        pageable)
-                        .map(inventoryMapper::toResponse)
-        );
+        
+        if (search == null || search.isBlank()) {
+            return PageResponse.from(
+                    inventoryRepository.findAllActiveAndBusinessId(businessId, pageable)
+                            .map(inventoryMapper::toResponse)
+            );
+        } else {
+            String formattedSearch = "%" + search.trim().toLowerCase() + "%";
+            return PageResponse.from(
+                    inventoryRepository.findAllActiveAndBusinessIdAndSearch(businessId, formattedSearch, pageable)
+                            .map(inventoryMapper::toResponse)
+            );
+        }
     }
 
     @Transactional(readOnly = true)

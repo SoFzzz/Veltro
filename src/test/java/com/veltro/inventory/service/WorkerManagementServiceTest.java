@@ -63,8 +63,8 @@ class WorkerManagementServiceTest {
             UserEntity saved = createWorkerEntity(1L, "cajero1", Role.CASHIER, BUSINESS_ID);
             saved.setCreatedAt(Instant.now());
 
-            when(userRepository.findByUsernameAndBusinessId("cajero1", BUSINESS_ID)).thenReturn(Optional.empty());
-            when(userRepository.findByEmailAndActiveTrue("cajero@test.com")).thenReturn(Optional.empty());
+            when(userRepository.existsByUsername("cajero1")).thenReturn(false);
+            when(userRepository.existsByEmail("cajero@test.com")).thenReturn(false);
             when(passwordEncoder.encode(PasswordHashUtils.sha256Hex("Password1"))).thenReturn("hash");
             when(userRepository.save(any(UserEntity.class))).thenReturn(saved);
 
@@ -82,8 +82,8 @@ class WorkerManagementServiceTest {
             UserEntity saved = createWorkerEntity(2L, "bodega1", Role.WAREHOUSE, BUSINESS_ID);
             saved.setCreatedAt(Instant.now());
 
-            when(userRepository.findByUsernameAndBusinessId("bodega1", BUSINESS_ID)).thenReturn(Optional.empty());
-            when(userRepository.findByEmailAndActiveTrue("bodega@test.com")).thenReturn(Optional.empty());
+            when(userRepository.existsByUsername("bodega1")).thenReturn(false);
+            when(userRepository.existsByEmail("bodega@test.com")).thenReturn(false);
             when(passwordEncoder.encode(PasswordHashUtils.sha256Hex("Password1"))).thenReturn("hash");
             when(userRepository.save(any(UserEntity.class))).thenReturn(saved);
 
@@ -105,21 +105,19 @@ class WorkerManagementServiceTest {
         @DisplayName("username duplicado en el negocio lanza IllegalArgumentException")
         void duplicateUsername_throws() {
             RegisterRequest request = new RegisterRequest("cajero1", "cajero@test.com", PasswordHashUtils.sha256Hex("Password1"), "CASHIER", null);
-            when(userRepository.findByUsernameAndBusinessId("cajero1", BUSINESS_ID))
-                    .thenReturn(Optional.of(new UserEntity()));
+            when(userRepository.existsByUsername("cajero1")).thenReturn(true);
 
             assertThatThrownBy(() -> service.createWorker(BUSINESS_ID, request))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("Username already exists");
+                    .hasMessageContaining("Username already in use");
         }
 
         @Test
         @DisplayName("email duplicado lanza IllegalArgumentException")
         void duplicateEmail_throws() {
             RegisterRequest request = new RegisterRequest("nuevo", "existing@test.com", PasswordHashUtils.sha256Hex("Password1"), "CASHIER", null);
-            when(userRepository.findByUsernameAndBusinessId("nuevo", BUSINESS_ID)).thenReturn(Optional.empty());
-            when(userRepository.findByEmailAndActiveTrue("existing@test.com"))
-                    .thenReturn(Optional.of(new UserEntity()));
+            when(userRepository.existsByUsername("nuevo")).thenReturn(false);
+            when(userRepository.existsByEmail("existing@test.com")).thenReturn(true);
 
             assertThatThrownBy(() -> service.createWorker(BUSINESS_ID, request))
                     .isInstanceOf(IllegalArgumentException.class)

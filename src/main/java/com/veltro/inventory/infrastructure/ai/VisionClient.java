@@ -535,9 +535,10 @@ public class VisionClient {
             double confidence = estimatedQuantity > 0 ? 0.85 : 0.5;
             Long productId = matchedProduct.map(ProductEntity::getId).orElse(null);
             String barcode = matchedProduct.map(ProductEntity::getBarcode).orElse(null);
-            String finalSuggestedName = fullName.toString();
-            String finalSuggestedBarcode = suggestedBarcode;
-            BigDecimal finalSuggestedPrice = suggestedPrice;
+            boolean isMatch = matchedProduct.isPresent();
+            String finalSuggestedName = isMatch ? null : fullName.toString();
+            String finalSuggestedBarcode = isMatch ? null : suggestedBarcode;
+            BigDecimal finalSuggestedPrice = isMatch ? null : suggestedPrice;
 
             log.info("Parsed product: {}", fullName);
             

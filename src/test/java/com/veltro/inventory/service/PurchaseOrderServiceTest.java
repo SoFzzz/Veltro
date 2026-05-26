@@ -176,14 +176,14 @@ class PurchaseOrderServiceTest {
     @Test
     @DisplayName("Should find all active purchase orders")
     void shouldFindAllActivePurchaseOrders() {
-        when(orderRepository.findAllByActiveTrueAndBusinessIdOrderByIdAsc(anyLong()))
+        when(orderRepository.findAllByActiveTrueAndBusinessIdOrderByIdDesc(anyLong()))
                 .thenReturn(List.of(orderEntity));
         when(orderMapper.toResponse(orderEntity)).thenReturn(orderResponse);
 
         List<PurchaseOrderResponse> result = orderService.findAll(null);
 
         assertThat(result).hasSize(1);
-        verify(orderRepository).findAllByActiveTrueAndBusinessIdOrderByIdAsc(anyLong());
+        verify(orderRepository).findAllByActiveTrueAndBusinessIdOrderByIdDesc(anyLong());
     }
 
     @Test

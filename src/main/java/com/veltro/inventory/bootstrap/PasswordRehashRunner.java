@@ -15,7 +15,7 @@ import java.util.Map;
 @Slf4j
 @Component
 @Order(1)
-@Profile({"dev", "staging"})
+@Profile({"dev", "staging", "dev-with-ai", "prod"})
 @RequiredArgsConstructor
 public class PasswordRehashRunner implements CommandLineRunner {
 

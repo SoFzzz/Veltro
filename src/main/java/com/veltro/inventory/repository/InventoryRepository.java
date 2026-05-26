@@ -29,17 +29,27 @@ public interface InventoryRepository extends JpaRepository<InventoryEntity, Long
             @Param("businessId") Long businessId);
 
     /**
-     * Finds all active inventory entries for active products,
-     * optionally filtering by product name (case-insensitive substring).
-     * B11 fix: enables the search parameter from the inventory UI.
+     * Finds all active inventory entries for active products in a business.
+     */
+    @Query("SELECT i FROM InventoryEntity i " +
+           "WHERE i.active = true " +
+           "AND i.product.active = true " +
+           "AND i.businessId = :businessId")
+    @EntityGraph(attributePaths = {"product"})
+    Page<InventoryEntity> findAllActiveAndBusinessId(
+            @Param("businessId") Long businessId,
+            Pageable pageable);
+
+    /**
+     * Finds all active inventory entries for active products, filtering by product name.
      */
     @Query("SELECT i FROM InventoryEntity i " +
            "WHERE i.active = true " +
            "AND i.product.active = true " +
            "AND i.businessId = :businessId " +
-           "AND (:search IS NULL OR LOWER(i.product.name) LIKE LOWER(CONCAT('%', :search, '%')))")
+           "AND LOWER(i.product.name) LIKE :search")
     @EntityGraph(attributePaths = {"product"})
-    Page<InventoryEntity> findAllByActiveTrueAndBusinessIdAndSearch(
+    Page<InventoryEntity> findAllActiveAndBusinessIdAndSearch(
             @Param("businessId") Long businessId,
             @Param("search") String search,
             Pageable pageable);

@@ -168,6 +168,10 @@ class SaleServiceTest {
         ConfirmSaleRequest request = new ConfirmSaleRequest(PaymentMethod.CASH, new BigDecimal("100.0000"));
 
         when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong())).thenReturn(Optional.of(sale));
+        com.veltro.inventory.model.InventoryEntity inventory = new com.veltro.inventory.model.InventoryEntity();
+        inventory.setCurrentStock(10);
+        when(inventoryRepository.findByProductIdAndActiveTrueAndBusinessId(eq(10L), anyLong()))
+                .thenReturn(Optional.of(inventory));
         when(saleRepository.save(sale)).thenReturn(sale);
         when(saleMapper.toResponse(sale)).thenReturn(createSaleResponse(1L, "VLT-2026-000001"));
         SaleCompletedEvent completedEvent = new SaleCompletedEvent(
@@ -215,6 +219,10 @@ class SaleServiceTest {
         ProductEntity product = createProduct(10L, "Widget", new BigDecimal("5.0000"));
         when(productRepository.findAllByIdInAndActiveTrueAndBusinessId(List.of(10L), BUSINESS_ID))
                 .thenReturn(List.of(product));
+        com.veltro.inventory.model.InventoryEntity inventory = new com.veltro.inventory.model.InventoryEntity();
+        inventory.setCurrentStock(10);
+        when(inventoryRepository.findByProductIdAndActiveTrueAndBusinessId(eq(10L), anyLong()))
+                .thenReturn(Optional.of(inventory));
 
         SaleCompletedEvent completedEvent = new SaleCompletedEvent(
                 BUSINESS_ID, 1L, "VLT-2026-000001", USER_ID, new BigDecimal("15.0000"), PaymentMethod.CASH, LocalDateTime.now(), List.of()
@@ -238,5 +246,28 @@ class SaleServiceTest {
         assertThat(startedSale.getDetails().get(0).getQuantity()).isEqualTo(3);
         verify(productRepository).findAllByIdInAndActiveTrueAndBusinessId(List.of(10L), BUSINESS_ID);
         verify(saleRepository, times(3)).save(any(SaleEntity.class));
+    }
+
+    @Test
+    @DisplayName("confirm throws InsufficientStockException when inventory is insufficient")
+    void confirm_insufficientStock_throwsException() {
+        SaleEntity sale = createSale(1L, "VLT-2026-000001", SaleStatus.IN_PROGRESS);
+        ProductEntity product = createProduct(10L, "Widget", new BigDecimal("30.0000"));
+        SaleDetailEntity detail = createSaleDetail(product, 5, new BigDecimal("30.0000"));
+        sale.addItem(detail);
+        sale.recalculateTotals();
+
+        ConfirmSaleRequest request = new ConfirmSaleRequest(PaymentMethod.CASH, new BigDecimal("150.0000"));
+
+        when(saleRepository.findByIdAndActiveTrueAndBusinessId(eq(1L), anyLong())).thenReturn(Optional.of(sale));
+
+        com.veltro.inventory.model.InventoryEntity inventory = new com.veltro.inventory.model.InventoryEntity();
+        inventory.setCurrentStock(2);
+        when(inventoryRepository.findByProductIdAndActiveTrueAndBusinessId(eq(10L), anyLong()))
+                .thenReturn(Optional.of(inventory));
+
+        assertThatThrownBy(() -> saleService.confirm(1L, request))
+                .isInstanceOf(com.veltro.inventory.exception.InsufficientStockException.class)
+                .hasMessageContaining("Insufficient stock for 'Widget': available 2, requested 5.");
     }
 }

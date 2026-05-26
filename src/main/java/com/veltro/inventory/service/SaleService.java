@@ -225,6 +225,31 @@ public class SaleService {
         SaleEntity sale = saleRepository.findByIdAndActiveTrueAndBusinessId(saleId, businessId)
                 .orElseThrow(() -> new NotFoundException("Sale not found with id: " + saleId));
 
+        // Validate stock availability for all active items in the sale cart before confirming
+        Map<Long, Integer> requestedQuantities = new java.util.HashMap<>();
+        Map<Long, String> productNames = new java.util.HashMap<>();
+        for (SaleDetailEntity item : sale.getDetails()) {
+            if (item.isActive()) {
+                requestedQuantities.merge(item.getProductId(), item.getQuantity(), Integer::sum);
+                productNames.put(item.getProductId(), item.getProductName());
+            }
+        }
+
+        for (Map.Entry<Long, Integer> entry : requestedQuantities.entrySet()) {
+            Long productId = entry.getKey();
+            int requestedQty = entry.getValue();
+            String prodName = productNames.get(productId);
+
+            InventoryEntity inventory = inventoryRepository.findByProductIdAndActiveTrueAndBusinessId(
+                    productId, businessId)
+                    .orElseThrow(() -> new InsufficientStockException(
+                            prodName, 0, requestedQty));
+            if (inventory.getCurrentStock() < requestedQty) {
+                throw new InsufficientStockException(
+                        prodName, inventory.getCurrentStock(), requestedQty);
+            }
+        }
+
         // Capture state BEFORE confirmation for audit (B3-03)
         final Map<String, Object> beforeSnapshot = snapshotService.buildSnapshot(sale);
 
