@@ -3,7 +3,7 @@ spring:
     url: ${DB_URL:jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:5432}/${DB_NAME:veltro}}
     driver-class-name: org.postgresql.Driver
     username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD}
+    password: ${DB_PASSWORD:lolxd777}
   jpa:
     hibernate:
       ddl-auto: validate
